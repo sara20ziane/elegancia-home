@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { Sparkles } from "lucide-react";
 import { StoreLayout } from "@/components/storefront/store-layout";
 import { ProductGrid } from "@/components/storefront/product-card";
 import { HomeHero, TrustBar } from "@/components/storefront/home-hero";
@@ -6,17 +7,31 @@ import {
   BrandStory,
   CategoryStrip,
   ClosingCta,
-  PromoBand,
   ReviewWall,
   StyleDiscovery,
 } from "@/components/storefront/home-sections";
-import { ErrorState, NoProducts, ProductSkeleton } from "@/components/ui/feedback";
+import { EmptyState, ErrorState, ProductSkeleton } from "@/components/ui/feedback";
 import { SetupCheck } from "@/components/setup-check";
 import { isEmptyDatabaseError } from "@/lib/supabase/health";
 import { supabaseConfigProblem } from "@/lib/supabase/client";
 import { reviewsQuery, storeSettingsQuery } from "@/lib/queries";
 import { EMPTY_FILTERS, cataloguePageQuery, useCataloguePage } from "@/lib/catalogue";
 import { useI18n } from "@/lib/i18n-context";
+
+const emptyCopy = {
+  fr: {
+    title: "La collection Elegancia arrive bientôt.",
+    body: "Les premiers modèles sont en préparation. Revenez bientôt pour découvrir les parures disponibles.",
+  },
+  en: {
+    title: "The Elegancia collection is coming soon.",
+    body: "Our first designs are being prepared. Come back soon to discover the available bedding sets.",
+  },
+  ar: {
+    title: "مجموعة Elegancia قادمة قريباً.",
+    body: "نحضّر أول الموديلات بعناية. عودي قريباً لاكتشاف الأطقم المتوفرة.",
+  },
+} as const;
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
@@ -54,7 +69,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { settings } = Route.useLoaderData();
   const catalogue = useCataloguePage(EMPTY_FILTERS, 1);
   const configProblem = supabaseConfigProblem();
@@ -70,6 +85,7 @@ function Home() {
 
   const list = catalogue.data?.products ?? [];
   const catalogueTotal = catalogue.data?.total ?? 0;
+  const empty = emptyCopy[locale];
 
   return (
     <StoreLayout>
@@ -109,7 +125,12 @@ function Home() {
             <SetupCheck />
           </div>
         ) : list.length === 0 ? (
-          <NoProducts />
+          <EmptyState
+            title={empty.title}
+            body={empty.body}
+            icon={<Sparkles size={28} />}
+            className="border-[#DFD1C5] bg-[#FFFDF9]"
+          />
         ) : (
           <ProductGrid products={list} />
         )}
@@ -117,8 +138,7 @@ function Home() {
 
       <CategoryStrip />
       <BrandStory />
-      <TrustBar returnsDays={settings?.returns_days ?? 14} />
-      <PromoBand threshold={settings?.free_shipping_threshold ?? 0} />
+      <TrustBar />
       <ReviewWall />
       <ClosingCta storeName={settings?.name ?? "Elegancia Home"} />
     </StoreLayout>

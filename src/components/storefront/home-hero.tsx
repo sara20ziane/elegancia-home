@@ -1,12 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Banknote,
-  Headphones,
-  RotateCcw,
-  ShieldCheck,
-  Truck,
-} from "lucide-react";
+import { ArrowRight, Banknote, ShieldCheck, Truck } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import type { CatalogueProduct, StoreSettings } from "@/lib/queries";
 import { productImage } from "@/lib/queries";
@@ -22,16 +15,43 @@ const fallbackVisuals = {
 const editorialCopy = {
   fr: {
     eyebrow: "LINGE DE LIT · ELEGANCIA HOME",
+    title: "Votre chambre mérite plus que du confort.",
+    body: "Parures élégantes, matières douces et modèles soigneusement sélectionnés pour embellir votre quotidien.",
+    cta: "Découvrir la collection",
     secure: "Commande suivie",
   },
   en: {
     eyebrow: "BED LINEN · ELEGANCIA HOME",
+    title: "Your bedroom deserves more than comfort.",
+    body: "Elegant bedding, soft fabrics and carefully selected designs made to elevate your everyday space.",
+    cta: "Discover the collection",
     secure: "Order tracking",
   },
   ar: {
     eyebrow: "مفروشات راقية · ELEGANCIA HOME",
+    title: "غرفتك تستحق أكثر من الراحة.",
+    body: "أطقم أنيقة، خامات ناعمة وموديلات مختارة بعناية لتضيف لمسة أجمل لكل يوم.",
+    cta: "اكتشفي المجموعة",
     secure: "تتبع الطلب",
   },
+} as const;
+
+const trustCopy = {
+  fr: [
+    ["Paiement à la livraison", "Réglez votre commande à la réception."],
+    ["Livraison en Algérie", "Expédition selon les zones desservies."],
+    ["Commande suivie", "Consultez l’état de votre commande depuis le site."],
+  ],
+  en: [
+    ["Cash on delivery", "Pay when your order arrives."],
+    ["Delivery in Algeria", "Shipping according to serviced areas."],
+    ["Order tracking", "Check your order status directly on the site."],
+  ],
+  ar: [
+    ["الدفع عند الاستلام", "ادفعي عند استلام طلبك."],
+    ["التوصيل في الجزائر", "الشحن حسب المناطق المتوفرة للخدمة."],
+    ["تتبع الطلب", "تابعي حالة طلبك مباشرة من الموقع."],
+  ],
 } as const;
 
 /** Premium storefront hero tailored to Elegancia Home's bedding identity. */
@@ -70,11 +90,11 @@ export function HomeHero({
           </span>
 
           <h1 className="mb-5 max-w-[640px] font-display text-[clamp(38px,6vw,70px)] font-semibold leading-[0.98] tracking-[-0.035em] text-[#38281E]">
-            {t("home.hero.title")}
+            {copy.title}
           </h1>
 
           <p className="mb-8 max-w-[540px] text-base leading-[1.8] text-[#75675D] sm:text-lg">
-            {t("home.hero.body")}
+            {copy.body}
           </p>
 
           <div className="flex w-full flex-wrap gap-3 sm:w-auto">
@@ -82,7 +102,7 @@ export function HomeHero({
               to="/catalogue"
               className="btn btn-primary btn-lg flex-1 shadow-[0_12px_30px_rgba(95,55,25,0.14)] sm:flex-none"
             >
-              {t("home.promo.cta")}
+              {copy.cta}
               <ArrowRight size={18} className="rtl:rotate-180" aria-hidden="true" />
             </Link>
             <Link
@@ -184,39 +204,29 @@ export function HomeHero({
   );
 }
 
-/** Compact reassurance band beneath the main commercial sections. */
-export function TrustBar({ returnsDays }: { returnsDays: number }) {
-  const { t } = useI18n();
-
-  const items = [
-    { icon: Banknote, title: t("home.trust.cod.title"), body: t("home.trust.cod.body") },
-    {
-      icon: Truck,
-      title: t("home.trust.delivery.title"),
-      body: t("home.trust.delivery.body"),
-    },
-    {
-      icon: RotateCcw,
-      title: t("home.trust.returns.title", { days: returnsDays }),
-      body: t("home.trust.returns.body"),
-    },
-    { icon: Headphones, title: t("home.trust.support.title"), body: t("home.trust.support.body") },
-  ] as const;
+/** Reassurance limited to commercial promises already supported by the store flow. */
+export function TrustBar() {
+  const { locale } = useI18n();
+  const icons = [Banknote, Truck, ShieldCheck] as const;
+  const items = trustCopy[locale];
 
   return (
     <section className="border-y border-[#E8DDD3] bg-[#FFFDF9]">
-      <div className="container-page grid gap-5 py-8 sm:grid-cols-2 lg:grid-cols-4 lg:py-9">
-        {items.map((item) => (
-          <div key={item.title} className="flex items-start gap-3.5">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#E3D4C7] bg-[#F7F1EA] text-primary">
-              <item.icon size={18} aria-hidden="true" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-[#38281E]">{item.title}</span>
-              <span className="mt-1 block text-xs leading-relaxed text-[#786B61]">{item.body}</span>
-            </span>
-          </div>
-        ))}
+      <div className="container-page grid gap-5 py-8 sm:grid-cols-3 lg:py-9">
+        {items.map(([title, body], index) => {
+          const Icon = icons[index];
+          return (
+            <div key={title} className="flex items-start gap-3.5">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#E3D4C7] bg-[#F7F1EA] text-primary">
+                <Icon size={18} aria-hidden="true" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-[#38281E]">{title}</span>
+                <span className="mt-1 block text-xs leading-relaxed text-[#786B61]">{body}</span>
+              </span>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
