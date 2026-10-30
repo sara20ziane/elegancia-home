@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { CategoryRow } from "@/components/admin/category-row";
 import { Button } from "@/components/ui/button";
@@ -22,16 +22,72 @@ export const Route = createFileRoute("/admin/categories")({
   component: CategoriesPage,
 });
 
-/**
- * Categories, without SQL.
- *
- * Before this screen an owner could pick a category for a product but had no
- * way to create one, so a new shop had exactly the categories its seed came
- * with. Order is a plain up/down pair: drag-and-drop is fiddly on the phone
- * most owners run their shop from.
- */
+const ELEGANCIA_PRESETS = [
+  { fr: "Parures de lit", ar: "أطقم السرير" },
+  { fr: "Draps", ar: "الشراشف" },
+  { fr: "Housses de couette", ar: "أغطية اللحاف" },
+  { fr: "Couettes", ar: "الألحفة" },
+  { fr: "Oreillers", ar: "الوسائد" },
+  { fr: "Protège-matelas", ar: "واقيات المراتب" },
+  { fr: "Plaids", ar: "البطانيات الخفيفة" },
+  { fr: "Linge de maison", ar: "مفروشات المنزل" },
+] as const;
+
+const COPY = {
+  fr: {
+    title: "Catégories de la boutique",
+    intro:
+      "Organise les modèles Elegancia comme les clientes les cherchent. L’ordre défini ici est aussi celui utilisé dans la boutique.",
+    createTitle: "Ajouter une catégorie",
+    arabic: "Nom arabe",
+    french: "Nom français",
+    frenchHint: "Utilisé dans la version française de la boutique.",
+    add: "Ajouter",
+    suggestions: "Suggestions Elegancia",
+    suggestionsBody:
+      "Clique sur une suggestion pour préremplir les deux noms. Rien n’est créé tant que tu n’appuies pas sur Ajouter.",
+    alreadyAdded: "Déjà ajoutée",
+    empty: "Aucune catégorie pour le moment.",
+  },
+  en: {
+    title: "Store categories",
+    intro:
+      "Organise Elegancia models the way customers browse them. The order here is also used in the storefront.",
+    createTitle: "Add a category",
+    arabic: "Arabic name",
+    french: "French name",
+    frenchHint: "Used in the French version of the store.",
+    add: "Add",
+    suggestions: "Elegancia suggestions",
+    suggestionsBody:
+      "Choose a suggestion to prefill both names. Nothing is created until you press Add.",
+    alreadyAdded: "Already added",
+    empty: "No categories yet.",
+  },
+  ar: {
+    title: "فئات المتجر",
+    intro:
+      "رتّبي موديلات Elegancia حسب طريقة بحث الزبونات. الترتيب هنا هو نفسه الذي يظهر في المتجر.",
+    createTitle: "إضافة فئة",
+    arabic: "الاسم بالعربية",
+    french: "الاسم بالفرنسية",
+    frenchHint: "يظهر في النسخة الفرنسية من المتجر.",
+    add: "إضافة",
+    suggestions: "اقتراحات Elegancia",
+    suggestionsBody:
+      "اختاري اقتراحاً لملء الاسمين تلقائياً. لن يتم إنشاء شيء حتى تضغطي على إضافة.",
+    alreadyAdded: "مضافة بالفعل",
+    empty: "لا توجد فئات بعد.",
+  },
+} as const;
+
+function normalise(value: string | null | undefined) {
+  return (value ?? "").trim().toLocaleLowerCase();
+}
+
 function CategoriesPage() {
-  const { t } = useI18n();
+  const { locale } = useI18n();
+  const c = COPY[locale] ?? COPY.fr;
   const queryClient = useQueryClient();
   const { data, isPending, isError, error, refetch } = useAdminCategories();
   const [name, setName] = useState("");
@@ -39,7 +95,6 @@ function CategoriesPage() {
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEY });
-    // The storefront and the product form both read the public list.
     void queryClient.invalidateQueries({ queryKey: ["categories"] });
   };
   const onError = (mutationError: Error) => toast.error(mutationError.message);
@@ -67,8 +122,6 @@ function CategoriesPage() {
   const list = data ?? [];
   const busy = create.isPending || update.isPending || remove.isPending;
 
-  // Swap with the neighbour. Sort orders are renumbered 0..n first, so two
-  // categories that both started at 0 still move.
   const move = (index: number, direction: -1 | 1) => {
     const neighbour = list[index + direction];
     if (!neighbour) return;
@@ -82,19 +135,34 @@ function CategoriesPage() {
   };
 
   const confirmDelete = (category: AdminCategory) => {
-    const message = t("admin.categories.deleteConfirm", { count: category.product_count });
+    const message =
+      locale === "ar"
+        ? `هذه الفئة مرتبطة بـ ${category.product_count} موديل. حذفها سيترك هذه الموديلات بدون فئة. متابعة؟`
+        : locale === "en"
+          ? `This category contains ${category.product_count} model(s). Deleting it will leave them uncategorised. Continue?`
+          : `Cette catégorie contient ${category.product_count} modèle(s). Sa suppression laissera ces modèles sans catégorie. Continuer ?`;
     if (category.product_count === 0 || window.confirm(message)) remove.mutate(category.id);
   };
+
+  const exists = (preset: (typeof ELEGANCIA_PRESETS)[number]) =>
+    list.some(
+      (category) =>
+        normalise(category.name) === normalise(preset.ar) ||
+        normalise(category.name_fr) === normalise(preset.fr),
+    );
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold">{t("admin.nav.categories")}</h1>
-        <p className="mt-1 max-w-xl text-sm text-on-surface-muted">{t("admin.categories.intro")}</p>
+        <h1 className="font-display text-2xl font-semibold">{c.title}</h1>
+        <p className="mt-1 max-w-2xl text-sm text-on-surface-muted">{c.intro}</p>
       </div>
 
       <Card>
-        <CardBody>
+        <CardBody className="flex flex-col gap-5">
+          <div>
+            <h2 className="font-display text-lg font-semibold">{c.createTitle}</h2>
+          </div>
           <form
             className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
             onSubmit={(event) => {
@@ -106,37 +174,71 @@ function CategoriesPage() {
               });
             }}
           >
-            <Field label={t("admin.categories.name")} required>
+            <Field label={c.arabic} required>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 dir="rtl"
                 required
                 minLength={2}
+                placeholder="مثال: أطقم السرير"
               />
             </Field>
-            <Field
-              label={t("admin.categories.nameLatin")}
-              hint={t("admin.categories.nameLatinHint")}
-            >
-              <Input value={nameFr} onChange={(e) => setNameFr(e.target.value)} dir="ltr" />
+            <Field label={c.french} hint={c.frenchHint}>
+              <Input
+                value={nameFr}
+                onChange={(e) => setNameFr(e.target.value)}
+                dir="ltr"
+                placeholder="Ex. Parures de lit"
+              />
             </Field>
             <Button type="submit" disabled={busy || name.trim().length < 2}>
               <Plus size={16} aria-hidden="true" />
-              {t("admin.categories.add")}
+              {c.add}
             </Button>
           </form>
+
+          <div className="border-t border-outline pt-4">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-primary" aria-hidden="true" />
+              <h3 className="font-semibold">{c.suggestions}</h3>
+            </div>
+            <p className="mt-1 text-xs text-on-surface-muted">{c.suggestionsBody}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {ELEGANCIA_PRESETS.map((preset) => {
+                const added = exists(preset);
+                return (
+                  <button
+                    key={preset.fr}
+                    type="button"
+                    disabled={added || busy}
+                    onClick={() => {
+                      setName(preset.ar);
+                      setNameFr(preset.fr);
+                    }}
+                    className="rounded-full border border-outline bg-surface px-3 py-2 text-start text-xs transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-default disabled:opacity-45"
+                  >
+                    <span className="font-medium">{preset.fr}</span>
+                    <span className="mx-1.5 text-outline-strong">·</span>
+                    <span dir="rtl">{preset.ar}</span>
+                    {added && <span className="ms-2 text-positive">✓ {c.alreadyAdded}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </CardBody>
       </Card>
 
       {list.length === 0 ? (
-        <EmptyState title={t("admin.categories.empty")} />
+        <EmptyState title={c.empty} />
       ) : (
         <ul className="flex flex-col gap-3">
           {list.map((category, index) => (
             <CategoryRow
               key={`${category.id}-${category.name}-${category.name_fr ?? ""}`}
               category={category}
+              position={index + 1}
               first={index === 0}
               last={index === list.length - 1}
               busy={busy}
