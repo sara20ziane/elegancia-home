@@ -38,9 +38,6 @@ function CheckoutPage() {
 
   if (placedToken) return <OrderPlaced token={placedToken} phone={form.phone} />;
 
-  // The owner can close the shop without deleting it. Cash on delivery is the
-  // only payment method, so `accepts_cod = false` means no orders at all. The
-  // database refuses them too, via validate_order.
   if (settings && !settings.accepts_cod) {
     return <NothingToCheckOut title={t("shop.closed")} body={t("shop.closedBody")} />;
   }
@@ -53,27 +50,36 @@ function CheckoutPage() {
     cart.subtotal,
     form.delivery_method,
   );
-  // The home price is shown next to the pickup price, whichever is chosen.
-  const homeFee = resolveDelivery(
+  const homeDelivery = resolveDelivery(
     settings ?? null,
     zones ?? [],
     form.wilaya || null,
     cart.subtotal,
-  ).fee;
+    "home",
+  );
   const pickup = pickupFee(zones ?? [], form.wilaya || null);
+  const deliveryAvailable = !form.wilaya || delivery.available;
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setSubmitting(true);
     setError(null);
+
+    if (!form.wilaya || !delivery.available) {
+      setError("Tarif Packers indisponible pour cette wilaya. Réessaie après synchronisation des tarifs.");
+      return;
+    }
+    if (form.delivery_method === "stopdesk" && !form.stopdesk_name) {
+      setError("Choisis une commune Stop Desk proposée par Packers.");
+      return;
+    }
+
+    setSubmitting(true);
     const result = await placeOrder(
       toCustomer(form),
       cart.items.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })),
     );
     setSubmitting(false);
     if (result.error || !result.token) {
-      // Known refusals are translated; anything else is the database's own message,
-      // which is written for a human.
       setError(
         result.code
           ? t(`checkout.error.${result.code}`)
@@ -111,19 +117,23 @@ function CheckoutPage() {
               </p>
             )}
             <AddressFields form={form} onChange={setForm} />
+            {form.wilaya && !homeDelivery.available && (
+              <p className="rounded-[12px] border border-tertiary/30 bg-tertiary/10 px-4 py-3 text-sm text-tertiary">
+                Tarif Packers indisponible pour cette wilaya. La commande reste bloquée tant que les tarifs ne sont pas synchronisés.
+              </p>
+            )}
             <DeliveryChoice
               wilaya={form.wilaya}
-              homeFee={homeFee}
-              // Free delivery covers pickup too, so both options show the same 0.
-              pickupFee={pickup === null ? null : delivery.source === "free" ? 0 : pickup}
+              homeFee={homeDelivery.fee}
+              pickupFee={pickup}
               method={form.delivery_method}
-              officeId={form.stopdesk_id}
-              onChange={({ method, officeId, officeName }) =>
+              stopdeskName={form.stopdesk_name}
+              onChange={({ method, stopdeskName }) =>
                 setForm({
                   ...form,
                   delivery_method: method,
-                  stopdesk_id: officeId,
-                  stopdesk_name: officeName,
+                  stopdesk_id: "",
+                  stopdesk_name: stopdeskName,
                 })
               }
             />
@@ -133,6 +143,7 @@ function CheckoutPage() {
           <CheckoutSummary
             deliveryFee={delivery.fee}
             hasWilaya={Boolean(form.wilaya)}
+            deliveryAvailable={deliveryAvailable}
             error={error}
             submitting={submitting}
           />
@@ -172,12 +183,11 @@ function toCustomer(form: CheckoutForm) {
     address: form.address,
     note: form.note || null,
     delivery_method: form.delivery_method,
-    stopdesk_id: form.stopdesk_id || null,
+    stopdesk_id: null,
     stopdesk_name: form.stopdesk_name || null,
   };
 }
 
-/** An empty cart, or a shop that is not taking orders: say so and point back. */
 function NothingToCheckOut({ title, body }: { title: string; body?: string }) {
   const { t } = useI18n();
   return (

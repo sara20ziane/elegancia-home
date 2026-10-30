@@ -3,40 +3,33 @@ import { Home, Store } from "lucide-react";
 import { Field, Select } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
-import { listPickupOffices } from "@/lib/server/guepex-actions";
+import { listPackersStopDeskCommunes } from "@/lib/server/packers-actions";
 import type { DeliveryMethod } from "@/lib/delivery";
 import { cn } from "@/lib/utils";
 
-/**
- * Home delivery or pickup at the carrier's office.
- *
- * Pickup is cheaper and many Algerian buyers prefer it, so it is offered
- * wherever the owner priced it, with both prices visible before choosing. The
- * office comes from the carrier's own list, because the carrier rejects a
- * parcel whose office id it does not know. Without a connected carrier there
- * is no list, and the shop confirms the office on the confirmation call.
- */
+/** Home delivery or Packers Stop Desk, using only Packers-defined communes. */
 export function DeliveryChoice({
   wilaya,
   homeFee,
   pickupFee,
   method,
-  officeId,
+  stopdeskName,
   onChange,
 }: {
   wilaya: string;
   homeFee: number;
   pickupFee: number | null;
   method: DeliveryMethod;
-  officeId: string;
-  onChange: (next: { method: DeliveryMethod; officeId: string; officeName: string }) => void;
+  stopdeskName: string;
+  onChange: (next: { method: DeliveryMethod; stopdeskName: string }) => void;
 }) {
   const { t, locale } = useI18n();
-  const offices = useQuery({
-    queryKey: ["pickup_offices", wilaya] as const,
-    queryFn: () => listPickupOffices({ data: { wilaya } }),
+  const stopdesk = useQuery({
+    queryKey: ["packers_stopdesk_communes", wilaya] as const,
+    queryFn: () => listPackersStopDeskCommunes({ data: { wilaya } }),
     enabled: method === "stopdesk" && Boolean(wilaya),
     staleTime: 3_600_000,
+    retry: false,
   });
 
   if (!wilaya || pickupFee === null) return null;
@@ -53,7 +46,7 @@ export function DeliveryChoice({
         name="delivery_method"
         value={value}
         checked={method === value}
-        onChange={() => onChange({ method: value, officeId: "", officeName: "" })}
+        onChange={() => onChange({ method: value, stopdeskName: "" })}
         className="accent-[var(--primary-solid)]"
       />
       <Icon size={17} className="shrink-0 text-primary" aria-hidden="true" />
@@ -64,7 +57,7 @@ export function DeliveryChoice({
     </label>
   );
 
-  const list = offices.data ?? [];
+  const communes = stopdesk.data?.communes ?? [];
   return (
     <fieldset className="flex flex-col gap-2.5">
       <legend className="mb-1 text-sm font-medium">{t("checkout.method.title")}</legend>
@@ -72,33 +65,27 @@ export function DeliveryChoice({
       {option("stopdesk", t("checkout.method.stopdesk"), pickupFee, Store)}
 
       {method === "stopdesk" &&
-        (list.length > 0 ? (
-          <Field label={t("checkout.stopdesk.choose")} required>
+        (communes.length > 0 ? (
+          <Field label="Commune Stop Desk Packers" required>
             <Select
-              value={officeId}
+              value={stopdeskName}
               required
-              onChange={(event) => {
-                const office = list.find((o) => String(o.id) === event.target.value);
-                onChange({
-                  method,
-                  officeId: event.target.value,
-                  officeName: office ? office.name : "",
-                });
-              }}
+              onChange={(event) => onChange({ method, stopdeskName: event.target.value })}
             >
-              <option value="">{t("checkout.stopdesk.choose")}</option>
-              {list.map((office) => (
-                <option key={office.id} value={office.id}>
-                  {office.commune ? `${office.commune} — ` : ""}
-                  {office.name}
+              <option value="">Choisir un Stop Desk</option>
+              {communes.map((commune) => (
+                <option key={commune} value={commune}>
+                  {commune}
                 </option>
               ))}
             </Select>
           </Field>
         ) : (
-          !offices.isPending && (
+          !stopdesk.isPending && (
             <p className="rounded-[10px] bg-surface-mid px-3 py-2 text-xs text-on-surface-muted">
-              {t("checkout.stopdesk.later")}
+              {stopdesk.data?.configured === false
+                ? "Packers n’est pas encore connecté."
+                : "Aucun Stop Desk Packers disponible pour cette wilaya."}
             </p>
           )
         ))}

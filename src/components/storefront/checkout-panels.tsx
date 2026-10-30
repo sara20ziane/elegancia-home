@@ -9,7 +9,6 @@ import { useStoreSettings } from "@/lib/queries";
 import { useCommunes } from "@/lib/communes";
 import type { DeliveryMethod } from "@/lib/delivery";
 
-/** The address form shape, shared by the page and its panels. */
 export type CheckoutForm = {
   customer_name: string;
   phone: string;
@@ -47,10 +46,6 @@ export function AddressFields({
   const set = <K extends keyof CheckoutForm>(key: K, value: CheckoutForm[K]) =>
     onChange({ ...form, [key]: value });
 
-  // Restrict the picker to wilayas the owner actually serves. An empty list
-  // means everywhere. The database enforces the same rule, so this is courtesy
-  // rather than control — but offering 58 options when 6 are served is how a
-  // buyer picks one that gets rejected at the last step.
   const allowed = settings?.delivery_wilayas ?? [];
   const deliverable =
     allowed.length === 0 ? WILAYAS : WILAYAS.filter((w) => allowed.includes(w.fr));
@@ -88,8 +83,6 @@ export function AddressFields({
         <Field label={t("checkout.wilaya")} required>
           <Select
             value={form.wilaya}
-            // A new wilaya invalidates the commune and the pickup office chosen
-            // for the old one.
             onChange={(e) =>
               onChange({
                 ...form,
@@ -122,7 +115,6 @@ export function AddressFields({
             list="commune-options"
             autoComplete="address-level2"
           />
-          {/* Suggestions, not a lock: a commune missing from the list can still be typed. */}
           <datalist id="commune-options">
             {communes.map(([latin, arabic]) => (
               <option key={latin} value={latin}>
@@ -156,8 +148,6 @@ export function AddressFields({
   );
 }
 
-/** Cash-on-delivery reassurance. Above the fold on purpose: it is the reason
- *  a first-time Algerian buyer completes the order. */
 export function CodNotice() {
   const { t } = useI18n();
   return (
@@ -174,17 +164,19 @@ export function CodNotice() {
 export function CheckoutSummary({
   deliveryFee,
   hasWilaya,
+  deliveryAvailable,
   error,
   submitting,
 }: {
   deliveryFee: number;
   hasWilaya: boolean;
+  deliveryAvailable: boolean;
   error: string | null;
   submitting: boolean;
 }) {
   const { t, locale } = useI18n();
   const { items, subtotal } = useCart();
-  const total = subtotal + deliveryFee;
+  const total = subtotal + (deliveryAvailable ? deliveryFee : 0);
 
   return (
     <aside className="flex flex-col gap-4 self-start rounded-[16px] border border-outline bg-surface p-6 lg:sticky lg:top-24">
@@ -216,7 +208,11 @@ export function CheckoutSummary({
         <div className="flex justify-between">
           <dt className="text-on-surface-muted">{t("cart.delivery")}</dt>
           <dd className="font-mono" dir="ltr">
-            {hasWilaya ? formatDzd(deliveryFee, locale) : t("cart.deliveryCalculated")}
+            {!hasWilaya
+              ? t("cart.deliveryCalculated")
+              : deliveryAvailable
+                ? formatDzd(deliveryFee, locale)
+                : "Tarif Packers indisponible"}
           </dd>
         </div>
         <div className="flex justify-between border-t border-outline pt-2 text-base font-semibold">
@@ -233,7 +229,7 @@ export function CheckoutSummary({
         </p>
       )}
 
-      <Button type="submit" variant="berry" size="lg" disabled={submitting}>
+      <Button type="submit" variant="berry" size="lg" disabled={submitting || !deliveryAvailable}>
         {submitting ? t("checkout.placing") : t("checkout.placeOrder")}
       </Button>
     </aside>

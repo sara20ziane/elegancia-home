@@ -11,6 +11,16 @@ export type PackersConnectionResult =
   | { configured: false; connected: false }
   | { configured: true; connected: boolean };
 
+export type PackersRateSyncResult =
+  | { ok: true; count: number }
+  | { ok: false; error: string };
+
+export type PackersStopDeskResult = {
+  configured: boolean;
+  wilayaCode: number | null;
+  communes: string[];
+};
+
 function userClient(accessToken: string) {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
@@ -60,6 +70,89 @@ export async function runPackersConnectionTest(): Promise<PackersConnectionResul
   if (!config) return { configured: false, connected: false };
   const connected = await createPackersClient(config).validateToken();
   return { configured: true, connected };
+}
+
+export async function runSyncPackersRates(input: {
+  accessToken: string;
+}): Promise<PackersRateSyncResult> {
+  const auth = await assertAdmin(input.accessToken);
+  if (auth.error || !auth.supabase) return { ok: false, error: auth.error ?? "Not authorized." };
+
+  const config = readPackersConfig();
+  if (!config) {
+    return { ok: false, error: "Packers n’est pas encore connecté. Ajoute PACKERS_API_TOKEN dans Vercel." };
+  }
+
+  try {
+    const rates = await createPackersClient(config).getRates();
+    const rows = rates
+      .map((rate) => {
+        const canonical = WILAYAS.find((wilaya) => wilaya.code === rate.wilayaId);
+        if (!canonical) return null;
+        return {
+          wilaya: canonical.fr,
+          fee: Math.max(0, Math.round(rate.homeFee)),
+          stopdesk_fee:
+            rate.stopDeskFee === null ? null : Math.max(0, Math.round(rate.stopDeskFee)),
+          eta_days: 3,
+          is_active: true,
+        };
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+
+    if (rows.length === 0) {
+      return { ok: false, error: "Packers n’a renvoyé aucun tarif de livraison." };
+    }
+
+    const { error: clearError } = await auth.supabase.from("delivery_zones").delete().neq("wilaya", "");
+    if (clearError) return { ok: false, error: clearError.message };
+
+    const { error: upsertError } = await auth.supabase
+      .from("delivery_zones")
+      .upsert(rows, { onConflict: "wilaya" });
+    if (upsertError) return { ok: false, error: upsertError.message };
+
+    const { error: settingsError } = await auth.supabase
+      .from("store_settings")
+      .update({
+        delivery_wilayas: rows.map((row) => row.wilaya),
+        delivery_fee_flat: 0,
+        free_shipping_threshold: 0,
+        guepex_from_wilaya: "Alger",
+      })
+      .eq("id", 1);
+    if (settingsError) return { ok: false, error: settingsError.message };
+
+    return { ok: true, count: rows.length };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Impossible de synchroniser les tarifs Packers.",
+    };
+  }
+}
+
+export async function runListPackersStopDeskCommunes(
+  wilaya: string,
+): Promise<PackersStopDeskResult> {
+  const config = readPackersConfig();
+  const wilayaCode = resolveWilayaCode(wilaya);
+  if (!config) return { configured: false, wilayaCode, communes: [] };
+  if (!wilayaCode) return { configured: true, wilayaCode: null, communes: [] };
+
+  try {
+    const communes = await createPackersClient(config).getCommunes(wilayaCode);
+    return {
+      configured: true,
+      wilayaCode,
+      communes: communes
+        .filter((commune) => commune.hasStopDesk)
+        .map((commune) => commune.name)
+        .sort((a, b) => a.localeCompare(b, "fr")),
+    };
+  } catch {
+    return { configured: true, wilayaCode, communes: [] };
+  }
 }
 
 export async function runCreatePackersParcel(input: {
