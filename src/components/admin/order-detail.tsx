@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Check, Printer, Truck, X } from "lucide-react";
+import { Check, Printer, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
@@ -97,7 +97,7 @@ export function OrderDetail({
   );
 }
 
-/** Status transitions. Only forward moves are offered, matching the flow. */
+/** Status transitions. Packers owns confirmed -> shipped after carrier validation. */
 function OrderActions({ order }: { order: AdminOrder }) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
@@ -174,16 +174,6 @@ function OrderActions({ order }: { order: AdminOrder }) {
             {t("admin.orders.refuse")}
           </Button>
         </>
-      )}
-      {order.status === "confirmed" && (
-        <Button
-          size="sm"
-          disabled={mutation.isPending}
-          onClick={() => mutation.mutate({ status: "shipped" })}
-        >
-          <Truck size={15} aria-hidden="true" />
-          {t("admin.orders.ship")}
-        </Button>
       )}
       {order.status === "shipped" && (
         <Button
