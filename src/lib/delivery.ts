@@ -3,19 +3,17 @@ import { getSupabase } from "./supabase/client";
 import type { StoreSettings } from "./queries";
 
 /**
- * Delivery pricing.
+ * Delivery pricing cache.
  *
- * A row in `delivery_zones` overrides the flat fee for that wilaya. The flat fee
- * stays as the fallback so a store is usable before any zone is configured, and
- * so a wilaya the owner forgot still gets a sane number instead of zero.
- *
- * The carrier's own rate becomes authoritative once Guepex is connected; this is
- * the estimate shown before the parcel exists.
+ * `delivery_zones` is no longer manually priced. It is a local cache of the
+ * tariffs returned by Packers / EcoTrack, synchronized from the admin delivery
+ * page. If a wilaya has no cached Packers tariff, checkout must treat delivery
+ * as unavailable rather than inventing a fallback amount.
  */
 export type DeliveryZone = {
   wilaya: string;
   fee: number;
-  /** Pickup at the carrier's office. Null: pickup not offered in this wilaya. */
+  /** Packers Stop Desk tariff. Null means Packers does not offer it for the wilaya. */
   stopdesk_fee: number | null;
   eta_days: number;
   is_active: boolean;
@@ -40,36 +38,35 @@ export function useDeliveryZones() {
 }
 
 /**
- * Fee and ETA for a wilaya. Falls back to the store's flat fee when no zone row
- * exists, and is free once the subtotal reaches the store's threshold.
- *
- * Display only. The order's real fee is set by `delivery_fee_for()` in
- * `supabase/schema.sql`, and this must stay the same rule or the buyer is shown
- * one number and charged another.
+ * Fee and ETA from the last successful Packers synchronization.
+ * No flat fallback and no free-shipping override are allowed: Packers is the
+ * single source of truth for both home delivery and Stop Desk pricing.
  */
 export function resolveDelivery(
   settings: StoreSettings | null,
   zones: DeliveryZone[],
   wilaya: string | null,
-  subtotal: number,
+  _subtotal: number,
   method: DeliveryMethod = "home",
-): { fee: number; etaDays: number; source: "zone" | "flat" | "free" } {
+): { fee: number; etaDays: number; source: "packers" | "unavailable"; available: boolean } {
   const zone = wilaya ? zones.find((z) => z.wilaya === wilaya) : undefined;
   const etaDays = zone?.eta_days ?? settings?.delivery_eta_days ?? 3;
-  const threshold = settings?.free_shipping_threshold ?? 0;
-  if (threshold > 0 && subtotal >= threshold) return { fee: 0, etaDays, source: "free" };
-  if (method === "stopdesk" && zone?.stopdesk_fee != null) {
-    return { fee: zone.stopdesk_fee, etaDays, source: "zone" };
+  if (!zone) return { fee: 0, etaDays, source: "unavailable", available: false };
+  if (method === "stopdesk") {
+    if (zone.stopdesk_fee == null) {
+      return { fee: 0, etaDays, source: "unavailable", available: false };
+    }
+    return { fee: zone.stopdesk_fee, etaDays, source: "packers", available: true };
   }
-  if (zone) return { fee: zone.fee, etaDays, source: "zone" };
-  return { fee: settings?.delivery_fee_flat ?? 0, etaDays, source: "flat" };
+  return { fee: zone.fee, etaDays, source: "packers", available: true };
 }
 
-/** The pickup price for a wilaya, or null where the owner does not offer pickup. */
+/** Packers Stop Desk price for a wilaya, or null where Packers does not offer it. */
 export function pickupFee(zones: DeliveryZone[], wilaya: string | null): number | null {
   return zones.find((z) => z.wilaya === wilaya)?.stopdesk_fee ?? null;
 }
 
+/** Admin-only helper retained for the Packers synchronization workflow. */
 export async function upsertZone(zone: {
   wilaya: string;
   fee: number;
