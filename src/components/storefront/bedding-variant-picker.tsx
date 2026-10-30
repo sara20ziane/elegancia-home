@@ -90,7 +90,7 @@ export function BeddingVariantPicker({
         }
       />
       <ChoiceRow
-        label="Dimension du matelas"
+        label="Taille"
         selected={choice.mattress}
         options={mattresses}
         onSelect={(mattress) =>
@@ -110,13 +110,8 @@ export function BeddingVariantDetails({ variant }: { variant: CatalogueVariant |
   if (!variant) return null;
 
   const dimensions = [
-    ["Dimension du matelas", variant.size],
-    [
-      "Drap-housse",
-      variant.fitted_sheet_size && variant.fitted_sheet_size !== variant.size
-        ? variant.fitted_sheet_size
-        : null,
-    ],
+    ["Taille", variant.size],
+    ["Dimension du matelas", variant.fitted_sheet_size],
     ["Drap plat", variant.flat_sheet_size],
     ["Housse de couette", variant.duvet_cover_size],
   ].filter((entry): entry is [string, string] => Boolean(entry[1]));
