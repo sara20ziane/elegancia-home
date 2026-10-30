@@ -71,7 +71,26 @@ export function VariantEditor({
   });
 
   const [adding, setAdding] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [newDraft, setNewDraft] = useState<VariantDraft>(EMPTY_DRAFT);
+
+  const startBlank = () => {
+    setNewDraft(EMPTY_DRAFT);
+    setDuplicating(false);
+    setAdding(true);
+  };
+
+  const startDuplicate = (draft: VariantDraft) => {
+    setNewDraft({ ...draft, sku: "" });
+    setDuplicating(true);
+    setAdding(true);
+    requestAnimationFrame(() => {
+      document.getElementById("new-configuration")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -84,13 +103,27 @@ export function VariantEditor({
             onSave={(draft, is_active) =>
               save.mutate({ id: variant.id, draft, is_active, sort_order: variant.sort_order })
             }
+            onDuplicate={startDuplicate}
             onDelete={() => remove.mutate(variant.id)}
           />
         ))}
       </ul>
 
       {adding ? (
-        <div className="flex flex-col gap-3 rounded-[16px] border border-primary/40 bg-primary/5 p-4">
+        <div
+          id="new-configuration"
+          className="flex scroll-mt-4 flex-col gap-3 rounded-[16px] border border-primary/40 bg-primary/5 p-4"
+        >
+          <div>
+            <p className="font-medium text-on-surface">
+              {duplicating ? "Configuration dupliquée" : "Nouvelle configuration"}
+            </p>
+            {duplicating && (
+              <p className="mt-1 text-xs text-on-surface-muted">
+                Modifie seulement les champs qui changent, puis enregistre. Le SKU a été vidé pour éviter un doublon.
+              </p>
+            )}
+          </div>
           <DraftFields draft={newDraft} onChange={setNewDraft} />
           <div className="flex gap-2">
             <Button
@@ -99,27 +132,31 @@ export function VariantEditor({
               onClick={() => {
                 save.mutate({ draft: newDraft, is_active: true, sort_order: variants.length });
                 setNewDraft(EMPTY_DRAFT);
+                setDuplicating(false);
                 setAdding(false);
               }}
             >
               <Check size={15} aria-hidden="true" />
-              {t("common.add")}
+              {duplicating ? "Enregistrer la copie" : t("common.add")}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setAdding(false);
+                setDuplicating(false);
+                setNewDraft(EMPTY_DRAFT);
+              }}
+            >
               <X size={15} aria-hidden="true" />
               {t("common.cancel")}
             </Button>
           </div>
         </div>
       ) : (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="self-start"
-          onClick={() => setAdding(true)}
-        >
+        <Button variant="secondary" size="sm" className="self-start" onClick={startBlank}>
           <Plus size={15} aria-hidden="true" />
-          Ajouter une configuration
+          Ajouter une configuration vierge
         </Button>
       )}
     </div>
