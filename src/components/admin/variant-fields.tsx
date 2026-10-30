@@ -6,6 +6,7 @@ import type { AdminVariant } from "@/lib/admin-products";
 /**
  * Elegancia variants describe a sellable bedding configuration:
  * fabric + set + number of pieces + mattress dimensions, with its own price and stock.
+ * Piece count and mattress dimensions are intentionally independent.
  * Legacy colour fields are kept so older OpenStore data remains compatible.
  */
 export type VariantDraft = {
@@ -83,12 +84,6 @@ export function DraftFields({
   const setTypeListId = `${listId}-set-types`;
   const set = <K extends keyof VariantDraft>(key: K, value: VariantDraft[K]) =>
     onChange({ ...draft, [key]: value });
-  const setPieceCount = (value: string) =>
-    onChange({
-      ...draft,
-      piece_count: value,
-      ...(value === "3" ? { size: "90 × 190 cm" } : {}),
-    });
 
   return (
     <div className="flex flex-col gap-5">
@@ -132,23 +127,23 @@ export function DraftFields({
             </datalist>
           </Field>
 
-          <Field label="Nombre de pièces" hint="3 pièces = 1 place">
+          <Field label="Nombre de pièces" hint="Indépendant de la dimension du matelas">
             <Input
               type="number"
               min={1}
               value={draft.piece_count}
-              onChange={(e) => setPieceCount(e.target.value)}
+              onChange={(e) => set("piece_count", e.target.value)}
               placeholder="3"
               dir="ltr"
               className="font-mono"
             />
           </Field>
 
-          <Field label="Dimension du matelas (drap-housse)" hint="Ex. 90 × 190 cm">
+          <Field label="Dimension du matelas" hint="Ex. 90 × 190 cm, 160 × 190 cm, 180 × 200 cm">
             <Input
               value={draft.size}
               onChange={(e) => set("size", e.target.value)}
-              placeholder="90 × 190 cm"
+              placeholder="160 × 190 cm"
               maxLength={30}
             />
           </Field>
@@ -213,7 +208,7 @@ export function DraftFields({
             <Input
               value={draft.fitted_sheet_size}
               onChange={(e) => set("fitted_sheet_size", e.target.value)}
-              placeholder="90 × 190 cm"
+              placeholder="160 × 190 cm"
               maxLength={40}
             />
           </Field>
