@@ -15,10 +15,17 @@ export type PackersRateSyncResult =
   | { ok: true; count: number }
   | { ok: false; error: string };
 
+export type PackersStopDeskInfo = {
+  commune: string;
+  zipCode: string | null;
+  label: string;
+};
+
 export type PackersStopDeskResult = {
   configured: boolean;
   wilayaCode: number | null;
   communes: string[];
+  stopDesks: PackersStopDeskInfo[];
 };
 
 function userClient(accessToken: string) {
@@ -137,21 +144,28 @@ export async function runListPackersStopDeskCommunes(
 ): Promise<PackersStopDeskResult> {
   const config = readPackersConfig();
   const wilayaCode = resolveWilayaCode(wilaya);
-  if (!config) return { configured: false, wilayaCode, communes: [] };
-  if (!wilayaCode) return { configured: true, wilayaCode: null, communes: [] };
+  if (!config) return { configured: false, wilayaCode, communes: [], stopDesks: [] };
+  if (!wilayaCode) return { configured: true, wilayaCode: null, communes: [], stopDesks: [] };
 
   try {
     const communes = await createPackersClient(config).getCommunes(wilayaCode);
+    const stopDesks = communes
+      .filter((commune) => commune.hasStopDesk)
+      .map((commune) => ({
+        commune: commune.name,
+        zipCode: commune.zipCode,
+        label: `Packers Stop Desk · ${commune.name}`,
+      }))
+      .sort((a, b) => a.commune.localeCompare(b.commune, "fr"));
+
     return {
       configured: true,
       wilayaCode,
-      communes: communes
-        .filter((commune) => commune.hasStopDesk)
-        .map((commune) => commune.name)
-        .sort((a, b) => a.localeCompare(b, "fr")),
+      communes: stopDesks.map((desk) => desk.commune),
+      stopDesks,
     };
   } catch {
-    return { configured: true, wilayaCode, communes: [] };
+    return { configured: true, wilayaCode, communes: [], stopDesks: [] };
   }
 }
 

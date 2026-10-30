@@ -69,7 +69,7 @@ function CheckoutPage() {
       return;
     }
     if (form.delivery_method === "stopdesk" && !form.stopdesk_name) {
-      setError("Choisis une commune Stop Desk proposée par Packers.");
+      setError("Le Stop Desk n’est pas disponible pour la commune sélectionnée.");
       return;
     }
 
@@ -124,6 +124,7 @@ function CheckoutPage() {
             )}
             <DeliveryChoice
               wilaya={form.wilaya}
+              commune={form.commune}
               homeFee={homeDelivery.fee}
               pickupFee={pickup}
               method={form.delivery_method}
