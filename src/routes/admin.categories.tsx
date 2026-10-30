@@ -23,21 +23,18 @@ export const Route = createFileRoute("/admin/categories")({
 });
 
 const ELEGANCIA_PRESETS = [
-  { fr: "Parures de lit", ar: "أطقم السرير" },
-  { fr: "Draps", ar: "الشراشف" },
-  { fr: "Housses de couette", ar: "أغطية اللحاف" },
-  { fr: "Couettes", ar: "الألحفة" },
-  { fr: "Oreillers", ar: "الوسائد" },
-  { fr: "Protège-matelas", ar: "واقيات المراتب" },
-  { fr: "Plaids", ar: "البطانيات الخفيفة" },
-  { fr: "Linge de maison", ar: "مفروشات المنزل" },
+  { fr: "Parure de drap", ar: "أطقم الشراشف" },
+  { fr: "Parure housse de couette", ar: "أطقم أغطية اللحاف" },
+  { fr: "Plaid", ar: "بطانيات خفيفة" },
+  { fr: "Taies d’oreillers", ar: "أغطية الوسائد" },
+  { fr: "Jetées", ar: "مفارش السرير" },
 ] as const;
 
 const COPY = {
   fr: {
     title: "Catégories de la boutique",
     intro:
-      "Organise les modèles Elegancia comme les clientes les cherchent. L’ordre défini ici est aussi celui utilisé dans la boutique.",
+      "Organise les modèles Elegancia comme les clientes les cherchent. Un même modèle peut appartenir à plusieurs catégories.",
     createTitle: "Ajouter une catégorie",
     arabic: "Nom arabe",
     french: "Nom français",
@@ -52,7 +49,7 @@ const COPY = {
   en: {
     title: "Store categories",
     intro:
-      "Organise Elegancia models the way customers browse them. The order here is also used in the storefront.",
+      "Organise Elegancia models the way customers browse them. One model can belong to several categories.",
     createTitle: "Add a category",
     arabic: "Arabic name",
     french: "French name",
@@ -67,7 +64,7 @@ const COPY = {
   ar: {
     title: "فئات المتجر",
     intro:
-      "رتّبي موديلات Elegancia حسب طريقة بحث الزبونات. الترتيب هنا هو نفسه الذي يظهر في المتجر.",
+      "رتّبي موديلات Elegancia حسب طريقة بحث الزبونات. يمكن أن ينتمي نفس الموديل إلى أكثر من فئة.",
     createTitle: "إضافة فئة",
     arabic: "الاسم بالعربية",
     french: "الاسم بالفرنسية",
@@ -137,10 +134,10 @@ function CategoriesPage() {
   const confirmDelete = (category: AdminCategory) => {
     const message =
       locale === "ar"
-        ? `هذه الفئة مرتبطة بـ ${category.product_count} موديل. حذفها سيترك هذه الموديلات بدون فئة. متابعة؟`
+        ? `هذه الفئة مرتبطة بـ ${category.product_count} موديل. حذفها سيزيل هذه الفئة فقط من الموديلات المرتبطة بها. متابعة؟`
         : locale === "en"
-          ? `This category contains ${category.product_count} model(s). Deleting it will leave them uncategorised. Continue?`
-          : `Cette catégorie contient ${category.product_count} modèle(s). Sa suppression laissera ces modèles sans catégorie. Continuer ?`;
+          ? `This category is linked to ${category.product_count} model(s). Deleting it only removes this category from those models. Continue?`
+          : `Cette catégorie est liée à ${category.product_count} modèle(s). Sa suppression retirera seulement cette catégorie de ces modèles. Continuer ?`;
     if (category.product_count === 0 || window.confirm(message)) remove.mutate(category.id);
   };
 
@@ -181,7 +178,7 @@ function CategoriesPage() {
                 dir="rtl"
                 required
                 minLength={2}
-                placeholder="مثال: أطقم السرير"
+                placeholder="مثال: أطقم الشراشف"
               />
             </Field>
             <Field label={c.french} hint={c.frenchHint}>
@@ -189,7 +186,7 @@ function CategoriesPage() {
                 value={nameFr}
                 onChange={(e) => setNameFr(e.target.value)}
                 dir="ltr"
-                placeholder="Ex. Parures de lit"
+                placeholder="Ex. Parure de drap"
               />
             </Field>
             <Button type="submit" disabled={busy || name.trim().length < 2}>
