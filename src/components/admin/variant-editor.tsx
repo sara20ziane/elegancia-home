@@ -11,8 +11,8 @@ import { DraftFields, EMPTY_DRAFT, type VariantDraft } from "./variant-fields";
 /**
  * Variant editor.
  *
- * Owns the add/remove/save mutations and delegates the presentation of each row
- * to `VariantRow`, so this file stays readable as the number of fields grows.
+ * For Elegancia, one variant is one sellable bedding configuration: fabric,
+ * set type, piece count and bed size determine the price and stock.
  */
 export function VariantEditor({
   productId,
@@ -46,6 +46,14 @@ export function VariantEditor({
         compare_at_price: Number(input.draft.compare_at_price) || null,
         stock: Number(input.draft.stock) || 0,
         weight_grams: input.draft.weight_grams ? Number(input.draft.weight_grams) : null,
+        fabric: input.draft.fabric.trim() || null,
+        fabric_origin: input.draft.fabric_origin.trim() || null,
+        set_type: input.draft.set_type.trim() || null,
+        piece_count: input.draft.piece_count ? Number(input.draft.piece_count) : null,
+        composition: input.draft.composition.trim() || null,
+        flat_sheet_size: input.draft.flat_sheet_size.trim() || null,
+        fitted_sheet_size: input.draft.fitted_sheet_size.trim() || null,
+        duvet_cover_size: input.draft.duvet_cover_size.trim() || null,
         sort_order: input.sort_order,
         is_active: input.is_active,
       }),
@@ -111,7 +119,7 @@ export function VariantEditor({
           onClick={() => setAdding(true)}
         >
           <Plus size={15} aria-hidden="true" />
-          {t("common.add")}
+          Ajouter une configuration
         </Button>
       )}
     </div>
