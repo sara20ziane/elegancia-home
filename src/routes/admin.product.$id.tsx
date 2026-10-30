@@ -7,7 +7,6 @@ import { VariantEditor } from "@/components/admin/variant-editor";
 import { ProductPhotos } from "@/components/admin/product-photos";
 import { ProductFieldsCard, type ProductDraft } from "@/components/admin/product-fields";
 import { PackBuilder } from "@/components/admin/pack-builder";
-import { SizeGuideEditor } from "@/components/admin/size-guide-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -148,8 +147,6 @@ function ProductEditPage() {
           </CardBody>
         </Card>
       )}
-
-      <SizeGuideEditor productId={id} />
     </div>
   );
 }
