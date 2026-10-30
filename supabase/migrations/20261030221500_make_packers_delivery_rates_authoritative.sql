@@ -41,6 +41,7 @@ $$;
 
 update public.store_settings
    set free_shipping_threshold = 0,
+       delivery_fee_flat = 0,
        guepex_from_wilaya = 'Alger',
        updated_at = now()
  where id = 1;
