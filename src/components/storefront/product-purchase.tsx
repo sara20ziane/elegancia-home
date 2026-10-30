@@ -8,11 +8,6 @@ import { waLink } from "@/lib/whatsapp";
 import { saleOf } from "@/lib/sale";
 import { Button } from "@/components/ui/button";
 
-/**
- * The parts of a product page that actually sell something: stock, variant
- * choice, quantity, add to cart and the WhatsApp order path.
- */
-
 function variantLabel(variant: CatalogueVariant): string {
   const bedding = Boolean(variant.fabric || variant.set_type || variant.piece_count !== null);
   const parts = bedding
@@ -96,9 +91,6 @@ export function AddToCart({
   const { add } = useCart();
   const { data: settings } = useStoreSettings();
 
-  // Read from state rather than `window` during render so the server and the
-  // first client render agree. An empty value on first paint is filtered out of
-  // the message below.
   const [pageUrl, setPageUrl] = useState("");
   useEffect(() => setPageUrl(window.location.href), []);
 
@@ -123,6 +115,7 @@ export function AddToCart({
         slug: product.slug,
         name,
         variantLabel: variantLabel(selected),
+        setType: selected.set_type,
         unitPrice: selected.price,
         imageUrl: images[0] ?? null,
       },
