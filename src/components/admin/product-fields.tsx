@@ -1,4 +1,6 @@
+import { Save } from "lucide-react";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n-context";
 import { localized } from "@/lib/i18n";
@@ -21,6 +23,7 @@ const fieldLabels = {
     descriptionFr: "Description en français",
     categories: "Catégories",
     categoriesHint: "Un même modèle peut apparaître dans plusieurs catégories.",
+    save: "Enregistrer les informations",
   },
   ar: {
     nameAr: "الاسم بالعربية",
@@ -29,6 +32,7 @@ const fieldLabels = {
     descriptionFr: "الوصف بالفرنسية",
     categories: "الفئات",
     categoriesHint: "يمكن أن يظهر نفس الموديل في أكثر من فئة.",
+    save: "حفظ معلومات المنتج",
   },
   en: {
     nameAr: "Name in Arabic",
@@ -37,6 +41,7 @@ const fieldLabels = {
     descriptionFr: "Description in French",
     categories: "Categories",
     categoriesHint: "The same model can appear in several categories.",
+    save: "Save product details",
   },
 } as const;
 
@@ -45,11 +50,15 @@ export function ProductFieldsCard({
   set,
   status,
   onStatusChange,
+  onSave,
+  saving,
 }: {
   draft: ProductDraft;
   set: <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) => void;
   status: string;
   onStatusChange: (status: AdminProduct["status"]) => void;
+  onSave: () => void;
+  saving: boolean;
 }) {
   const { t, locale } = useI18n();
   const { data: categories } = useCategories();
@@ -151,6 +160,13 @@ export function ProductFieldsCard({
             <option value="archived">{t("common.archived")}</option>
           </Select>
         </Field>
+
+        <div className="flex justify-end sm:col-span-2">
+          <Button disabled={saving || !draft.name.trim()} onClick={onSave}>
+            <Save size={16} aria-hidden="true" />
+            {saving ? t("common.saving") : labels.save}
+          </Button>
+        </div>
       </CardBody>
     </Card>
   );
