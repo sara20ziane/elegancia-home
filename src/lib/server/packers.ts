@@ -35,6 +35,13 @@ export type PackersCreateOrderResult = {
   [key: string]: unknown;
 };
 
+export type PackersCommune = {
+  name: string;
+  wilayaId: number;
+  zipCode: string | null;
+  hasStopDesk: boolean;
+};
+
 export function readPackersConfig(): PackersConfig | null {
   const token = process.env.PACKERS_API_TOKEN?.trim();
   if (!token) return null;
@@ -70,9 +77,7 @@ export function createPackersClient(config: PackersConfig) {
     const body = await safeJson(response);
     if (!response.ok) {
       const detail = extractMessage(body);
-      throw new Error(
-        detail ? `Packers: ${detail}` : `Packers API error ${response.status}.`,
-      );
+      throw new Error(detail ? `Packers: ${detail}` : `Packers API error ${response.status}.`);
     }
     return body as T;
   }
@@ -116,7 +121,7 @@ export function createPackersClient(config: PackersConfig) {
           ask_collection: askCollection ? 1 : 0,
         },
       });
-      return isSuccess(result);
+      return result?.success === true;
     },
 
     getOrder(tracking: string) {
@@ -128,18 +133,32 @@ export function createPackersClient(config: PackersConfig) {
     getFees() {
       return request<Record<string, unknown>>("api/v1/get/fees");
     },
+
+    async getCommunes(wilayaId: number): Promise<PackersCommune[]> {
+      const response = await request<unknown>("api/v1/get/communes", {
+        params: { wilaya_id: wilayaId },
+      });
+      const rows = Array.isArray(response)
+        ? response
+        : response && typeof response === "object"
+          ? Object.values(response as Record<string, unknown>)
+          : [];
+
+      return rows
+        .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === "object")
+        .map((row) => ({
+          name: String(row.nom ?? row.name ?? ""),
+          wilayaId: Number(row.wilaya_id ?? wilayaId),
+          zipCode: row.code_postal != null ? String(row.code_postal) : null,
+          hasStopDesk: toBool01(row.has_stop_desk),
+        }))
+        .filter((row) => row.name.length > 0);
+    },
   };
 }
 
-function isSuccess(value: Record<string, unknown> | null | undefined): boolean {
-  if (!value) return false;
-  if (value.success === true) return true;
-  if (value.validated === true) return true;
-  if (value.status === "success") return true;
-  if (value.valid === "success") return true;
-  // Some EcoTrack instances return a success message without a boolean.
-  const message = String(value.message ?? "").toLowerCase();
-  return message.includes("success") || message.includes("valid");
+function toBool01(value: unknown): boolean {
+  return value === true || value === 1 || value === "1" || value === "true";
 }
 
 async function safeJson(response: Response): Promise<unknown> {
