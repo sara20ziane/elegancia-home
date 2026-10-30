@@ -107,10 +107,13 @@ export function AddressFields({
         <Field
           label={t("checkout.commune")}
           hint={communes.length > 0 ? t("checkout.communeHint") : undefined}
+          required
         >
           <Input
             value={form.commune}
             onChange={(e) => set("commune", e.target.value)}
+            required
+            minLength={2}
             maxLength={80}
             list="commune-options"
             autoComplete="address-level2"

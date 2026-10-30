@@ -2,8 +2,13 @@ import { Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { useStoreSettings } from "@/lib/queries";
 import { SocialLinks } from "./social-links";
-import { formatDzd } from "@/lib/format";
 import { waLink } from "@/lib/whatsapp";
+
+const deliveryNotice = {
+  fr: "Frais de livraison selon la wilaya et le mode choisi",
+  en: "Delivery fees depend on the wilaya and delivery method",
+  ar: "مصاريف التوصيل حسب الولاية وطريقة التوصيل",
+} as const;
 
 /**
  * Storefront footer.
@@ -114,9 +119,7 @@ export function SiteFooter() {
 
       <div className="container-page flex flex-wrap items-center justify-between gap-3 border-t border-outline py-5 text-xs text-on-surface-muted">
         <p>
-          {t("checkout.codTitle")} · {t("cart.delivery")}{" "}
-          {settings ? formatDzd(settings.delivery_fee_flat, locale) : "—"} ·{" "}
-          {t("admin.settings.returnsDays")} {settings?.returns_days ?? 0}
+          {t("checkout.codTitle")} · {deliveryNotice[locale]}
         </p>
       </div>
 
