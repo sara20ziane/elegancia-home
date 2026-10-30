@@ -15,6 +15,8 @@ export type CartItem = {
   slug: string;
   name: string;
   variantLabel: string | null;
+  /** Used only to preview Elegancia's free-delivery promotion in the cart/checkout. */
+  setType?: string | null;
   unitPrice: number;
   imageUrl: string | null;
   quantity: number;
@@ -72,8 +74,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Read after mount only: localStorage does not exist on the server and a
-  // pre-hydration read would mismatch.
   useEffect(() => {
     setItems(readCart());
     setReady(true);
@@ -90,7 +90,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return current.map((line) =>
           line.variantId === item.variantId
-            ? { ...line, quantity: Math.min(line.quantity + quantity, MAX_PER_LINE) }
+            ? { ...line, ...item, quantity: Math.min(line.quantity + quantity, MAX_PER_LINE) }
             : line,
         );
       }
