@@ -111,24 +111,14 @@ export async function runSyncPackersRates(input: {
       return { ok: false, error: "Packers n’a renvoyé aucun tarif de livraison." };
     }
 
-    const { error: clearError } = await auth.supabase.from("delivery_zones").delete().neq("wilaya", "");
-    if (clearError) return { ok: false, error: clearError.message };
-
-    const { error: upsertError } = await auth.supabase
-      .from("delivery_zones")
-      .upsert(rows, { onConflict: "wilaya" });
-    if (upsertError) return { ok: false, error: upsertError.message };
-
-    const { error: settingsError } = await auth.supabase
-      .from("store_settings")
-      .update({
-        delivery_wilayas: rows.map((row) => row.wilaya),
-        delivery_fee_flat: 0,
-        free_shipping_threshold: 0,
-        guepex_from_wilaya: "Alger",
-      })
-      .eq("id", 1);
-    if (settingsError) return { ok: false, error: settingsError.message };
+    // One database function owns the whole refresh transaction. If any row or
+    // settings update fails, Postgres rolls everything back and the previous
+    // delivery cache remains usable by checkout.
+    const { error: syncError } = await auth.supabase.rpc(
+      "sync_packers_delivery_rates" as never,
+      { p_rows: rows } as never,
+    );
+    if (syncError) return { ok: false, error: syncError.message };
 
     return { ok: true, count: rows.length };
   } catch (error) {
