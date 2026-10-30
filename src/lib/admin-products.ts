@@ -22,6 +22,14 @@ export type AdminVariant = {
   compare_at_price?: number | null;
   stock: number;
   weight_grams: number | null;
+  fabric: string | null;
+  fabric_origin: string | null;
+  set_type: string | null;
+  piece_count: number | null;
+  composition: string | null;
+  flat_sheet_size: string | null;
+  fitted_sheet_size: string | null;
+  duvet_cover_size: string | null;
   sort_order: number;
   is_active: boolean;
   variant_images: { id: string; url: string; alt: string | null; sort_order: number }[];
@@ -50,7 +58,8 @@ const ADMIN_SELECT = `
   categories ( slug, name ),
   product_variants (
     id, product_id, size, color_name, color_hex, sku, price, compare_at_price, stock,
-    weight_grams, sort_order, is_active,
+    weight_grams, fabric, fabric_origin, set_type, piece_count, composition,
+    flat_sheet_size, fitted_sheet_size, duvet_cover_size, sort_order, is_active,
     variant_images ( id, url, alt, sort_order )
   )
 `;
@@ -205,6 +214,14 @@ export type VariantInput = {
   compare_at_price?: number | null;
   stock: number;
   weight_grams: number | null;
+  fabric?: string | null;
+  fabric_origin?: string | null;
+  set_type?: string | null;
+  piece_count?: number | null;
+  composition?: string | null;
+  flat_sheet_size?: string | null;
+  fitted_sheet_size?: string | null;
+  duvet_cover_size?: string | null;
   sort_order: number;
   is_active: boolean;
 };
@@ -216,7 +233,7 @@ export async function upsertVariant(input: VariantInput): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Many variants in one request, for the colour × size generator. */
+/** Many variants in one request, for the legacy colour × size generator. */
 export async function insertVariants(
   productId: string,
   rows: Omit<VariantInput, "product_id" | "weight_grams">[],
