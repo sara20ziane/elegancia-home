@@ -97,7 +97,7 @@ export type PublicReview = {
 
 const PRODUCT_SELECT = `
   id, slug, name, name_fr, description, description_fr, kind, status, category_id, published_at,
-  categories ( slug, name, name_fr ),
+  categories:categories!products_category_id_fkey ( slug, name, name_fr ),
   product_variants (
     id, size, color_name, color_hex, sku, price, compare_at_price, stock,
     fabric, fabric_origin, set_type, piece_count, composition,
