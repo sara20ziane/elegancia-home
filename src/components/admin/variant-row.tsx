@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
 import type { AdminVariant } from "@/lib/admin-products";
-import { VariantImages } from "./variant-images";
 import { DraftFields, type VariantDraft, toDraft } from "./variant-fields";
 
 /**
- * One variant row: its fields, its active switch, its images, and its own save.
+ * One Elegancia configuration row.
  *
- * Each row saves independently so a failure on one row does not discard edits
- * already made on the others.
+ * Photos are managed once at model level. A configuration only carries the
+ * commercial choices that affect what is sold: fabric, set type, piece count,
+ * mattress dimension, price and stock.
  */
 export function VariantRow({
   variant,
@@ -42,13 +42,17 @@ export function VariantRow({
           <Save size={15} aria-hidden="true" />
           {t("common.save")}
         </Button>
-        <Button variant="ghost" size="sm" disabled={busy} onClick={onDelete} className="text-error">
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={busy}
+          onClick={onDelete}
+          className="text-error"
+        >
           <Trash2 size={15} aria-hidden="true" />
           {t("common.delete")}
         </Button>
       </div>
-
-      <VariantImages variant={variant} />
     </li>
   );
 }
