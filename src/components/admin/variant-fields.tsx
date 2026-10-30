@@ -5,7 +5,7 @@ import type { AdminVariant } from "@/lib/admin-products";
 
 /**
  * Elegancia variants describe a sellable bedding configuration:
- * fabric + set + number of pieces + bed size, with its own price and stock.
+ * fabric + set + number of pieces + mattress dimensions, with its own price and stock.
  * Legacy colour fields are kept so older OpenStore data remains compatible.
  */
 export type VariantDraft = {
@@ -81,9 +81,14 @@ export function DraftFields({
   const listId = useId();
   const fabricListId = `${listId}-fabrics`;
   const setTypeListId = `${listId}-set-types`;
-  const bedSizeListId = `${listId}-bed-sizes`;
   const set = <K extends keyof VariantDraft>(key: K, value: VariantDraft[K]) =>
     onChange({ ...draft, [key]: value });
+  const setPieceCount = (value: string) =>
+    onChange({
+      ...draft,
+      piece_count: value,
+      ...(value === "3" ? { size: "90 × 190 cm" } : {}),
+    });
 
   return (
     <div className="flex flex-col gap-5">
@@ -127,30 +132,25 @@ export function DraftFields({
             </datalist>
           </Field>
 
-          <Field label="Nombre de pièces">
+          <Field label="Nombre de pièces" hint="3 pièces = 1 place">
             <Input
               type="number"
               min={1}
               value={draft.piece_count}
-              onChange={(e) => set("piece_count", e.target.value)}
-              placeholder="6"
+              onChange={(e) => setPieceCount(e.target.value)}
+              placeholder="3"
               dir="ltr"
               className="font-mono"
             />
           </Field>
 
-          <Field label="Taille du lit" hint="Queen ou King">
+          <Field label="Dimension du matelas (drap-housse)" hint="Ex. 90 × 190 cm">
             <Input
-              list={bedSizeListId}
               value={draft.size}
               onChange={(e) => set("size", e.target.value)}
-              placeholder="Queen"
+              placeholder="90 × 190 cm"
               maxLength={30}
             />
-            <datalist id={bedSizeListId}>
-              <option value="Queen" />
-              <option value="King" />
-            </datalist>
           </Field>
 
           <Field label="Couleur / finition">
@@ -213,7 +213,7 @@ export function DraftFields({
             <Input
               value={draft.fitted_sheet_size}
               onChange={(e) => set("fitted_sheet_size", e.target.value)}
-              placeholder="160 × 190 cm"
+              placeholder="90 × 190 cm"
               maxLength={40}
             />
           </Field>
