@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Save, Trash2 } from "lucide-react";
+import { Copy, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
@@ -17,11 +17,13 @@ export function VariantRow({
   variant,
   busy,
   onSave,
+  onDuplicate,
   onDelete,
 }: {
   variant: AdminVariant;
   busy: boolean;
   onSave: (draft: VariantDraft, isActive: boolean) => void;
+  onDuplicate: (draft: VariantDraft) => void;
   onDelete: () => void;
 }) {
   const { t } = useI18n();
@@ -41,6 +43,15 @@ export function VariantRow({
         <Button size="sm" disabled={busy} onClick={() => onSave(draft, active)}>
           <Save size={15} aria-hidden="true" />
           {t("common.save")}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={busy}
+          onClick={() => onDuplicate(draft)}
+        >
+          <Copy size={15} aria-hidden="true" />
+          Dupliquer
         </Button>
         <Button
           variant="ghost"
