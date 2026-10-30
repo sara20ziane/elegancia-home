@@ -57,7 +57,7 @@ export type AdminProduct = {
 const ADMIN_SELECT = `
   id, slug, name, name_fr, description, description_fr, kind, status, category_id,
   published_at, created_at,
-  categories ( slug, name ),
+  categories:categories!products_category_id_fkey ( slug, name ),
   product_categories ( category_id ),
   product_variants (
     id, product_id, size, color_name, color_hex, sku, price, compare_at_price, stock,
