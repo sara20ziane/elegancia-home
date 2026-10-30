@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Gift } from "lucide-react";
 import { StoreLayout } from "@/components/storefront/store-layout";
 import {
   AddressFields,
@@ -43,12 +43,19 @@ function CheckoutPage() {
   }
   if (cart.items.length === 0) return <NothingToCheckOut title={t("cart.empty")} />;
 
+  const parureQuantity = cart.items.reduce((sum, line) => {
+    const marker = `${line.setType ?? ""} ${line.variantLabel ?? ""}`.toLowerCase();
+    const isParure = marker.includes("parure de drap") || marker.includes("parure housse de couette");
+    return isParure ? sum + line.quantity : sum;
+  }, 0);
+
   const delivery = resolveDelivery(
     settings ?? null,
     zones ?? [],
     form.wilaya || null,
     cart.subtotal,
     form.delivery_method,
+    parureQuantity,
   );
   const homeDelivery = resolveDelivery(
     settings ?? null,
@@ -56,8 +63,9 @@ function CheckoutPage() {
     form.wilaya || null,
     cart.subtotal,
     "home",
+    parureQuantity,
   );
-  const pickup = pickupFee(zones ?? [], form.wilaya || null);
+  const pickup = pickupFee(zones ?? [], form.wilaya || null, parureQuantity);
   const deliveryAvailable = !form.wilaya || delivery.available;
 
   const submit = async (event: React.FormEvent) => {
@@ -117,6 +125,21 @@ function CheckoutPage() {
               </p>
             )}
             <AddressFields form={form} onChange={setForm} />
+
+            <div className="flex items-start gap-3 rounded-[14px] border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+              <Gift size={18} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+              <div>
+                <p className="font-medium text-on-surface">Offre livraison Elegancia</p>
+                {parureQuantity >= 3 ? (
+                  <p className="mt-1 text-on-surface-muted">Livraison offerte à domicile ou en Stop Desk pour vos {parureQuantity} parures.</p>
+                ) : parureQuantity >= 2 ? (
+                  <p className="mt-1 text-on-surface-muted">Livraison Stop Desk offerte. Ajoutez encore 1 parure pour profiter aussi de la livraison à domicile gratuite.</p>
+                ) : (
+                  <p className="mt-1 text-on-surface-muted">2 parures achetées : Stop Desk offert · 3 parures achetées : livraison à domicile offerte.</p>
+                )}
+              </div>
+            </div>
+
             {form.wilaya && !homeDelivery.available && (
               <p className="rounded-[12px] border border-tertiary/30 bg-tertiary/10 px-4 py-3 text-sm text-tertiary">
                 Tarif Packers indisponible pour cette wilaya. La commande reste bloquée tant que les tarifs ne sont pas synchronisés.
