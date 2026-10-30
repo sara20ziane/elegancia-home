@@ -5,13 +5,12 @@ import { localized } from "@/lib/i18n";
 import { useCategories } from "@/lib/queries";
 import type { AdminProduct } from "@/lib/admin-products";
 
-/** The editable text fields of a product. */
 export type ProductDraft = {
   name: string;
   name_fr: string;
   description: string;
   description_fr: string;
-  category_id: string;
+  category_ids: string[];
 };
 
 const fieldLabels = {
@@ -20,18 +19,24 @@ const fieldLabels = {
     nameFr: "Nom en français",
     descriptionAr: "Description en arabe",
     descriptionFr: "Description en français",
+    categories: "Catégories",
+    categoriesHint: "Un même modèle peut apparaître dans plusieurs catégories.",
   },
   ar: {
     nameAr: "الاسم بالعربية",
     nameFr: "الاسم بالفرنسية",
     descriptionAr: "الوصف بالعربية",
     descriptionFr: "الوصف بالفرنسية",
+    categories: "الفئات",
+    categoriesHint: "يمكن أن يظهر نفس الموديل في أكثر من فئة.",
   },
   en: {
     nameAr: "Name in Arabic",
     nameFr: "Name in French",
     descriptionAr: "Description in Arabic",
     descriptionFr: "Description in French",
+    categories: "Categories",
+    categoriesHint: "The same model can appear in several categories.",
   },
 } as const;
 
@@ -49,6 +54,16 @@ export function ProductFieldsCard({
   const { t, locale } = useI18n();
   const { data: categories } = useCategories();
   const labels = fieldLabels[locale];
+
+  const toggleCategory = (categoryId: string) => {
+    const selected = draft.category_ids.includes(categoryId);
+    set(
+      "category_ids",
+      selected
+        ? draft.category_ids.filter((id) => id !== categoryId)
+        : [...draft.category_ids, categoryId],
+    );
+  };
 
   return (
     <Card>
@@ -91,24 +106,40 @@ export function ProductFieldsCard({
           />
         </Field>
 
-        <Field
-          label={t("common.category")}
-          hint={
-            categories && categories.length === 0 ? t("admin.products.noCategories") : undefined
-          }
-        >
-          <Select
-            value={draft.category_id}
-            onChange={(event) => set("category_id", event.target.value)}
+        <div className="sm:col-span-2">
+          <Field
+            label={labels.categories}
+            hint={
+              categories && categories.length === 0
+                ? t("admin.products.noCategories")
+                : labels.categoriesHint
+            }
           >
-            <option value="">{t("common.none")}</option>
-            {(categories ?? []).map((category) => (
-              <option key={category.id} value={category.id}>
-                {localized(locale, category.name, category.name_fr)}
-              </option>
-            ))}
-          </Select>
-        </Field>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {(categories ?? []).map((category) => {
+                const checked = draft.category_ids.includes(category.id);
+                return (
+                  <label
+                    key={category.id}
+                    className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-[12px] border px-3 py-2.5 text-sm transition-colors ${
+                      checked
+                        ? "border-primary bg-primary/5 text-on-surface"
+                        : "border-outline bg-surface hover:border-primary/60"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleCategory(category.id)}
+                      className="size-4 accent-[var(--primary)]"
+                    />
+                    <span>{localized(locale, category.name, category.name_fr)}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </Field>
+        </div>
 
         <Field label={t("common.status")}>
           <Select
