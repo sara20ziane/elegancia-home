@@ -13,7 +13,6 @@ import type { StoreSettings } from "./queries";
 export type DeliveryZone = {
   wilaya: string;
   fee: number;
-  /** Packers Stop Desk tariff. Null means Packers does not offer it for the wilaya. */
   stopdesk_fee: number | null;
   eta_days: number;
   is_active: boolean;
@@ -37,10 +36,13 @@ export function useDeliveryZones() {
   return useQuery(deliveryZonesQuery());
 }
 
+export function qualifiesForFreeDelivery(method: DeliveryMethod, parureQuantity: number): boolean {
+  return method === "stopdesk" ? parureQuantity >= 2 : parureQuantity >= 3;
+}
+
 /**
- * Fee and ETA from the last successful Packers synchronization.
- * No flat fallback and no free-shipping override are allowed: Packers is the
- * single source of truth for both home delivery and Stop Desk pricing.
+ * Base tariff always comes from Packers. Elegancia may then cover that fee as a
+ * commercial promotion: 2+ parures => free Stop Desk, 3+ parures => free home.
  */
 export function resolveDelivery(
   settings: StoreSettings | null,
@@ -48,25 +50,33 @@ export function resolveDelivery(
   wilaya: string | null,
   _subtotal: number,
   method: DeliveryMethod = "home",
-): { fee: number; etaDays: number; source: "packers" | "unavailable"; available: boolean } {
+  parureQuantity = 0,
+): { fee: number; etaDays: number; source: "packers" | "promotion" | "unavailable"; available: boolean } {
   const zone = wilaya ? zones.find((z) => z.wilaya === wilaya) : undefined;
   const etaDays = zone?.eta_days ?? settings?.delivery_eta_days ?? 3;
   if (!zone) return { fee: 0, etaDays, source: "unavailable", available: false };
-  if (method === "stopdesk") {
-    if (zone.stopdesk_fee == null) {
-      return { fee: 0, etaDays, source: "unavailable", available: false };
-    }
-    return { fee: zone.stopdesk_fee, etaDays, source: "packers", available: true };
+
+  const baseFee = method === "stopdesk" ? zone.stopdesk_fee : zone.fee;
+  if (baseFee == null) {
+    return { fee: 0, etaDays, source: "unavailable", available: false };
   }
-  return { fee: zone.fee, etaDays, source: "packers", available: true };
+  if (qualifiesForFreeDelivery(method, parureQuantity)) {
+    return { fee: 0, etaDays, source: "promotion", available: true };
+  }
+  return { fee: baseFee, etaDays, source: "packers", available: true };
 }
 
-/** Packers Stop Desk price for a wilaya, or null where Packers does not offer it. */
-export function pickupFee(zones: DeliveryZone[], wilaya: string | null): number | null {
-  return zones.find((z) => z.wilaya === wilaya)?.stopdesk_fee ?? null;
+/** Packers Stop Desk price for a wilaya, with Elegancia's offer applied. */
+export function pickupFee(
+  zones: DeliveryZone[],
+  wilaya: string | null,
+  parureQuantity = 0,
+): number | null {
+  const fee = zones.find((z) => z.wilaya === wilaya)?.stopdesk_fee ?? null;
+  if (fee == null) return null;
+  return parureQuantity >= 2 ? 0 : fee;
 }
 
-/** Admin-only helper retained for the Packers synchronization workflow. */
 export async function upsertZone(zone: {
   wilaya: string;
   fee: number;
