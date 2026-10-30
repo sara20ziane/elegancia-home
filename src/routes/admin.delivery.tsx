@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link2Off, Plus, Trash2, Truck } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle2, Link2Off, Plus, Trash2, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { WILAYAS } from "@/lib/wilayas";
 import { useStoreSettings } from "@/lib/queries";
 import { saveStoreSettings } from "@/lib/admin";
 import { deleteZone, upsertZone, useDeliveryZones, type DeliveryZone } from "@/lib/delivery";
+import { testPackersConnection } from "@/lib/server/packers-actions";
 
 export const Route = createFileRoute("/admin/delivery")({
   component: DeliveryPage,
@@ -46,6 +47,12 @@ function DeliveryPage() {
 function CarrierCard({ origin, flatFee }: { origin: string; flatFee: number }) {
   const { t, locale } = useI18n();
   const invalidate = useDeliveryInvalidation();
+  const connection = useQuery({
+    queryKey: ["packers_connection"] as const,
+    queryFn: () => testPackersConnection(),
+    staleTime: 60_000,
+    retry: false,
+  });
 
   const saveOrigin = useMutation({
     mutationFn: (value: string) => saveStoreSettings({ guepex_from_wilaya: value || null }),
@@ -53,22 +60,42 @@ function CarrierCard({ origin, flatFee }: { origin: string; flatFee: number }) {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const connected = connection.data?.connected === true;
+  const configured = connection.data?.configured === true;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Truck size={18} className="text-primary" aria-hidden="true" />
-          {t("admin.delivery.carrier")}
+          Packers · EcoTrack
         </CardTitle>
-        <Badge tone="neutral">
-          <Link2Off size={12} aria-hidden="true" />
-          {t("admin.delivery.notConfigured")}
-        </Badge>
+        {connected ? (
+          <Badge tone="positive">
+            <CheckCircle2 size={12} aria-hidden="true" />
+            Connecté
+          </Badge>
+        ) : (
+          <Badge tone="neutral">
+            <Link2Off size={12} aria-hidden="true" />
+            {connection.isPending ? "Vérification…" : configured ? "Token invalide" : "Non connecté"}
+          </Badge>
+        )}
       </CardHeader>
       <CardBody className="flex flex-col gap-4">
+        {!connected && (
+          <div className="rounded-[12px] border border-outline bg-surface-mid px-4 py-3 text-sm">
+            <p className="font-medium">Connexion Packers requise</p>
+            <p className="mt-1 text-xs text-on-surface-muted">
+              Ajoute le token API de ton compte Packers dans Vercel sous le nom
+              <span className="mx-1 font-mono">PACKERS_API_TOKEN</span>, puis redéploie le site.
+            </p>
+          </div>
+        )}
+
         <Field
           label={t("admin.delivery.origin")}
-          hint={t("admin.delivery.originHint")}
+          hint="Wilaya de départ de tes colis."
           className="max-w-md"
         >
           <Select value={origin} onChange={(event) => saveOrigin.mutate(event.target.value)}>
@@ -80,6 +107,10 @@ function CarrierCard({ origin, flatFee }: { origin: string; flatFee: number }) {
             ))}
           </Select>
         </Field>
+        <p className="text-xs text-on-surface-muted">
+          Les tarifs affichés au checkout restent ceux de tes zones de livraison Elegancia.
+          Une synchronisation automatique avec les tarifs Packers pourra être activée après la connexion.
+        </p>
         <p className="text-xs text-on-surface-muted">
           {t("admin.delivery.flatNote", { fee: flatFee })}
         </p>
@@ -127,7 +158,6 @@ function ZoneForm() {
       upsertZone({
         wilaya,
         fee: Number(fee) || 0,
-        // Empty means pickup is not offered here, which is different from free.
         stopdesk_fee: pickup.trim() === "" ? null : Math.max(0, Number(pickup) || 0),
         eta_days: Number(eta) || 1,
       }),
