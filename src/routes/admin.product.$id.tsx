@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, LoadingState } from "@/components/ui/feedback";
 import { useI18n } from "@/lib/i18n-context";
-import { updateProduct, useAdminProduct } from "@/lib/admin-products";
+import { setProductCategories, updateProduct, useAdminProduct } from "@/lib/admin-products";
 import { useProductPicker } from "@/lib/product-picker";
 
 export const Route = createFileRoute("/admin/product/$id")({
@@ -33,12 +33,18 @@ function ProductEditPage() {
 
   useEffect(() => {
     if (product && !draft) {
+      const linkedCategories = product.product_categories.map((link) => link.category_id);
       setDraft({
         name: product.name,
         name_fr: product.name_fr ?? "",
         description: product.description ?? "",
         description_fr: product.description_fr ?? "",
-        category_id: product.category_id ?? "",
+        category_ids:
+          linkedCategories.length > 0
+            ? linkedCategories
+            : product.category_id
+              ? [product.category_id]
+              : [],
       });
     }
   }, [product, draft]);
@@ -49,6 +55,8 @@ function ProductEditPage() {
       ["admin_products"],
       ["product", product?.slug],
       ["products"],
+      ["categories"],
+      ["admin_categories"],
     ]) {
       void queryClient.invalidateQueries({ queryKey: key });
     }
@@ -56,6 +64,23 @@ function ProductEditPage() {
 
   const save = useMutation({
     mutationFn: (patch: Patch) => updateProduct(id, patch),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t("common.save"));
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const saveDetails = useMutation({
+    mutationFn: async (values: ProductDraft) => {
+      await updateProduct(id, {
+        name: values.name.trim(),
+        name_fr: values.name_fr.trim() || null,
+        description: values.description.trim() || null,
+        description_fr: values.description_fr.trim() || null,
+      });
+      await setProductCategories(id, values.category_ids);
+    },
     onSuccess: () => {
       invalidate();
       toast.success(t("common.save"));
@@ -72,6 +97,7 @@ function ProductEditPage() {
 
   const publishable = product.product_variants.length > 0;
   const published = product.status === "published";
+  const busy = save.isPending || saveDetails.isPending;
 
   const togglePublish = () =>
     save.mutate({
@@ -79,14 +105,7 @@ function ProductEditPage() {
       ...(published || product.published_at ? {} : { published_at: new Date().toISOString() }),
     });
 
-  const saveFields = () =>
-    save.mutate({
-      name: draft.name.trim(),
-      name_fr: draft.name_fr.trim() || null,
-      description: draft.description.trim() || null,
-      description_fr: draft.description_fr.trim() || null,
-      category_id: draft.category_id.trim() || null,
-    });
+  const saveFields = () => saveDetails.mutate(draft);
 
   return (
     <div className="flex flex-col gap-6">
@@ -95,7 +114,7 @@ function ProductEditPage() {
         slug={product.slug}
         published={published}
         publishable={publishable}
-        busy={save.isPending}
+        busy={busy}
         onTogglePublish={togglePublish}
         onSaveFields={saveFields}
       />

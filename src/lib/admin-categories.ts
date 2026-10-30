@@ -19,18 +19,20 @@ export type AdminCategory = {
   product_count: number;
 };
 
-type Row = Omit<AdminCategory, "product_count"> & { products: { count: number }[] };
+type Row = Omit<AdminCategory, "product_count"> & {
+  product_categories: { count: number }[];
+};
 
 async function fetchAdminCategories(): Promise<AdminCategory[]> {
   const { data, error } = await getSupabase()
     .from("categories")
-    .select("id, slug, name, name_fr, sort_order, is_active, products(count)")
+    .select("id, slug, name, name_fr, sort_order, is_active, product_categories(count)")
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
   if (error) throw new Error(error.message);
-  return ((data ?? []) as unknown as Row[]).map(({ products, ...category }) => ({
+  return ((data ?? []) as unknown as Row[]).map(({ product_categories, ...category }) => ({
     ...category,
-    product_count: products[0]?.count ?? 0,
+    product_count: product_categories[0]?.count ?? 0,
   }));
 }
 
@@ -40,11 +42,6 @@ export function useAdminCategories() {
   return useQuery(queryOptions({ queryKey: ADMIN_CATEGORIES_KEY, queryFn: fetchAdminCategories }));
 }
 
-/**
- * A slug from the Latin name if there is one: an Arabic slug works but is
- * shared as an unreadable run of percent-escapes. A short random tail resolves
- * a clash with an existing slug.
- */
 function slugFor(name: string, nameFr: string | null, attempt: number): string {
   const base = slugify(nameFr ?? "") || slugify(name) || "category";
   return attempt === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
@@ -60,7 +57,6 @@ export async function createCategory(input: {
       .from("categories")
       .insert({ ...input, slug: slugFor(input.name, input.name_fr, attempt) });
     if (!error) return;
-    // 23505 is a unique violation: the slug is taken, so try a suffixed one.
     if (error.code !== "23505") throw new Error(error.message);
   }
   throw new Error("Could not find a free web address for this category. Try another name.");
@@ -74,7 +70,7 @@ export async function updateCategory(
   if (error) throw new Error(error.message);
 }
 
-/** Products in a deleted category become uncategorised, not deleted. */
+/** Deleting a category removes only its model/category links, never the models. */
 export async function deleteCategory(id: string): Promise<void> {
   const { error } = await getSupabase().from("categories").delete().eq("id", id);
   if (error) throw new Error(error.message);
