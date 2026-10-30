@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Field, Input } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
 import type { AdminVariant } from "@/lib/admin-products";
@@ -77,6 +78,10 @@ export function DraftFields({
   onChange: (next: VariantDraft) => void;
 }) {
   const { t } = useI18n();
+  const listId = useId();
+  const fabricListId = `${listId}-fabrics`;
+  const setTypeListId = `${listId}-set-types`;
+  const bedSizeListId = `${listId}-bed-sizes`;
   const set = <K extends keyof VariantDraft>(key: K, value: VariantDraft[K]) =>
     onChange({ ...draft, [key]: value });
 
@@ -87,13 +92,13 @@ export function DraftFields({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Tissu" required>
             <Input
-              list="elegancia-fabrics"
+              list={fabricListId}
               value={draft.fabric}
               onChange={(e) => set("fabric", e.target.value)}
               placeholder="100 % coton"
               maxLength={60}
             />
-            <datalist id="elegancia-fabrics">
+            <datalist id={fabricListId}>
               <option value="100 % coton" />
               <option value="Polyester" />
             </datalist>
@@ -110,13 +115,13 @@ export function DraftFields({
 
           <Field label="Type de parure" required>
             <Input
-              list="elegancia-set-types"
+              list={setTypeListId}
               value={draft.set_type}
               onChange={(e) => set("set_type", e.target.value)}
               placeholder="Parure de drap"
               maxLength={80}
             />
-            <datalist id="elegancia-set-types">
+            <datalist id={setTypeListId}>
               <option value="Parure de drap" />
               <option value="Parure housse de couette" />
             </datalist>
@@ -136,13 +141,13 @@ export function DraftFields({
 
           <Field label="Taille du lit" hint="Queen ou King">
             <Input
-              list="elegancia-bed-sizes"
+              list={bedSizeListId}
               value={draft.size}
               onChange={(e) => set("size", e.target.value)}
               placeholder="Queen"
               maxLength={30}
             />
-            <datalist id="elegancia-bed-sizes">
+            <datalist id={bedSizeListId}>
               <option value="Queen" />
               <option value="King" />
             </datalist>
