@@ -4,11 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import { VariantEditor } from "@/components/admin/variant-editor";
-import { VariantGenerator } from "@/components/admin/variant-generator";
-import { ColourPhotos } from "@/components/admin/colour-photos";
+import { ProductPhotos } from "@/components/admin/product-photos";
 import { ProductFieldsCard, type ProductDraft } from "@/components/admin/product-fields";
 import { PackBuilder } from "@/components/admin/pack-builder";
-import { SizeGuideEditor } from "@/components/admin/size-guide-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,13 +26,11 @@ function ProductEditPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { data: product, isPending } = useAdminProduct(id);
-  // Variants for the pack contents picker. A narrow query, not the admin list.
   const { data: allProducts } = useProductPicker();
   const allVariants = (allProducts ?? []).flatMap((p) => p.product_variants);
 
   const [draft, setDraft] = useState<ProductDraft | null>(null);
 
-  // Seed once the product arrives; never overwrite in-flight edits.
   useEffect(() => {
     if (product && !draft) {
       setDraft({
@@ -106,7 +102,7 @@ function ProductEditPage() {
 
       {!publishable && (
         <p className="rounded-[10px] border border-tertiary/40 bg-tertiary/5 px-4 py-3 text-sm">
-          {t("admin.products.noVariants")}
+          Ajoute au moins une configuration de vente avant de publier ce modèle.
         </p>
       )}
 
@@ -117,30 +113,29 @@ function ProductEditPage() {
         onStatusChange={(status) => save.mutate({ status })}
       />
 
-      {product.product_variants.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("admin.photos.title")}</CardTitle>
-          </CardHeader>
-          <CardBody>
-            <ColourPhotos productId={id} variants={product.product_variants} />
-          </CardBody>
-        </Card>
-      )}
-
       <Card>
         <CardHeader>
-          <CardTitle>{t("admin.products.variants")}</CardTitle>
+          <CardTitle>Configurations de vente</CardTitle>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
-          <VariantGenerator
-            productId={id}
-            productSlug={product.slug}
-            existing={product.product_variants}
-          />
+          <p className="text-sm text-on-surface-muted">
+            Une configuration correspond à une combinaison vendable : tissu, type de parure,
+            nombre de pièces, dimension du matelas, prix et stock.
+          </p>
           <VariantEditor productId={id} variants={product.product_variants} />
         </CardBody>
       </Card>
+
+      {product.product_variants.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Photos du modèle</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <ProductPhotos productId={id} variants={product.product_variants} />
+          </CardBody>
+        </Card>
+      )}
 
       {product.kind === "pack" && (
         <Card>
@@ -148,14 +143,10 @@ function ProductEditPage() {
             <CardTitle>{t("admin.products.packContents")}</CardTitle>
           </CardHeader>
           <CardBody>
-            {/* A pack references variants from anywhere in the catalogue, so the
-                picker is given every variant, not just this product's. */}
             <PackBuilder productId={id} variants={allVariants} />
           </CardBody>
         </Card>
       )}
-
-      <SizeGuideEditor productId={id} />
     </div>
   );
 }
@@ -203,7 +194,7 @@ function ProductHeader({
         <Button
           variant="secondary"
           disabled={!publishable || busy}
-          title={publishable ? undefined : t("admin.products.noVariants")}
+          title={publishable ? undefined : "Ajoute une configuration avant de publier"}
           onClick={onTogglePublish}
         >
           {published ? t("admin.products.unpublish") : t("admin.products.publish")}

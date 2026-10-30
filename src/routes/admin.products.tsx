@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { Dialog } from "@/components/ui/dialog";
-import { Field, Input, Select } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
@@ -25,7 +25,6 @@ export const Route = createFileRoute("/admin/products")({
   component: ProductsPage,
 });
 
-/** Both the public catalogue and the admin list must drop their cached copies. */
 function useProductInvalidation() {
   const queryClient = useQueryClient();
   return () => {
@@ -53,23 +52,27 @@ function ProductsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-semibold">{t("admin.products.title")}</h1>
+        <div>
+          <h1 className="font-display text-2xl font-semibold">Modèles</h1>
+          <p className="mt-1 text-sm text-on-surface-muted">
+            Gère les modèles Elegancia et leurs configurations de vente.
+          </p>
+        </div>
         <span className="flex items-center gap-3">
-          {/* A paged list and a complete one look identical without this. */}
           <span className="font-mono text-xs text-on-surface-muted" data-testid="products-total">
             {total}
           </span>
           <Button onClick={() => setOpen(true)}>
             <Plus size={16} aria-hidden="true" />
-            {t("admin.products.new")}
+            Nouveau modèle
           </Button>
         </span>
       </div>
 
       {list.length === 0 ? (
         <EmptyState
-          title={t("store.empty.title")}
-          action={<Button onClick={() => setOpen(true)}>{t("admin.products.new")}</Button>}
+          title="Aucun modèle pour le moment"
+          action={<Button onClick={() => setOpen(true)}>Créer le premier modèle</Button>}
         />
       ) : (
         <>
@@ -99,8 +102,8 @@ function ProductRow({ product }: { product: AdminProduct }) {
 
   const image = productImage(product as never);
   const range = priceRange(product as never);
-  const variants = product.product_variants.length;
-  const stock = product.product_variants.reduce((sum, v) => sum + v.stock, 0);
+  const configurations = product.product_variants.length;
+  const stock = product.product_variants.reduce((sum, variant) => sum + variant.stock, 0);
 
   const toggle = useMutation({
     mutationFn: () =>
@@ -150,11 +153,10 @@ function ProductRow({ product }: { product: AdminProduct }) {
           <Badge tone={product.status === "published" ? "positive" : "neutral"}>
             {statusLabel}
           </Badge>
-          {product.kind === "pack" && <Badge tone="primary">{t("admin.products.pack")}</Badge>}
         </div>
         <p className="mt-1 text-xs text-on-surface-muted">
-          {variants} {t("admin.products.variants")} · {stock} {t("common.quantity")}
-          {range ? ` · ${formatDzd(range.min, locale)}` : ""}
+          {configurations} configuration{configurations === 1 ? "" : "s"} · Stock total {stock}
+          {range ? ` · À partir de ${formatDzd(range.min, locale)}` : ""}
         </p>
       </div>
 
@@ -162,12 +164,10 @@ function ProductRow({ product }: { product: AdminProduct }) {
         <Button
           variant="secondary"
           size="sm"
-          disabled={toggle.isPending}
+          disabled={toggle.isPending || configurations === 0}
           onClick={() => toggle.mutate()}
         >
-          {product.status === "published"
-            ? t("admin.products.unpublish")
-            : t("admin.products.publish")}
+          {product.status === "published" ? "Dépublier" : "Publier"}
         </Button>
         <Button asChild variant="ghost" size="sm">
           <Link to="/admin/product/$id" params={{ id: product.id }}>
@@ -188,22 +188,20 @@ function ProductRow({ product }: { product: AdminProduct }) {
 }
 
 function CreateProductDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
   const navigate = useNavigate();
   const invalidate = useProductInvalidation();
-
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [kind, setKind] = useState<"single" | "pack">("single");
 
   const create = useMutation({
-    mutationFn: () => createProduct({ name, slug, kind }),
+    mutationFn: () => {
+      const cleanName = name.trim();
+      return createProduct({ name: cleanName, slug: suggestSlug(cleanName), kind: "single" });
+    },
     onSuccess: (id) => {
       invalidate();
       onClose();
       setName("");
-      setSlug("");
-      toast.success(t("admin.products.created"));
+      toast.success("Modèle créé");
       void navigate({ to: "/admin/product/$id", params: { id } });
     },
     onError: (mutationError: Error) => toast.error(mutationError.message),
@@ -213,51 +211,32 @@ function CreateProductDialog({ open, onClose }: { open: boolean; onClose: () => 
     <Dialog
       open={open}
       onClose={onClose}
-      title={t("admin.products.new")}
+      title="Nouveau modèle Elegancia"
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            {t("common.cancel")}
+            Annuler
           </Button>
-          <Button
-            disabled={!name.trim() || !slug.trim() || create.isPending}
-            onClick={() => create.mutate()}
-          >
-            {create.isPending ? t("common.saving") : t("common.add")}
+          <Button disabled={!name.trim() || create.isPending} onClick={() => create.mutate()}>
+            {create.isPending ? "Création…" : "Créer le modèle"}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
-        <Field label={t("common.name")} required>
+        <Field label="Nom du modèle" hint="Ex. Aveline, Velina, Sunny" required>
           <Input
             value={name}
-            onChange={(event) => {
-              setName(event.target.value);
-              if (!slug || slug === suggestSlug(name)) setSlug(suggestSlug(event.target.value));
-            }}
+            onChange={(event) => setName(event.target.value)}
             maxLength={120}
             autoFocus
+            placeholder="Aveline"
           />
         </Field>
-        <Field label={t("admin.products.slug")} required>
-          <Input
-            value={slug}
-            onChange={(event) => setSlug(event.target.value)}
-            dir="ltr"
-            className="font-mono"
-            maxLength={80}
-          />
-        </Field>
-        <Field label={t("admin.products.kind")}>
-          <Select
-            value={kind}
-            onChange={(event) => setKind(event.target.value as "single" | "pack")}
-          >
-            <option value="single">{t("admin.products.single")}</option>
-            <option value="pack">{t("admin.products.pack")}</option>
-          </Select>
-        </Field>
+        <p className="text-xs leading-5 text-on-surface-muted">
+          Après création, tu pourras ajouter les photos, la catégorie et toutes les configurations
+          de tissu, pièces, dimensions, prix et stock.
+        </p>
       </div>
     </Dialog>
   );
