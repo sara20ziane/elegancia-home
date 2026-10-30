@@ -5,8 +5,8 @@ import type { AdminVariant } from "@/lib/admin-products";
 
 /**
  * Elegancia variants describe a sellable bedding configuration:
- * fabric + set + number of pieces + mattress dimensions, with its own price and stock.
- * Piece count and mattress dimensions are intentionally independent.
+ * fabric + set + number of pieces + bed size determine the price and stock.
+ * Piece count and bed size remain intentionally independent.
  * Legacy colour fields are kept so older OpenStore data remains compatible.
  */
 export type VariantDraft = {
@@ -47,10 +47,33 @@ export const EMPTY_DRAFT: VariantDraft = {
   duvet_cover_size: "",
 };
 
-const MATTRESS_SIZES = ["90 × 190 cm", "160 × 190 cm", "180 × 200 cm"] as const;
+const BED_SIZE_OPTIONS = [
+  {
+    value: "90 × 190 cm",
+    label: "90 × 190 cm",
+    fittedSheet: "90 × 190 cm",
+    duvetCover: "",
+  },
+  {
+    value: "Queen size",
+    label: "Queen size",
+    fittedSheet: "160 × 190 cm",
+    duvetCover: "220 × 240 cm",
+  },
+  {
+    value: "King size",
+    label: "King size",
+    fittedSheet: "180 × 200 cm",
+    duvetCover: "260 × 240 cm",
+  },
+] as const;
 
-function isStandardMattressSize(value: string): boolean {
-  return MATTRESS_SIZES.some((size) => size === value);
+function bedSizeOption(value: string) {
+  return BED_SIZE_OPTIONS.find((option) => option.value === value);
+}
+
+function isStandardBedSize(value: string): boolean {
+  return BED_SIZE_OPTIONS.some((option) => option.value === value);
 }
 
 export function toDraft(variant: AdminVariant): VariantDraft {
@@ -88,11 +111,49 @@ export function DraftFields({
   const listId = useId();
   const fabricListId = `${listId}-fabrics`;
   const setTypeListId = `${listId}-set-types`;
-  const [customMattressSize, setCustomMattressSize] = useState(
-    () => Boolean(draft.size) && !isStandardMattressSize(draft.size),
+  const [customBedSize, setCustomBedSize] = useState(
+    () => Boolean(draft.size) && !isStandardBedSize(draft.size),
   );
   const set = <K extends keyof VariantDraft>(key: K, value: VariantDraft[K]) =>
     onChange({ ...draft, [key]: value });
+
+  const setSetType = (value: string) => {
+    const mapped = bedSizeOption(draft.size);
+    onChange({
+      ...draft,
+      set_type: value,
+      fitted_sheet_size: mapped?.fittedSheet ?? draft.fitted_sheet_size,
+      duvet_cover_size:
+        value === "Parure housse de couette" ? (mapped?.duvetCover ?? draft.duvet_cover_size) : "",
+    });
+  };
+
+  const setBedSize = (value: string) => {
+    if (value === "__other__") {
+      setCustomBedSize(true);
+      if (isStandardBedSize(draft.size)) {
+        onChange({
+          ...draft,
+          size: "",
+          fitted_sheet_size: "",
+          duvet_cover_size: draft.set_type === "Parure housse de couette" ? "" : draft.duvet_cover_size,
+        });
+      }
+      return;
+    }
+
+    setCustomBedSize(false);
+    const mapped = bedSizeOption(value);
+    onChange({
+      ...draft,
+      size: value,
+      fitted_sheet_size: mapped?.fittedSheet ?? draft.fitted_sheet_size,
+      duvet_cover_size:
+        draft.set_type === "Parure housse de couette"
+          ? (mapped?.duvetCover ?? draft.duvet_cover_size)
+          : "",
+    });
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -126,7 +187,7 @@ export function DraftFields({
             <Input
               list={setTypeListId}
               value={draft.set_type}
-              onChange={(e) => set("set_type", e.target.value)}
+              onChange={(e) => setSetType(e.target.value)}
               placeholder="Parure de drap"
               maxLength={80}
             />
@@ -136,7 +197,7 @@ export function DraftFields({
             </datalist>
           </Field>
 
-          <Field label="Nombre de pièces" hint="Indépendant de la dimension du matelas">
+          <Field label="Nombre de pièces" hint="Indépendant de la taille du lit">
             <Input
               type="number"
               min={1}
@@ -148,32 +209,23 @@ export function DraftFields({
             />
           </Field>
 
-          <Field label="Dimension du matelas">
+          <Field label="Taille du lit" hint="Queen : 160 × 190 cm · King : 180 × 200 cm">
             <Select
-              value={customMattressSize ? "__other__" : draft.size}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "__other__") {
-                  setCustomMattressSize(true);
-                  if (isStandardMattressSize(draft.size)) set("size", "");
-                  return;
-                }
-                setCustomMattressSize(false);
-                set("size", value);
-              }}
+              value={customBedSize ? "__other__" : draft.size}
+              onChange={(e) => setBedSize(e.target.value)}
             >
-              <option value="">Choisir une dimension</option>
-              {MATTRESS_SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {size}
+              <option value="">Choisir une taille</option>
+              {BED_SIZE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
-              <option value="__other__">Autre dimension</option>
+              <option value="__other__">Autre taille / dimension</option>
             </Select>
           </Field>
 
-          {customMattressSize && (
-            <Field label="Autre dimension" hint="Saisis la dimension exacte du matelas">
+          {customBedSize && (
+            <Field label="Autre taille / dimension" hint="Saisis le libellé ou la dimension exacte">
               <Input
                 value={draft.size}
                 onChange={(e) => set("size", e.target.value)}
@@ -192,7 +244,11 @@ export function DraftFields({
             />
           </Field>
 
-          <Field label={t("common.price")} required>
+          <Field
+            label={t("common.price")}
+            required
+            hint="Même prix pour Queen et King à parure équivalente"
+          >
             <Input
               type="number"
               min={0}
@@ -239,7 +295,7 @@ export function DraftFields({
             />
           </Field>
 
-          <Field label="Drap-housse">
+          <Field label="Drap-housse / dimension matelas">
             <Input
               value={draft.fitted_sheet_size}
               onChange={(e) => set("fitted_sheet_size", e.target.value)}
