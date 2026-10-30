@@ -44,9 +44,11 @@ export type AdminProduct = {
   description_fr: string | null;
   kind: "single" | "pack";
   status: string;
+  /** Legacy primary category, kept for compatibility with older storefront components. */
   category_id: string | null;
-  /** Joined for display; the admin form edits category_id. */
   categories: { slug: string; name: string } | null;
+  /** Real Elegancia classification: one model can belong to several categories. */
+  product_categories: { category_id: string }[];
   published_at: string | null;
   created_at: string;
   product_variants: AdminVariant[];
@@ -56,6 +58,7 @@ const ADMIN_SELECT = `
   id, slug, name, name_fr, description, description_fr, kind, status, category_id,
   published_at, created_at,
   categories ( slug, name ),
+  product_categories ( category_id ),
   product_variants (
     id, product_id, size, color_name, color_hex, sku, price, compare_at_price, stock,
     weight_grams, fabric, fabric_origin, set_type, piece_count, composition,
@@ -64,30 +67,14 @@ const ADMIN_SELECT = `
   )
 `;
 
-/*
- * Products per page. Fifteen, same reasoning as the order queue: a page that has to
- * be scrolled to reach the bottom is a page whose last rows get skimmed past.
- */
 const PRODUCTS_PAGE_SIZE = 15;
 
-/** One page of products, plus what is needed to ask for the next one. */
 type AdminProductsPage = {
   rows: AdminProduct[];
   total: number;
   pageCount: number;
 };
 
-/*
- * A page of products, newest first.
- *
- * Unbounded before, which was worse than it looks: each row carries its variants
- * and each variant its images, so the list fetched the whole catalogue with
- * everything nested on every visit. Paging bounds the payload, not just the rows.
- *
- * Ordered by `created_at` then `id`, the same tiebreaker the order list uses:
- * `created_at` is not unique, and without a stable second key rows repeat or
- * vanish between pages.
- */
 async function fetchAdminProductsPage(page: number): Promise<AdminProductsPage> {
   const from = (Math.max(page, 1) - 1) * PRODUCTS_PAGE_SIZE;
   const { data, error, count } = await getSupabase()
@@ -110,7 +97,6 @@ export function useAdminProductsPage(page: number) {
   return useQuery({
     queryKey: ["admin_products", page] as const,
     queryFn: () => fetchAdminProductsPage(page),
-    // Keeps the current page visible while the next loads.
     placeholderData: keepPreviousData,
   });
 }
@@ -136,7 +122,6 @@ export function useAdminProduct(id: string) {
   return useQuery(adminProductQuery(id));
 }
 
-/** Suggest a slug from a name, never overwriting one the owner already set. */
 export function suggestSlug(name: string): string {
   return slugify(name) || `product-${Date.now()}`;
 }
@@ -182,9 +167,38 @@ export async function updateProduct(
 }
 
 /**
- * Publish or unpublish. `published_at` is stamped on first publish only, so
- * republishing does not reorder the storefront.
+ * Replace all category links for one model.
+ * The first selected category is mirrored to products.category_id only so legacy
+ * components can keep a primary category while the real classification remains many-to-many.
  */
+export async function setProductCategories(productId: string, categoryIds: string[]): Promise<void> {
+  const ids = [...new Set(categoryIds.filter(Boolean))];
+  const supabase = getSupabase();
+
+  const { error: deleteError } = await supabase
+    .from("product_categories")
+    .delete()
+    .eq("product_id", productId);
+  if (deleteError) throw new Error(deleteError.message);
+
+  if (ids.length > 0) {
+    const { error: insertError } = await supabase.from("product_categories").insert(
+      ids.map((categoryId, index) => ({
+        product_id: productId,
+        category_id: categoryId,
+        sort_order: index,
+      })),
+    );
+    if (insertError) throw new Error(insertError.message);
+  }
+
+  const { error: legacyError } = await supabase
+    .from("products")
+    .update({ category_id: ids[0] ?? null })
+    .eq("id", productId);
+  if (legacyError) throw new Error(legacyError.message);
+}
+
 export async function setProductStatus(
   id: string,
   status: "draft" | "published" | "archived",
@@ -233,7 +247,6 @@ export async function upsertVariant(input: VariantInput): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Many variants in one request, for the legacy colour × size generator. */
 export async function insertVariants(
   productId: string,
   rows: Omit<VariantInput, "product_id" | "weight_grams">[],
