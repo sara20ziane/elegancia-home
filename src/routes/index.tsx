@@ -3,10 +3,12 @@ import { StoreLayout } from "@/components/storefront/store-layout";
 import { ProductGrid } from "@/components/storefront/product-card";
 import { HomeHero, TrustBar } from "@/components/storefront/home-hero";
 import {
+  BrandStory,
   CategoryStrip,
   ClosingCta,
   PromoBand,
   ReviewWall,
+  StyleDiscovery,
 } from "@/components/storefront/home-sections";
 import { ErrorState, NoProducts, ProductSkeleton } from "@/components/ui/feedback";
 import { SetupCheck } from "@/components/setup-check";
@@ -18,18 +20,11 @@ import { useI18n } from "@/lib/i18n-context";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    // Prefetch both so SSR emits the store name and the catalogue instead of an
-    // empty shell. Failures are swallowed: a missing database must render the
-    // setup guidance, not a 500.
     const settings = await context.queryClient
       .ensureQueryData(storeSettingsQuery())
       .catch(() => null);
     await Promise.all([
-      // Reviews feed the testimonial wall below the fold. Fetching them during
-      // SSR avoids a visible pop-in and lets crawlers see the social proof.
       context.queryClient.ensureQueryData(reviewsQuery()).catch(() => null),
-      // The product grid is the page. Without this the server HTML ships an
-      // empty grid and the buyer waits for the browser to fill it in.
       context.queryClient.ensureQueryData(cataloguePageQuery(EMPTY_FILTERS, 1)).catch(() => null),
     ]);
     return { settings };
@@ -39,12 +34,12 @@ export const Route = createFileRoute("/")({
     const ar = match.context.locale === "ar";
     const name = s?.name?.trim();
     const tagline = (ar ? s?.tagline : s?.tagline_fr)?.trim();
-    const title = name ? `${name}${tagline ? ` — ${tagline}` : ""}` : "OpenStore DZ";
+    const title = name ? `${name}${tagline ? ` — ${tagline}` : ""}` : "Elegancia Home";
     const description =
       (ar ? s?.description : s?.description_fr)?.trim() ||
       (ar
-        ? "تسوق أونلاين مع الدفع عند الاستلام والتوصيل إلى 58 ولاية."
-        : "Shop online, pay cash on delivery.");
+        ? "مفروشات وبياضات منزلية أنيقة مع الدفع عند الاستلام."
+        : "Literie et linge de maison élégants avec paiement à la livraison.");
     return {
       meta: [
         { title },
@@ -64,13 +59,10 @@ function Home() {
   const catalogue = useCataloguePage(EMPTY_FILTERS, 1);
   const configProblem = supabaseConfigProblem();
 
-  // A shop that has not been connected to a database yet, or whose database is
-  // still empty, must see the setup instructions, not an error boundary. This is
-  // the first screen a new owner ever loads, so it has to be the most forgiving one.
   if (configProblem || (catalogue.isError && isEmptyDatabaseError(catalogue.error))) {
     return (
       <main className="container-page flex min-h-dvh flex-col items-center justify-center gap-6 py-20 text-center">
-        <h1 className="font-display text-3xl font-semibold">{settings?.name ?? "OpenStore DZ"}</h1>
+        <h1 className="font-display text-3xl font-semibold">{settings?.name ?? "Elegancia Home"}</h1>
         <SetupCheck />
       </main>
     );
@@ -82,18 +74,20 @@ function Home() {
   return (
     <StoreLayout>
       <HomeHero settings={settings} products={list} />
-      <TrustBar returnsDays={settings?.returns_days ?? 14} />
+      <StyleDiscovery />
 
-      <section id="catalogue" className="container-page scroll-mt-20 py-12">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+      <section id="catalogue" className="container-page scroll-mt-20 py-12 sm:py-16">
+        <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
           <div>
             <span className="section-label">{t("home.featured")}</span>
-            <h2 className="mt-2 font-display text-xl font-semibold sm:text-2xl">{t("nav.shop")}</h2>
+            <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.02em] text-[#38281E] sm:text-3xl">
+              {t("nav.shop")}
+            </h2>
           </div>
           {catalogueTotal > 0 && (
             <Link
               to="/catalogue"
-              className="inline-flex min-h-9 items-center text-sm text-primary hover:underline"
+              className="inline-flex min-h-9 items-center text-sm font-semibold text-primary hover:underline"
             >
               {t("store.productCount", { count: catalogueTotal })}
             </Link>
@@ -122,9 +116,11 @@ function Home() {
       </section>
 
       <CategoryStrip />
+      <BrandStory />
+      <TrustBar returnsDays={settings?.returns_days ?? 14} />
       <PromoBand threshold={settings?.free_shipping_threshold ?? 0} />
       <ReviewWall />
-      <ClosingCta storeName={settings?.name ?? "OpenStore DZ"} />
+      <ClosingCta storeName={settings?.name ?? "Elegancia Home"} />
     </StoreLayout>
   );
 }
