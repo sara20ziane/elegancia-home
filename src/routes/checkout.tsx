@@ -76,6 +76,10 @@ function CheckoutPage() {
       setError("Tarif Packers indisponible pour cette wilaya. Réessaie après synchronisation des tarifs.");
       return;
     }
+    if (!form.commune.trim()) {
+      setError("La commune est obligatoire pour la livraison.");
+      return;
+    }
     if (form.delivery_method === "stopdesk" && !form.stopdesk_name) {
       setError("Le Stop Desk n’est pas disponible pour la commune sélectionnée.");
       return;
@@ -203,7 +207,7 @@ function toCustomer(form: CheckoutForm) {
     customer_name: form.customer_name,
     phone: form.phone,
     wilaya: form.wilaya,
-    commune: form.commune || null,
+    commune: form.commune.trim(),
     address: form.address,
     note: form.note || null,
     delivery_method: form.delivery_method,
