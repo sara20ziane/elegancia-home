@@ -1,23 +1,40 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Banknote, Headphones, RotateCcw, Truck } from "lucide-react";
+import {
+  ArrowRight,
+  Banknote,
+  Headphones,
+  RotateCcw,
+  ShieldCheck,
+  Truck,
+} from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import type { CatalogueProduct, StoreSettings } from "@/lib/queries";
 import { productImage } from "@/lib/queries";
 import { localized } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-/**
- * Storefront hero.
- *
- * Photography sells clothing, so the visual is the shop's own products: three
- * portrait photos in a staggered row, each a link to that product. Portrait
- * crops on purpose; the catalogue is shot 4:5, and a landscape frame cut the
- * model's head off.
- *
- * The headline is interface copy in the buyer's language. The owner's tagline
- * is written in one language, so it is shown only to readers of that language
- * (Arabic, the default) instead of greeting an English reader in Arabic.
- */
+const fallbackVisuals = {
+  fr: ["Neutres & élégants", "Fleurs & motifs", "Tons doux"],
+  en: ["Soft neutrals", "Florals & patterns", "Gentle tones"],
+  ar: ["ألوان هادئة", "نقوش وزهور", "درجات ناعمة"],
+} as const;
+
+const editorialCopy = {
+  fr: {
+    eyebrow: "LINGE DE LIT · ELEGANCIA HOME",
+    secure: "Commande suivie",
+  },
+  en: {
+    eyebrow: "BED LINEN · ELEGANCIA HOME",
+    secure: "Order tracking",
+  },
+  ar: {
+    eyebrow: "مفروشات راقية · ELEGANCIA HOME",
+    secure: "تتبع الطلب",
+  },
+} as const;
+
+/** Premium storefront hero tailored to Elegancia Home's bedding identity. */
 export function HomeHero({
   settings,
   products,
@@ -30,90 +47,144 @@ export function HomeHero({
     .map((product) => ({ product, image: productImage(product) }))
     .filter((shot): shot is { product: CatalogueProduct; image: string } => shot.image !== null)
     .slice(0, 3);
-  const tagline = settings?.tagline?.trim();
+
+  const copy = editorialCopy[locale];
+  const placeholders = fallbackVisuals[locale];
 
   return (
-    <section className="overflow-hidden border-b border-outline bg-gradient-to-b from-bg to-bg-dim">
-      <div className="container-page grid items-center gap-10 py-10 sm:py-14 lg:grid-cols-[1fr_1.1fr] lg:gap-14 lg:py-20">
+    <section className="relative overflow-hidden border-b border-outline bg-[#F7F1EA] text-[#38281E]">
+      <div
+        className="pointer-events-none absolute -top-24 -end-20 size-72 rounded-full bg-[#D8B99C]/25 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -bottom-24 -start-12 size-64 rounded-full bg-[#C8B9A7]/20 blur-3xl"
+        aria-hidden="true"
+      />
+
+      <div className="container-page relative grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16 lg:py-24">
         <div className="flex flex-col items-start">
-          <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-outline bg-surface px-3.5 py-1.5 text-xs font-semibold text-secondary">
-            <span className="size-[7px] shrink-0 rounded-full bg-secondary" aria-hidden="true" />
-            {settings?.name ?? "OpenStore DZ"}
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#DCCCBD] bg-white/65 px-3.5 py-1.5 text-[0.68rem] font-semibold tracking-[0.12em] text-primary backdrop-blur-sm">
+            <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+            {copy.eyebrow}
           </span>
 
-          <h1 className="mb-4 max-w-xl font-display text-[clamp(32px,5.2vw,60px)] font-semibold leading-[1.06] tracking-[-0.02em]">
-            {(locale === "ar" ? tagline : settings?.tagline_fr?.trim()) || t("home.hero.title")}
+          <h1 className="mb-5 max-w-[640px] font-display text-[clamp(38px,6vw,70px)] font-semibold leading-[0.98] tracking-[-0.035em] text-[#38281E]">
+            {t("home.hero.title")}
           </h1>
 
-          <p className="mb-7 max-w-[480px] text-base leading-[1.7] text-on-surface-muted">
+          <p className="mb-8 max-w-[540px] text-base leading-[1.8] text-[#75675D] sm:text-lg">
             {t("home.hero.body")}
           </p>
 
           <div className="flex w-full flex-wrap gap-3 sm:w-auto">
-            <Link to="/catalogue" className="btn btn-primary btn-lg flex-1 sm:flex-none">
+            <Link
+              to="/catalogue"
+              className="btn btn-primary btn-lg flex-1 shadow-[0_12px_30px_rgba(95,55,25,0.14)] sm:flex-none"
+            >
               {t("home.promo.cta")}
               <ArrowRight size={18} className="rtl:rotate-180" aria-hidden="true" />
             </Link>
-            <Link to="/track" className="btn btn-secondary btn-lg flex-1 sm:flex-none">
+            <Link
+              to="/track"
+              className="btn btn-secondary btn-lg flex-1 border-[#CBB7A5] bg-white/55 sm:flex-none"
+            >
               {t("nav.trackOrder")}
             </Link>
           </div>
 
-          <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-on-surface-muted">
+          <ul className="mt-8 flex flex-wrap gap-x-5 gap-y-3 text-xs font-medium text-[#75675D] sm:text-sm">
             <li className="inline-flex items-center gap-1.5">
-              <Banknote size={15} className="text-primary" aria-hidden="true" />
+              <Banknote size={16} className="text-primary" aria-hidden="true" />
               {t("home.trust.cod.title")}
             </li>
             <li className="inline-flex items-center gap-1.5">
-              <RotateCcw size={15} className="text-primary" aria-hidden="true" />
-              {t("home.trust.returns.title", { days: settings?.returns_days ?? 14 })}
+              <Truck size={16} className="text-primary" aria-hidden="true" />
+              {t("home.trust.delivery.title")}
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <ShieldCheck size={16} className="text-primary" aria-hidden="true" />
+              {copy.secure}
             </li>
           </ul>
         </div>
 
-        {shots.length > 0 && (
-          <div className="grid grid-cols-3 items-start gap-3 sm:gap-4">
-            {shots.map(({ product, image }, index) => {
-              const name = localized(locale, product.name, product.name_fr);
-              return (
-                <Link
-                  key={product.id}
-                  to="/product/$slug"
-                  params={{ slug: product.slug }}
-                  className={cn(
-                    "group relative block overflow-hidden rounded-[18px] border border-outline bg-surface-high shadow-sm",
-                    index === 1 && "mt-8 sm:mt-12",
-                  )}
-                >
-                  <img
-                    src={image}
-                    alt={name}
-                    // The first photo is the largest paint above the fold.
-                    loading={index === 0 ? "eager" : "lazy"}
-                    fetchPriority={index === 0 ? "high" : "auto"}
-                    decoding="async"
-                    className="aspect-[4/5] w-full object-cover transition-transform duration-500 ease-out-soft group-hover:scale-[1.04]"
-                  />
-                  <span className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black/65 to-transparent px-3 pt-8 pb-3 text-xs font-medium text-white sm:block">
-                    <span className="line-clamp-1">{name}</span>
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        <div className="relative mx-auto w-full max-w-[620px]">
+          <div
+            className="pointer-events-none absolute inset-x-[10%] bottom-[-22px] h-20 rounded-[50%] bg-[#8D6D55]/12 blur-2xl"
+            aria-hidden="true"
+          />
+
+          {shots.length > 0 ? (
+            <div className="grid grid-cols-3 items-start gap-3 sm:gap-4">
+              {shots.map(({ product, image }, index) => {
+                const name = localized(locale, product.name, product.name_fr);
+                return (
+                  <Link
+                    key={product.id}
+                    to="/product/$slug"
+                    params={{ slug: product.slug }}
+                    className={cn(
+                      "group relative block overflow-hidden rounded-[22px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(76,55,40,0.14)]",
+                      index === 1 && "mt-10 sm:mt-14",
+                    )}
+                  >
+                    <img
+                      src={image}
+                      alt={name}
+                      loading={index === 0 ? "eager" : "lazy"}
+                      fetchPriority={index === 0 ? "high" : "auto"}
+                      decoding="async"
+                      className="aspect-[4/5] w-full object-cover transition-transform duration-500 ease-out-soft group-hover:scale-[1.04]"
+                    />
+                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2E2018]/75 to-transparent px-3 pt-10 pb-3 text-xs font-medium text-white">
+                      <span className="line-clamp-1">{name}</span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 items-start gap-3 sm:gap-4" aria-hidden="true">
+              {placeholders.map((label, index) => {
+                const backgrounds = [
+                  "linear-gradient(155deg, #DED7CE 0%, #F8F3ED 62%, #C8B7A6 100%)",
+                  "linear-gradient(155deg, #D7C0C2 0%, #F4E9E7 58%, #B88C91 100%)",
+                  "linear-gradient(155deg, #BCC4B7 0%, #F5F0E8 58%, #8E9D8A 100%)",
+                ];
+                const patterns = [
+                  "radial-gradient(circle at 20% 20%, rgba(255,255,255,.78) 0 13%, transparent 14%), radial-gradient(circle at 78% 72%, rgba(255,255,255,.42) 0 18%, transparent 19%)",
+                  "radial-gradient(ellipse at 25% 30%, rgba(255,255,255,.58) 0 11%, transparent 12%), radial-gradient(ellipse at 70% 58%, rgba(255,255,255,.5) 0 14%, transparent 15%)",
+                  "linear-gradient(35deg, rgba(255,255,255,.36) 25%, transparent 25% 55%, rgba(255,255,255,.22) 55% 72%, transparent 72%)",
+                ];
+                return (
+                  <div
+                    key={label}
+                    className={cn(
+                      "relative aspect-[4/5] overflow-hidden rounded-[22px] border border-white/70 shadow-[0_18px_45px_rgba(76,55,40,0.14)]",
+                      index === 1 && "mt-10 sm:mt-14",
+                    )}
+                    style={{ background: backgrounds[index] }}
+                  >
+                    <span
+                      className="absolute inset-0 opacity-70"
+                      style={{ backgroundImage: patterns[index] }}
+                    />
+                    <span className="absolute inset-x-3 bottom-3 rounded-full border border-white/45 bg-white/60 px-3 py-2 text-center text-[0.66rem] font-semibold tracking-wide text-[#4C3A30] backdrop-blur-sm sm:text-xs">
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
 }
 
-/**
- * Trust bar.
- *
- * Every claim here is one the platform actually keeps: cash on delivery is the
- * only payment method, coverage is all 58 wilayas, and the return window is a
- * real setting. Nothing is decorative marketing copy.
- */
+/** Compact reassurance band beneath the main commercial sections. */
 export function TrustBar({ returnsDays }: { returnsDays: number }) {
   const { t } = useI18n();
 
@@ -133,18 +204,16 @@ export function TrustBar({ returnsDays }: { returnsDays: number }) {
   ] as const;
 
   return (
-    <section className="border-b border-outline bg-surface">
-      <div className="container-page grid gap-6 py-8 sm:grid-cols-2 lg:grid-cols-4">
+    <section className="border-y border-[#E8DDD3] bg-[#FFFDF9]">
+      <div className="container-page grid gap-5 py-8 sm:grid-cols-2 lg:grid-cols-4 lg:py-9">
         {items.map((item) => (
-          <div key={item.title} className="flex items-start gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-[10px] border border-outline bg-primary/5 text-primary">
+          <div key={item.title} className="flex items-start gap-3.5">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full border border-[#E3D4C7] bg-[#F7F1EA] text-primary">
               <item.icon size={18} aria-hidden="true" />
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-semibold">{item.title}</span>
-              <span className="mt-0.5 block text-xs leading-relaxed text-on-surface-muted">
-                {item.body}
-              </span>
+              <span className="block text-sm font-semibold text-[#38281E]">{item.title}</span>
+              <span className="mt-1 block text-xs leading-relaxed text-[#786B61]">{item.body}</span>
             </span>
           </div>
         ))}
