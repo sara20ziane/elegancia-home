@@ -162,8 +162,14 @@ export async function updateProduct(
     >
   >,
 ): Promise<void> {
-  const { error } = await getSupabase().from("products").update(patch).eq("id", id);
+  const { data, error } = await getSupabase()
+    .from("products")
+    .update(patch)
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
   if (error) throw new Error(error.message);
+  if (!data) throw new Error("La sauvegarde du modèle n’a pas été confirmée. Réessaie.");
 }
 
 /**
@@ -192,11 +198,14 @@ export async function setProductCategories(productId: string, categoryIds: strin
     if (insertError) throw new Error(insertError.message);
   }
 
-  const { error: legacyError } = await supabase
+  const { data: legacyData, error: legacyError } = await supabase
     .from("products")
     .update({ category_id: ids[0] ?? null })
-    .eq("id", productId);
+    .eq("id", productId)
+    .select("id")
+    .maybeSingle();
   if (legacyError) throw new Error(legacyError.message);
+  if (!legacyData) throw new Error("Les catégories n’ont pas pu être confirmées. Réessaie.");
 }
 
 export async function setProductStatus(
