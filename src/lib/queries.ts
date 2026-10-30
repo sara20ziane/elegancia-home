@@ -35,6 +35,14 @@ export type CatalogueVariant = {
   /** Original price when on sale; display only. */
   compare_at_price?: number | null;
   stock: number;
+  fabric: string | null;
+  fabric_origin: string | null;
+  set_type: string | null;
+  piece_count: number | null;
+  composition: string | null;
+  flat_sheet_size: string | null;
+  fitted_sheet_size: string | null;
+  duvet_cover_size: string | null;
   is_active: boolean;
   sort_order: number;
   variant_images: CatalogueImage[];
@@ -91,7 +99,10 @@ const PRODUCT_SELECT = `
   id, slug, name, name_fr, description, description_fr, kind, status, category_id, published_at,
   categories ( slug, name, name_fr ),
   product_variants (
-    id, size, color_name, color_hex, sku, price, compare_at_price, stock, is_active, sort_order,
+    id, size, color_name, color_hex, sku, price, compare_at_price, stock,
+    fabric, fabric_origin, set_type, piece_count, composition,
+    flat_sheet_size, fitted_sheet_size, duvet_cover_size,
+    is_active, sort_order,
     variant_images ( id, url, alt, sort_order )
   )
 `;
@@ -120,12 +131,6 @@ async function fetchReviews(productId?: string): Promise<PublicReview[]> {
   return (data ?? []) as PublicReview[];
 }
 
-/**
- * Active categories with their published-product count.
- *
- * Counted in a separate read rather than a PostgREST aggregate, so the
- * `status` rule lives in one place instead of being repeated in a query string.
- */
 /**
  * Active categories with their published-product count.
  *
