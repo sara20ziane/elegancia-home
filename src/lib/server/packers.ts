@@ -42,6 +42,13 @@ export type PackersCommune = {
   hasStopDesk: boolean;
 };
 
+export type PackersRate = {
+  wilayaId: number;
+  wilayaName: string;
+  homeFee: number;
+  stopDeskFee: number | null;
+};
+
 export function readPackersConfig(): PackersConfig | null {
   const token = process.env.PACKERS_API_TOKEN?.trim();
   if (!token) return null;
@@ -130,8 +137,35 @@ export function createPackersClient(config: PackersConfig) {
       });
     },
 
-    getFees() {
-      return request<Record<string, unknown>>("api/v1/get/fees");
+    async getRates(): Promise<PackersRate[]> {
+      const response = await request<unknown>("api/v1/get/fees");
+      const root = response && typeof response === "object" ? (response as Record<string, unknown>) : {};
+      const nested = root.data && typeof root.data === "object" ? (root.data as Record<string, unknown>) : {};
+      const raw = Array.isArray(response)
+        ? response
+        : Array.isArray(root.livraison)
+          ? root.livraison
+          : Array.isArray(nested.livraison)
+            ? nested.livraison
+            : [];
+
+      return raw
+        .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === "object")
+        .map((row) => {
+          const stopDeskRaw = row.tarif_stopdesk ?? row.stopdesk_fee ?? null;
+          const homeFee = Number(row.tarif ?? row.home_fee ?? 0);
+          const stopDeskFee = stopDeskRaw === null || stopDeskRaw === "" ? null : Number(stopDeskRaw);
+          return {
+            wilayaId: Number(row.wilaya_id ?? row.code_wilaya ?? 0),
+            wilayaName: String(row.wilaya_name ?? row.nom ?? row.name ?? ""),
+            homeFee: Number.isFinite(homeFee) ? homeFee : 0,
+            stopDeskFee:
+              stopDeskFee !== null && Number.isFinite(stopDeskFee) && stopDeskFee >= 0
+                ? stopDeskFee
+                : null,
+          };
+        })
+        .filter((row) => row.wilayaId > 0 && row.homeFee >= 0);
     },
 
     async getCommunes(wilayaId: number): Promise<PackersCommune[]> {
