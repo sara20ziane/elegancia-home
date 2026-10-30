@@ -1,18 +1,18 @@
 {
-  "name": "openstore-dz",
+  "name": "elegancia-home",
   "private": false,
   "version": "0.1.0",
   "type": "module",
   "license": "AGPL-3.0-only",
   "author": "Sifeddine Mebarki",
-  "description": "Free, self-hosted e-commerce for Algerian businesses. Arabic RTL first, cash on delivery, agent-installed.",
-  "homepage": "https://github.com/Meykiio/openstore-dz#readme",
+  "description": "Boutique e-commerce Elegancia Home pour la literie et le linge de maison en Algérie.",
+  "homepage": "https://github.com/sara20ziane/elegancia-home#readme",
   "bugs": {
-    "url": "https://github.com/Meykiio/openstore-dz/issues"
+    "url": "https://github.com/sara20ziane/elegancia-home/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Meykiio/openstore-dz.git"
+    "url": "git+https://github.com/sara20ziane/elegancia-home.git"
   },
   "engines": {
     "node": ">=20.19.0"
