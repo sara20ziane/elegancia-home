@@ -1,6 +1,7 @@
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n-context";
+import { localized } from "@/lib/i18n";
 import { useCategories } from "@/lib/queries";
 import type { AdminProduct } from "@/lib/admin-products";
 
@@ -13,6 +14,27 @@ export type ProductDraft = {
   category_id: string;
 };
 
+const fieldLabels = {
+  fr: {
+    nameAr: "Nom en arabe",
+    nameFr: "Nom en français",
+    descriptionAr: "Description en arabe",
+    descriptionFr: "Description en français",
+  },
+  ar: {
+    nameAr: "الاسم بالعربية",
+    nameFr: "الاسم بالفرنسية",
+    descriptionAr: "الوصف بالعربية",
+    descriptionFr: "الوصف بالفرنسية",
+  },
+  en: {
+    nameAr: "Name in Arabic",
+    nameFr: "Name in French",
+    descriptionAr: "Description in Arabic",
+    descriptionFr: "Description in French",
+  },
+} as const;
+
 export function ProductFieldsCard({
   draft,
   set,
@@ -24,8 +46,9 @@ export function ProductFieldsCard({
   status: string;
   onStatusChange: (status: AdminProduct["status"]) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { data: categories } = useCategories();
+  const labels = fieldLabels[locale];
 
   return (
     <Card>
@@ -33,10 +56,15 @@ export function ProductFieldsCard({
         <CardTitle>{t("admin.products.details")}</CardTitle>
       </CardHeader>
       <CardBody className="grid gap-4 sm:grid-cols-2">
-        <Field label={t("common.name")} required>
-          <Input value={draft.name} onChange={(e) => set("name", e.target.value)} maxLength={120} />
+        <Field label={labels.nameAr} required>
+          <Input
+            value={draft.name}
+            onChange={(e) => set("name", e.target.value)}
+            maxLength={120}
+            dir="rtl"
+          />
         </Field>
-        <Field label={t("admin.products.nameFr")}>
+        <Field label={labels.nameFr}>
           <Input
             value={draft.name_fr}
             onChange={(e) => set("name_fr", e.target.value)}
@@ -44,15 +72,16 @@ export function ProductFieldsCard({
             dir="ltr"
           />
         </Field>
-        <Field label={t("common.description")}>
+        <Field label={labels.descriptionAr}>
           <Textarea
             value={draft.description}
             onChange={(e) => set("description", e.target.value)}
             rows={4}
             maxLength={4000}
+            dir="rtl"
           />
         </Field>
-        <Field label={t("admin.products.descriptionFr")}>
+        <Field label={labels.descriptionFr}>
           <Textarea
             value={draft.description_fr}
             onChange={(e) => set("description_fr", e.target.value)}
@@ -62,8 +91,6 @@ export function ProductFieldsCard({
           />
         </Field>
 
-        {/* A select, not free text. A typed category used to silently create a
-            new one on every typo, which is why categories are entities now. */}
         <Field
           label={t("common.category")}
           hint={
@@ -77,7 +104,7 @@ export function ProductFieldsCard({
             <option value="">{t("common.none")}</option>
             {(categories ?? []).map((category) => (
               <option key={category.id} value={category.id}>
-                {category.name}
+                {localized(locale, category.name, category.name_fr)}
               </option>
             ))}
           </Select>
