@@ -11,15 +11,19 @@ import { Button } from "@/components/ui/button";
 /**
  * The parts of a product page that actually sell something: stock, variant
  * choice, quantity, add to cart and the WhatsApp order path.
- *
- * Split out of `product-detail.tsx` when that file passed the 250-line limit.
- * The seam is real rather than arithmetic: everything here is an action, and
- * everything left there is presentation.
  */
 
 function variantLabel(variant: CatalogueVariant): string {
-  const parts = [variant.size, variant.color_name].filter(Boolean);
-  return parts.length > 0 ? parts.join(" / ") : "—";
+  const bedding = Boolean(variant.fabric || variant.set_type || variant.piece_count !== null);
+  const parts = bedding
+    ? [
+        variant.fabric,
+        variant.set_type,
+        variant.piece_count !== null ? `${variant.piece_count} pièces` : null,
+        variant.size ? `Matelas ${variant.size}` : null,
+      ]
+    : [variant.size, variant.color_name];
+  return parts.filter(Boolean).join(" / ") || "—";
 }
 
 export function StockLine({
@@ -98,12 +102,6 @@ export function AddToCart({
   const [pageUrl, setPageUrl] = useState("");
   useEffect(() => setPageUrl(window.location.href), []);
 
-  /**
-   * A buyer who is unsure will not fill in a form; they will send a message.
-   * Carrying the product, the variant, the quantity and the page link into a
-   * prefilled WhatsApp message turns that hesitation into an order, and costs
-   * nothing to maintain.
-   */
   const waHref = waLink(
     settings?.whatsapp,
     [
@@ -161,8 +159,6 @@ export function AddToCart({
         </Button>
       </div>
 
-      {/* Secondary to adding to the cart, because a WhatsApp message is a real
-          order path in Algeria and not a fallback for a broken form. */}
       {waHref && (
         <a
           href={waHref}
