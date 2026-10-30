@@ -1,5 +1,5 @@
-import { useId } from "react";
-import { Field, Input } from "@/components/ui/form";
+import { useId, useState } from "react";
+import { Field, Input, Select } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
 import type { AdminVariant } from "@/lib/admin-products";
 
@@ -47,6 +47,12 @@ export const EMPTY_DRAFT: VariantDraft = {
   duvet_cover_size: "",
 };
 
+const MATTRESS_SIZES = ["90 × 190 cm", "160 × 190 cm", "180 × 200 cm"] as const;
+
+function isStandardMattressSize(value: string): boolean {
+  return MATTRESS_SIZES.some((size) => size === value);
+}
+
 export function toDraft(variant: AdminVariant): VariantDraft {
   return {
     size: variant.size ?? "",
@@ -82,6 +88,9 @@ export function DraftFields({
   const listId = useId();
   const fabricListId = `${listId}-fabrics`;
   const setTypeListId = `${listId}-set-types`;
+  const [customMattressSize, setCustomMattressSize] = useState(
+    () => Boolean(draft.size) && !isStandardMattressSize(draft.size),
+  );
   const set = <K extends keyof VariantDraft>(key: K, value: VariantDraft[K]) =>
     onChange({ ...draft, [key]: value });
 
@@ -139,14 +148,40 @@ export function DraftFields({
             />
           </Field>
 
-          <Field label="Dimension du matelas" hint="Ex. 90 × 190 cm, 160 × 190 cm, 180 × 200 cm">
-            <Input
-              value={draft.size}
-              onChange={(e) => set("size", e.target.value)}
-              placeholder="160 × 190 cm"
-              maxLength={30}
-            />
+          <Field label="Dimension du matelas">
+            <Select
+              value={customMattressSize ? "__other__" : draft.size}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "__other__") {
+                  setCustomMattressSize(true);
+                  if (isStandardMattressSize(draft.size)) set("size", "");
+                  return;
+                }
+                setCustomMattressSize(false);
+                set("size", value);
+              }}
+            >
+              <option value="">Choisir une dimension</option>
+              {MATTRESS_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+              <option value="__other__">Autre dimension</option>
+            </Select>
           </Field>
+
+          {customMattressSize && (
+            <Field label="Autre dimension" hint="Saisis la dimension exacte du matelas">
+              <Input
+                value={draft.size}
+                onChange={(e) => set("size", e.target.value)}
+                placeholder="Ex. 140 × 190 cm"
+                maxLength={30}
+              />
+            </Field>
+          )}
 
           <Field label="Couleur / finition">
             <Input
