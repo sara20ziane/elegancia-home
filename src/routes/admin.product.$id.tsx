@@ -73,17 +73,27 @@ function ProductEditPage() {
 
   const saveDetails = useMutation({
     mutationFn: async (values: ProductDraft) => {
-      await updateProduct(id, {
+      const normalized: ProductDraft = {
         name: values.name.trim(),
-        name_fr: values.name_fr.trim() || null,
-        description: values.description.trim() || null,
-        description_fr: values.description_fr.trim() || null,
+        name_fr: values.name_fr.trim(),
+        description: values.description.trim(),
+        description_fr: values.description_fr.trim(),
+        category_ids: [...values.category_ids],
+      };
+
+      await updateProduct(id, {
+        name: normalized.name,
+        name_fr: normalized.name_fr || null,
+        description: normalized.description || null,
+        description_fr: normalized.description_fr || null,
       });
-      await setProductCategories(id, values.category_ids);
+      await setProductCategories(id, normalized.category_ids);
+      return normalized;
     },
-    onSuccess: () => {
+    onSuccess: (savedDraft) => {
+      setDraft(savedDraft);
       invalidate();
-      toast.success(t("common.save"));
+      toast.success("Informations du modèle enregistrées");
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -93,7 +103,7 @@ function ProductEditPage() {
   if (!draft) return <LoadingState />;
 
   const set = <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) =>
-    setDraft({ ...draft, [key]: value });
+    setDraft((current) => (current ? { ...current, [key]: value } : current));
 
   const publishable = product.product_variants.length > 0;
   const published = product.status === "published";
@@ -130,6 +140,8 @@ function ProductEditPage() {
         set={set}
         status={product.status}
         onStatusChange={(status) => save.mutate({ status })}
+        onSave={saveFields}
+        saving={saveDetails.isPending}
       />
 
       <Card>
