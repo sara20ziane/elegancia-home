@@ -42,6 +42,8 @@ export type AdminOrder = {
   refused_at: string | null;
   refused_reason: string | null;
   carrier: string | null;
+  carrier_status: string | null;
+  carrier_status_updated_at: string | null;
   tracking_number: string | null;
   tracking_url: string | null;
   created_at: string;
@@ -52,7 +54,7 @@ export const ORDER_SELECT = `
   id, public_token, customer_name, phone, wilaya, commune, address, note,
   delivery_method, stopdesk_id, stopdesk_name,
   subtotal, delivery_fee, total, status, confirmed_at, refused_at, refused_reason,
-  carrier, tracking_number, tracking_url, created_at,
+  carrier, carrier_status, carrier_status_updated_at, tracking_number, tracking_url, created_at,
   order_items ( id, product_name, variant_label, quantity, unit_price )
 `;
 
