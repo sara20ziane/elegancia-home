@@ -71,10 +71,19 @@ export async function runNotifyNewOrder(publicToken: unknown): Promise<void> {
   try {
     const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
     const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-    if (!url || !key || !process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
-      logTelegramFailure("order");
+    if (!url || !key) {
+      logTelegramFailure("order", "missing_supabase_config");
       return;
     }
+    if (!process.env.TELEGRAM_BOT_TOKEN?.trim()) {
+      logTelegramFailure("order", "missing_bot_token");
+      return;
+    }
+    if (!process.env.TELEGRAM_CHAT_ID?.trim()) {
+      logTelegramFailure("order", "missing_chat_id");
+      return;
+    }
+
     const client = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
       global: {
@@ -82,20 +91,33 @@ export async function runNotifyNewOrder(publicToken: unknown): Promise<void> {
       },
     });
     const { data, error } = await client.rpc("track_order", { p_token: token });
-    if (error || !data || typeof data !== "object" || !("token" in data) || data.token !== token)
+    if (error) {
+      logTelegramFailure("order", "track_order_rpc_failed");
       return;
+    }
+    if (!data || typeof data !== "object" || !("token" in data) || data.token !== token) {
+      logTelegramFailure("order", "track_order_not_found_or_mismatch");
+      return;
+    }
+
     const order = parseCanonicalOrder(data);
+    if (!order) {
+      logTelegramFailure("order", "track_order_invalid_payload");
+      return;
+    }
+
     const now = Date.now();
     if (
-      !order ||
       Date.parse(order.created_at) < now - WINDOW_MS ||
       Date.parse(order.created_at) > now + 60_000
-    )
+    ) {
+      logTelegramFailure("order", "order_outside_notification_window");
       return;
+    }
     if (!claimRecent(token, now)) return;
     await sendTelegram(formatNewOrder(order), "order");
   } catch {
-    logTelegramFailure("order");
+    logTelegramFailure("order", "server_unexpected");
   }
 }
 
@@ -104,6 +126,6 @@ export async function notifyPackersParcel(order: TelegramParcel): Promise<void> 
   try {
     await sendTelegram(formatPackersParcel(order), "parcel");
   } catch {
-    logTelegramFailure("parcel");
+    logTelegramFailure("parcel", "server_unexpected");
   }
 }
