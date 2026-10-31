@@ -1,4 +1,5 @@
 import { ImageUploadPreview } from "./image-upload-preview";
+import { ColourPhotos } from "./colour-photos";
 import type { ImageFrame } from "@/lib/image-frame";
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,12 +22,29 @@ function productUrls(variants: AdminVariant[]): string[] {
 }
 
 /**
- * Elegancia sells one visual model with several bedding configurations.
- * The same gallery therefore belongs to the model, not to a mattress dimension
- * or fabric configuration. Images are attached to every variant so the current
- * OpenStore schema remains compatible with the storefront and order flow.
+ * Multi-colour bedding models are edited colour by colour so the owner can
+ * upload the correct photo directly from a phone. Products without colour
+ * variants keep the simpler model-level gallery.
  */
 export function ProductPhotos({
+  productId,
+  variants,
+}: {
+  productId: string;
+  variants: AdminVariant[];
+}) {
+  const colours = new Set(
+    variants.map((variant) => variant.color_name?.trim()).filter((colour): colour is string => Boolean(colour)),
+  );
+
+  if (colours.size > 0) {
+    return <ColourPhotos productId={productId} variants={variants} />;
+  }
+
+  return <SharedProductPhotos productId={productId} variants={variants} />;
+}
+
+function SharedProductPhotos({
   productId,
   variants,
 }: {
