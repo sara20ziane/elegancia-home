@@ -36,46 +36,85 @@ describe("canonical new-order notification", () => {
     expect(sendTelegram).toHaveBeenCalledWith(expect.stringContaining("TOTAL : 7 900 DA"), "order");
     expect(sendTelegram.mock.calls[0][0]).not.toContain(publicToken);
   });
-  it("ignores invalid input and missing orders", async () => {
+
+  it("ignores invalid input and diagnoses missing orders", async () => {
     for (const invalid of [null, "internal-id", { publicToken }]) await runNotifyNewOrder(invalid);
     expect(rpc).not.toHaveBeenCalled();
     rpc.mockResolvedValue({ data: null, error: null });
     await runNotifyNewOrder(publicToken);
     expect(sendTelegram).not.toHaveBeenCalled();
+    expect(logTelegramFailure).toHaveBeenCalledWith("order", "track_order_not_found_or_mismatch");
   });
+
   it.each([
     { ...telegramOrder, total: "client-price" },
     { ...telegramOrder, items: [] },
     { ...telegramOrder, items: [{ quantity: -1, unit_price: 1, product_name: "bad" }] },
-    { ...telegramOrder, created_at: "2020-01-01T00:00:00Z" },
-    { ...telegramOrder, created_at: "2030-01-01T00:00:00Z" },
-  ])("rejects unusable and old canonical responses", async (data) => {
+  ])("rejects unusable canonical responses with a safe diagnostic", async (data) => {
     rpc.mockResolvedValue({ data: { ...data, token: publicToken }, error: null });
     await runNotifyNewOrder(publicToken);
     expect(sendTelegram).not.toHaveBeenCalled();
+    expect(logTelegramFailure).toHaveBeenCalledWith("order", "track_order_invalid_payload");
   });
+
+  it.each([
+    { ...telegramOrder, created_at: "2020-01-01T00:00:00Z" },
+    { ...telegramOrder, created_at: "2030-01-01T00:00:00Z" },
+  ])("rejects old or future canonical responses with a safe diagnostic", async (data) => {
+    rpc.mockResolvedValue({ data: { ...data, token: publicToken }, error: null });
+    await runNotifyNewOrder(publicToken);
+    expect(sendTelegram).not.toHaveBeenCalled();
+    expect(logTelegramFailure).toHaveBeenCalledWith("order", "order_outside_notification_window");
+  });
+
   it("suppresses duplicates in concurrent calls on a warm instance", async () => {
     await Promise.all([runNotifyNewOrder(publicToken), runNotifyNewOrder(publicToken)]);
     expect(sendTelegram).toHaveBeenCalledTimes(1);
   });
-  it("never rejects on Supabase or Telegram failure", async () => {
+
+  it("diagnoses Supabase RPC errors without logging private details", async () => {
+    rpc.mockResolvedValue({ data: null, error: { message: "private data" } });
+    await expect(runNotifyNewOrder(publicToken)).resolves.toBeUndefined();
+    expect(logTelegramFailure).toHaveBeenCalledWith("order", "track_order_rpc_failed");
+    expect(sendTelegram).not.toHaveBeenCalled();
+  });
+
+  it("never rejects on unexpected Supabase or Telegram failures", async () => {
     rpc.mockRejectedValueOnce(new Error("private data"));
     await expect(runNotifyNewOrder(publicToken)).resolves.toBeUndefined();
+    expect(logTelegramFailure).toHaveBeenCalledWith("order", "server_unexpected");
+
     sendTelegram.mockRejectedValue(new Error("private data"));
+    publicToken = token.slice(0, -4) + (++index).toString().padStart(4, "0");
+    rpc.mockResolvedValue({ data: { ...telegramOrder, token: publicToken }, error: null });
     await expect(runNotifyNewOrder(publicToken)).resolves.toBeUndefined();
-    expect(logTelegramFailure).toHaveBeenCalledWith("order");
+    expect(logTelegramFailure).toHaveBeenCalledWith("order", "server_unexpected");
   });
-  it("skips calls when Telegram configuration is missing", async () => {
-    vi.stubEnv("TELEGRAM_BOT_TOKEN", "");
+
+  it.each([
+    ["TELEGRAM_BOT_TOKEN", "missing_bot_token"],
+    ["TELEGRAM_CHAT_ID", "missing_chat_id"],
+  ])("skips calls when %s is missing", async (name, reason) => {
+    vi.stubEnv(name, "");
     await runNotifyNewOrder(publicToken);
     expect(rpc).not.toHaveBeenCalled();
     expect(sendTelegram).not.toHaveBeenCalled();
+    expect(logTelegramFailure).toHaveBeenCalledWith("order", reason);
   });
+
+  it("diagnoses missing Supabase configuration", async () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "");
+    vi.stubEnv("SUPABASE_URL", "");
+    await runNotifyNewOrder(publicToken);
+    expect(rpc).not.toHaveBeenCalled();
+    expect(logTelegramFailure).toHaveBeenCalledWith("order", "missing_supabase_config");
+  });
+
   it("does not reject a saved parcel when Telegram throws", async () => {
     sendTelegram.mockRejectedValue(new Error("private data"));
     await expect(
       notifyPackersParcel({ ...telegramOrder, tracking_number: "ECGHTG2610311948869" }),
     ).resolves.toBeUndefined();
-    expect(logTelegramFailure).toHaveBeenCalledWith("parcel");
+    expect(logTelegramFailure).toHaveBeenCalledWith("parcel", "server_unexpected");
   });
 });
