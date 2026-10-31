@@ -1,4 +1,5 @@
-import { Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Mail, MapPin, Phone, ShieldCheck, Truck } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { useStoreSettings } from "@/lib/queries";
 import { SocialLinks } from "./social-links";
@@ -8,6 +9,12 @@ const deliveryNotice = {
   fr: "Frais de livraison selon la wilaya et le mode choisi",
   en: "Delivery fees depend on the wilaya and delivery method",
   ar: "مصاريف التوصيل حسب الولاية وطريقة التوصيل",
+} as const;
+
+const deliveryLink = {
+  fr: "Livraison et tarifs",
+  en: "Delivery and rates",
+  ar: "التوصيل والأسعار",
 } as const;
 
 /**
@@ -51,6 +58,13 @@ export function SiteFooter() {
           <p className="font-display text-lg font-semibold">{settings?.name ?? t("app.name")}</p>
           {tagline && <p className="text-sm text-on-surface-muted">{tagline}</p>}
           {description && <p className="max-w-sm text-sm text-on-surface-muted">{description}</p>}
+          <Link
+            to="/livraison"
+            className="mt-2 inline-flex min-h-10 items-center gap-2 text-sm font-medium text-primary hover:underline"
+          >
+            <Truck size={15} aria-hidden="true" />
+            {deliveryLink[locale]}
+          </Link>
         </div>
 
         {hasLegal && (
@@ -121,6 +135,9 @@ export function SiteFooter() {
         <p>
           {t("checkout.codTitle")} · {deliveryNotice[locale]}
         </p>
+        <Link to="/livraison" className="font-medium text-primary hover:underline">
+          {deliveryLink[locale]}
+        </Link>
       </div>
 
       {settings?.returns_note && (
