@@ -52,11 +52,12 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
     ? findBeddingVariant(variants, beddingChoice)
     : findVariant(variants, legacyChoice.colour, legacyChoice.size);
 
-  // A bedding model keeps one gallery across configurations; legacy products
-  // can still change their gallery with the selected colour.
   const selectedColourImages = imagesForColour(variants, legacyChoice.colour);
+  const beddingColourImages = imagesForColour(variants, beddingChoice.colour);
   const images = bedding
-    ? imagesForColour(variants, null)
+    ? beddingColourImages.length > 0
+      ? beddingColourImages
+      : imagesForColour(variants, null)
     : selectedColourImages.length > 0
       ? selectedColourImages
       : imagesForColour(variants, null);
@@ -79,6 +80,7 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
     const next = chooseBeddingVariant(variants, filter);
     if (!next) return;
     setBeddingChoice(beddingChoiceForVariant(next));
+    setActiveImage(0);
     setQuantity(1);
   };
 
@@ -88,7 +90,9 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
     : product.description_fr;
   const name = localized(locale, product.name, product.name_fr);
   const galleryAlt = bedding
-    ? [name, beddingChoice.fabric, beddingChoice.setType].filter(Boolean).join(" — ")
+    ? [name, beddingChoice.colour, beddingChoice.fabric, beddingChoice.setType]
+        .filter(Boolean)
+        .join(" — ")
     : legacyChoice.colour
       ? `${name} — ${legacyChoice.colour}`
       : name;
