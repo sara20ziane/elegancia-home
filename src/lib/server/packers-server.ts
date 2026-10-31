@@ -15,6 +15,10 @@ export type PackersRateSyncResult =
   | { ok: true; count: number }
   | { ok: false; error: string };
 
+export type PackersStatusSyncResult =
+  | { ok: true; checked: number; changed: number; failed: number }
+  | { ok: false; error: string };
+
 export type PackersStopDeskInfo = {
   commune: string;
   zipCode: string | null;
@@ -66,10 +70,160 @@ function normalize(value: string | null | undefined) {
     .trim();
 }
 
+function normalizeStatus(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[’']/g, "")
+    .replace(/[\s-]+/g, "_");
+}
+
 function resolveWilayaCode(name: string): number | null {
   const key = normalize(name);
   const match = WILAYAS.find((wilaya) => normalize(wilaya.fr) === key || normalize(wilaya.ar) === key);
   return match?.code ?? null;
+}
+
+function objectRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function extractPackersOrder(payload: unknown, tracking: string): Record<string, unknown> | null {
+  const root = objectRecord(payload);
+  const nested = objectRecord(root?.data);
+  const rows = Array.isArray(payload)
+    ? payload
+    : Array.isArray(root?.data)
+      ? root.data
+      : Array.isArray(root?.orders)
+        ? root.orders
+        : Array.isArray(nested?.orders)
+          ? nested.orders
+          : nested
+            ? [nested]
+            : root
+              ? [root]
+              : [];
+
+  const records = rows
+    .map(objectRecord)
+    .filter((row): row is Record<string, unknown> => row !== null);
+  const exact = records.find((row) =>
+    [row.tracking, row.tracking_number, row.numero_suivi].some(
+      (candidate) => candidate != null && String(candidate) === tracking,
+    ),
+  );
+  return exact ?? (records.length === 1 ? records[0] : null);
+}
+
+function rawPackersStatus(order: Record<string, unknown>): string | null {
+  for (const candidate of [
+    order.status,
+    order.statut,
+    order.status_name,
+    order.etat,
+    order.current_status,
+  ]) {
+    if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+  }
+  return null;
+}
+
+type CarrierState = "pending" | "shipped" | "delivered" | "refused" | "returned" | "cancelled" | "unknown";
+
+const DELIVERED = new Set([
+  "livred",
+  "livre",
+  "delivered",
+  "encaissed",
+  "payed",
+  "livre_non_encaisse",
+  "encaisse_non_paye",
+  "livre_encaisse_non_paye",
+  "paiements_prets",
+  "paiement_pret",
+  "paye_et_archive",
+  "paiement_archive",
+]);
+const RETURNED = new Set([
+  "return_received",
+  "returned",
+  "retourne",
+  "retour_recu",
+  "retour_archive",
+  "retours_recu",
+  "retours_a_dispatcher_vers_stock",
+  "retours_en_transit_stock",
+  "retours_en_stock",
+  "retours_archive",
+]);
+const CANCELLED = new Set(["annule", "annulee", "cancelled"]);
+const REFUSED = new Set(["refused", "refuse", "refuse_par_client", "client_refuse"]);
+const SHIPPED = new Set([
+  "picked",
+  "picked_up",
+  "collected",
+  "ramasse",
+  "accepted_by_carrier",
+  "dispatched_to_driver",
+  "attempt_delivery",
+  "en_ramassage",
+  "vers_hub",
+  "en_hub",
+  "vers_wilaya",
+  "in_hub",
+  "in_transit",
+  "en_transit",
+  "transferred",
+  "en_livraison",
+  "out_for_delivery",
+  "en_cours_de_livraison",
+  "stop_desk",
+  "return_asked",
+  "return_in_transit",
+  "return_initiated",
+  "returning",
+  "en_retour",
+  "retour_chez_livreur",
+  "retour_transit_entrepot",
+  "retour_en_traitement",
+  "retours_chez_livreur",
+  "retours_en_traitement",
+  "retours_prets",
+]);
+const PENDING = new Set([
+  "order_information_received_by_carrier",
+  "prete_a_expedier",
+  "pret_a_expedier",
+  "pret_a_preparer",
+  "en_preparation_stock",
+  "stock_en_preparation",
+  "en_preparation",
+  "suspendu",
+  "suspendus",
+  "created",
+  "pending",
+  "en_attente",
+  "ready",
+]);
+
+function classifyPackersStatus(rawStatus: string): CarrierState {
+  const key = normalizeStatus(rawStatus);
+  if (DELIVERED.has(key)) return "delivered";
+  if (RETURNED.has(key)) return "returned";
+  if (CANCELLED.has(key)) return "cancelled";
+  if (REFUSED.has(key)) return "refused";
+  if (SHIPPED.has(key)) return "shipped";
+  if (PENDING.has(key)) return "pending";
+  return "unknown";
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function runPackersConnectionTest(): Promise<PackersConnectionResult> {
@@ -111,9 +265,6 @@ export async function runSyncPackersRates(input: {
       return { ok: false, error: "Packers n’a renvoyé aucun tarif de livraison." };
     }
 
-    // One database function owns the whole refresh transaction. If any row or
-    // settings update fails, Postgres rolls everything back and the previous
-    // delivery cache remains usable by checkout.
     const { error: syncError } = await auth.supabase.rpc(
       "sync_packers_delivery_rates" as never,
       { p_rows: rows } as never,
@@ -127,6 +278,95 @@ export async function runSyncPackersRates(input: {
       error: error instanceof Error ? error.message : "Impossible de synchroniser les tarifs Packers.",
     };
   }
+}
+
+export async function runSyncPackersOrderStatuses(input: {
+  accessToken: string;
+}): Promise<PackersStatusSyncResult> {
+  const auth = await assertAdmin(input.accessToken);
+  if (auth.error || !auth.supabase) return { ok: false, error: auth.error ?? "Not authorized." };
+
+  const config = readPackersConfig();
+  if (!config) return { ok: false, error: "Packers n’est pas encore connecté." };
+
+  const { data: orders, error } = await auth.supabase
+    .from("orders")
+    .select(
+      "id, status, tracking_number, shipped_at, delivered_at, refused_at, refused_reason, carrier_status, carrier_status_updated_at",
+    )
+    .eq("carrier", "Packers")
+    .not("tracking_number", "is", null)
+    .in("status", ["confirmed", "shipped"])
+    .order("carrier_status_updated_at", { ascending: true, nullsFirst: true })
+    .order("created_at", { ascending: true })
+    .limit(10);
+  if (error) return { ok: false, error: error.message };
+  if (!orders?.length) return { ok: true, checked: 0, changed: 0, failed: 0 };
+
+  const client = createPackersClient(config);
+  let changed = 0;
+  let failed = 0;
+
+  for (let index = 0; index < orders.length; index += 1) {
+    if (index > 0) await wait(1_250);
+    const order = orders[index];
+    const tracking = String(order.tracking_number ?? "");
+    if (!tracking) continue;
+
+    try {
+      const payload = await client.getOrder(tracking);
+      const carrierOrder = extractPackersOrder(payload, tracking);
+      const rawStatus = carrierOrder ? rawPackersStatus(carrierOrder) : null;
+      if (!rawStatus) {
+        failed += 1;
+        continue;
+      }
+
+      const now = new Date().toISOString();
+      const carrierState = classifyPackersStatus(rawStatus);
+      const patch: Record<string, unknown> = {
+        carrier_status: rawStatus,
+        carrier_status_updated_at: now,
+      };
+      let transitioned = false;
+
+      if (carrierState === "shipped" && order.status === "confirmed") {
+        patch.status = "shipped";
+        patch.shipped_at = order.shipped_at ?? now;
+        transitioned = true;
+      } else if (carrierState === "delivered") {
+        patch.status = "delivered";
+        patch.delivered_at = order.delivered_at ?? now;
+        transitioned = order.status !== "delivered";
+      } else if (carrierState === "refused") {
+        patch.status = "refused";
+        patch.refused_at = order.refused_at ?? now;
+        patch.refused_reason = order.refused_reason ?? `Packers · ${rawStatus}`;
+        transitioned = order.status !== "refused";
+      } else if (carrierState === "returned") {
+        patch.status = "returned";
+        transitioned = order.status !== "returned";
+      } else if (carrierState === "cancelled") {
+        patch.status = "cancelled";
+        transitioned = order.status !== "cancelled";
+      }
+
+      const { error: saveError } = await auth.supabase
+        .from("orders")
+        .update(patch)
+        .eq("id", order.id)
+        .in("status", ["confirmed", "shipped"]);
+      if (saveError) {
+        failed += 1;
+        continue;
+      }
+      if (transitioned) changed += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return { ok: true, checked: orders.length, changed, failed };
 }
 
 export async function runListPackersStopDeskCommunes(
@@ -245,7 +485,12 @@ export async function runCreatePackersParcel(input: {
     const tracking = String(created.tracking);
     const { error: saveError } = await auth.supabase
       .from("orders")
-      .update({ carrier: "Packers", tracking_number: tracking })
+      .update({
+        carrier: "Packers",
+        tracking_number: tracking,
+        carrier_status: "prete_a_expedier",
+        carrier_status_updated_at: new Date().toISOString(),
+      })
       .eq("id", order.id);
     if (saveError) return { ok: false, error: saveError.message };
 
