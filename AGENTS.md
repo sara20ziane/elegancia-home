@@ -1,108 +1,74 @@
-# AGENTS.md — OpenStore DZ
+# Elegancia Home — règles de développement
 
-Instructions for any AI coding agent working in this repository. This is the distilled,
-project-specific layer of the owner's global operating system. Follow both layers: global
-rules always, project rules on top.
+Elegancia Home est une boutique algérienne indépendante. Ne travailler que dans
+`sara20ziane/elegancia-home`. Les anciennes références OpenStore dans la documentation
+ne remplacent pas les règles de ce fichier ni les instructions de la propriétaire.
 
-## Who you are working with
+## Stack et workflow
 
-Sifeddine Mebarki (GitHub: Meykiio), solo builder in Algiers, Algeria. Strong builder
-intuition, relies on AI to write most code. OpenStore DZ is his open-source project for
-Algerian small businesses. Be a co-founder with stake, not an order-taker: stress-test
-ideas, state verdicts first (Go / No-Go / Conditional), flag weak assumptions, teach
-briefly where a business or engineering concept is the real gap. Never flatter, never pad,
-keep responses short without losing information. English only.
+- React 19, TanStack Start, TypeScript strict, Tailwind CSS v4, Supabase/PostgreSQL, Vercel.
+- Jamais Firebase. Ne pas utiliser `any` comme raccourci.
+- Inspecter le code, les migrations, les types, les triggers et les RLS avant modification.
+- Partir du dernier `main`, créer une branche dédiée, vérifier, committer et ouvrir une PR.
+- Ne jamais modifier directement `main`, fusionner une PR ou activer sa fusion automatique.
+- PR : problème, solution, fichiers, migrations, impact métier, risques et tests.
+- Préserver les comportements existants. Pas de fonctionnalité ou dépendance hors mission.
+- ESLint : 250 lignes par fichier source, 120 par fonction ; séparer les responsabilités.
 
-## Read before touching anything
+## Supabase et sécurité
 
-1. `README.md` — what the project is and the one-click agent setup prompt
-2. `docs/PROJECT.md` — current state, scope, and the project-specific adaptations
-3. `docs/ARCHITECTURE.md` — how the system fits together
-4. `docs/DATABASE.md` — schema, RLS, and design rules (matches `supabase/schema.sql`)
-5. `docs/DECISIONS.md` — decisions already made and why. Do not relitigate them silently.
+- Toute modification SQL doit avoir une migration dans `supabase/migrations/`.
+- Lire `supabase/schema.sql` ET les migrations : le schéma historique seul est incomplet.
+- Ne jamais modifier seulement la production. Préférer les tests sur une base jetable.
+- Préserver les contrôles admin owner/staff et les RLS. Vérifier les GRANT en plus des policies.
+- Examiner `SECURITY DEFINER`, fixer `search_path`, révoquer les exécutions sensibles de PUBLIC/anon.
+- Aucun secret, token transporteur ou service_role dans le frontend, les logs ou ce fichier.
+- Ne jamais committer de fichier `.env`.
 
-## The code is the source of truth, not the docs
+## Packers et livraison
 
-If docs and code disagree, the code is right. Investigate, plan against reality, then fix
-the docs. Never modify code to match a stale document.
+- Packers / EcoTrack est l'unique source tarifaire ; origine Alger (16).
+- Aucun tarif inventé, forfait de secours ou `delivery_fee_flat`. Tarif absent : checkout bloqué.
+- Commune obligatoire. Stop Desk désactivé si absent pour la commune choisie.
+- Afficher uniquement les informations réellement retournées, sans inventer nom ou adresse.
+- Ne jamais supposer le sens d'un statut EcoTrack. Parser `unknown`, vérifier le suivi exact,
+  isoler la correspondance dans une fonction testable, préserver l'état si inconnu ou ambigu.
+- `PACKERS_VERIFIED_STATUS_RULES` reste vide sans validation sur réponse réelle/documentation
+  officielle. Voir `docs/PACKERS_STATUS_SYNC.md`. Les fixtures de tests ne sont pas des codes API.
+- Synchroniser seulement les commandes Packers avec suivi et statut actif ; erreurs API isolées.
+- Un retour en transit n'est pas un retour physique reçu et ne doit pas déclencher de restock.
 
-## Workflow
+## Offre commerciale
 
-Research the codebase first. Do real web research on anything version-sensitive: library
-versions, API changes, deprecations, and carrier/payment API behaviour. Training data
-ages fast and the Algerian market moves quarterly.
+- 2+ parures : Stop Desk offert ; 3+ : domicile et Stop Desk offerts.
+- Seuls `set_type = 'Parure de drap'` ou `'Parure housse de couette'` comptent.
+- Packers reste le tarif de référence ; Elegancia prend les frais à sa charge.
+- Toujours recalculer côté serveur/base, jamais seulement dans l'interface.
 
-State current state, target state, and acceptance criteria before coding. Plan, validate
-the plan against findings, execute one logical change at a time, verify, document the
-verified result.
+## Produits, variantes et stock
 
-## Non-negotiable rules
+- Aveline, Velina, Sunny sont des produits ; Queen/King sont des variantes.
+- Même configuration : même prix Queen/King ; stocks distincts possibles.
+- Queen : drap-housse 160 × 190, housse de couette 220 × 240 cm.
+- King : drap-housse 180 × 200, housse de couette 260 × 240 cm.
+- Préserver le workflow : configuration existante → Dupliquer → taille/stock → Enregistrer la copie.
+- Stock réservé à la création. Préserver l'expiration pending après 24 h et la restitution unique
+  de `20261030235258_launch_safety.sql`. Ne jamais expirer une commande confirmée.
+- Vérifier annulation, refus, retour et répétitions : aucune double restitution.
 
-1. **Never break working code.** Preserve existing behaviour unless a change explicitly
-   replaces it, and say so.
-2. **Max 250 lines per file, 120 per function.** Enforced by ESLint, not by discipline.
-   Split by responsibility before reaching it, never artificially. Documented exemptions:
-   `supabase/schema.sql`, `src/styles.css`, `docs/DESIGN_SYSTEM.html` are one addressable
-   unit each. Generated and vendored files are not hand-written:
-   `src/routeTree.gen.ts`, `src/lib/supabase/types.ts`, `src/components/ui/*`.
-3. **Never add unrequested features, dependencies, or abstractions.** Prefer what exists.
-   Every dependency must be used by shipped code, because `knip` fails the gate otherwise.
-4. **Commit consistently.** Conventional commits (`feat:`, `fix:`, `docs:`, `refactor:`,
-   `chore:`). Never leave work uncommitted.
-5. **Never commit secrets or `.env` files.** `.env.example` is the published reference.
-   The Guepex token and any service-role key are server-only and must never appear in a
-   `VITE_`-prefixed variable, a client file, a comment, a log, or a document.
-6. **Database changes go through `supabase/schema.sql`.** Never via ad-hoc console SQL.
-   Read the existing schema and RLS first. Never assume the database is empty. There are
-   no migration files, by design.
-7. **Security.** RLS on every table with a base `GRANT` alongside the policy, because
-   PostgREST evaluates grants _before_ RLS and returns 401 otherwise. Prices are computed
-   server-side; a client-supplied price is a bug. Public storage buckets are read-only
-   for non-admins.
-8. **Arabic is the primary language.** `dir="rtl"` is the default. Arabic needs larger
-   type and more leading than Latin — the density override in `styles.css` is not
-   optional styling, it is legibility. Prices stay LTR inside RTL paragraphs.
-9. **The audience is non-technical Algerians.** One obvious primary action per screen,
-   plain-language errors, helpful empty states. Never show a raw stack trace. If
-   something is misconfigured, say exactly what to fix.
-10. **This platform never holds money.** No feature may intermediate a payment between a
-    shop owner and their buyer. The courier and the shop owner's own payment account move
-    the money.
-11. **The confirmation call and the size guide are core features, not enhancements.**
-    Do not defer, simplify, or remove them to save time. They are where the margin is.
-12. **Uncertainty protocol.** If the codebase, the docs, or research cannot establish the
-    answer, say so explicitly instead of guessing. A wrong confident answer costs more
-    than an admitted unknown.
-13. **If mid-sprint evidence contradicts the plan:** stop, research, update the docs,
-    revalidate. Never silently change architecture.
+## Vérification obligatoire
 
-## Verification
-
-The gate is one command and it must pass before every commit:
+Exécuter et rapporter honnêtement :
 
 ```bash
-npm run check   # typecheck → lint → vitest → knip → production build
+npm run typecheck
+npm run lint
+npm test
+npm run knip
+npm run build
 ```
 
-Additional gates once the relevant parts exist:
-
-```bash
-npx supabase db advisors    # RLS and security review after any schema change
-npm audit                   # dependency audit before a release
-E2E_BASE_URL=http://127.0.0.1:3000 npm run test:e2e   # layout, against the built output
-```
-
-Run the browser suite against the built output when the assertion is about layout or
-performance. In `vite dev` the stylesheet is injected by JavaScript during hydration, so
-for a window the page is unstyled and any measurement taken there is a measurement of the
-loader.
-
-## Scope discipline
-
-The phases are ordered so each one removes a reason a real shop cannot use the platform.
-Phase B (the Algeria-specific gaps) comes before Phase E, because stopdesk and the commune
-picker are why a buyer abandons a cart, and a launch without them ships a shop that loses
-orders.
-
-Never cut the confirmation queue or the size guide to save time. They are where the margin
-is. See `docs/ROADMAP.md`.
+`npm run check` regroupe ces contrôles. Corriger les erreurs liées au changement ; ne pas
+masquer les échecs préexistants. Ajouter des tests pertinents pour les transitions, réponses
+inconnues, absence de suivi, autre transporteur, erreurs réseau et idempotence. Tester les
+triggers SQL sur une base jetable quand disponible ; signaler toute vérification non exécutée.
