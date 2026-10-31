@@ -1,4 +1,5 @@
 import { ORDER_SELECT, type AdminOrder } from "./admin";
+import { orderSourceLabel } from "./manual-order";
 import { getSupabase } from "./supabase/client";
 
 /**
@@ -33,6 +34,7 @@ export async function fetchOrders(filter: {
 const COLUMNS = [
   "date",
   "order",
+  "source",
   "status",
   "customer",
   "phone",
@@ -64,6 +66,7 @@ export function ordersToCsv(orders: AdminOrder[]): string {
     [
       o.created_at.slice(0, 16).replace("T", " "),
       o.public_token.slice(0, 8),
+      orderSourceLabel(o.order_source),
       o.status,
       o.customer_name,
       o.phone,
