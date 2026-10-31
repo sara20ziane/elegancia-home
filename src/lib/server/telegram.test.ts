@@ -31,38 +31,48 @@ describe("Telegram delivery", () => {
     });
     expect(console.warn).not.toHaveBeenCalled();
   });
+
   it.each([
-    new Response("private response", { status: 500 }),
-    new Response('{"ok":false}'),
-    new Response("invalid-json"),
-  ])("swallows HTTP and Telegram errors with safe logs", async (response) => {
+    [new Response("private response", { status: 500 }), "api_http_500"],
+    [new Response('{"ok":false}'), "api_rejected"],
+    [new Response("invalid-json"), "api_invalid_response"],
+    [new Response('{"ok":false,"description":"Bad Request: chat not found"}', { status: 400 }), "api_chat_not_found"],
+    [new Response('{"ok":false}', { status: 401 }), "api_unauthorized"],
+    [new Response('{"ok":false}', { status: 403 }), "api_forbidden"],
+  ])("swallows Telegram errors with a safe reason", async (response, reason) => {
     fetchMock.mockResolvedValue(response);
     expect(await sendTelegram("private customer details", "order")).toBe(false);
     expect(console.warn).toHaveBeenCalledExactlyOnceWith(
-      "[telegram] New order notification failed",
+      `[telegram] New order notification failed (${reason})`,
     );
   });
+
   it.each([
-    new Error("URL with secret and customer data"),
-    new DOMException("private timeout info", "TimeoutError"),
-  ])("swallows network/timeout errors", async (error) => {
+    [new Error("URL with secret and customer data"), "network_or_unexpected"],
+    [new DOMException("private timeout info", "TimeoutError"), "timeout"],
+  ])("swallows network/timeout errors without leaking details", async (error, reason) => {
     fetchMock.mockRejectedValue(error);
     const signal = new AbortController().signal;
     const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(signal);
     await expect(sendTelegram("private text", "parcel")).resolves.toBe(false);
     expect(timeout).toHaveBeenCalledWith(5000);
     expect(console.warn).toHaveBeenCalledExactlyOnceWith(
-      "[telegram] Packers parcel notification failed",
+      `[telegram] Packers parcel notification failed (${reason})`,
     );
   });
-  it.each(["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"])(
-    "does not call fetch when %s is absent",
-    async (name) => {
-      vi.stubEnv(name, "");
-      await expect(sendTelegram("message", "order")).resolves.toBe(false);
-      expect(fetchMock).not.toHaveBeenCalled();
-    },
-  );
+
+  it.each([
+    ["TELEGRAM_BOT_TOKEN", "missing_bot_token"],
+    ["TELEGRAM_CHAT_ID", "missing_chat_id"],
+  ])("does not call fetch when %s is absent", async (name, reason) => {
+    vi.stubEnv(name, "");
+    await expect(sendTelegram("message", "order")).resolves.toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith(
+      `[telegram] New order notification failed (${reason})`,
+    );
+  });
+
   it("sends multiple chunks within one shared deadline", async () => {
     fetchMock.mockImplementation(async () => new Response('{"ok":true}'));
     const timeout = vi.spyOn(AbortSignal, "timeout");
