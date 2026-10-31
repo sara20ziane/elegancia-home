@@ -71,8 +71,8 @@ export async function runNotifyNewOrder(publicToken: unknown): Promise<void> {
   try {
     const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
     const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-    if (!url || !key || !process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
-      logTelegramFailure("order");
+    if (!url || !key) {
+      logTelegramFailure("order", "config_missing");
       return;
     }
     const client = createClient(url, key, {
@@ -95,7 +95,7 @@ export async function runNotifyNewOrder(publicToken: unknown): Promise<void> {
     if (!claimRecent(token, now)) return;
     await sendTelegram(formatNewOrder(order), "order");
   } catch {
-    logTelegramFailure("order");
+    logTelegramFailure("order", "network_or_runtime");
   }
 }
 
@@ -104,6 +104,6 @@ export async function notifyPackersParcel(order: TelegramParcel): Promise<void> 
   try {
     await sendTelegram(formatPackersParcel(order), "parcel");
   } catch {
-    logTelegramFailure("parcel");
+    logTelegramFailure("parcel", "network_or_runtime");
   }
 }
