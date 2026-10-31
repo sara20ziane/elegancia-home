@@ -60,34 +60,7 @@ export function readPackersConfig(): PackersConfig | null {
 }
 
 export function createPackersClient(config: PackersConfig) {
-  async function request<T>(
-    path: string,
-    options: { method?: string; params?: Record<string, string | number | boolean | null | undefined> } = {},
-  ): Promise<T> {
-    const url = new URL(path.replace(/^\//, ""), config.baseUrl);
-    url.searchParams.set("api_token", config.token);
-    for (const [key, value] of Object.entries(options.params ?? {})) {
-      if (value !== undefined && value !== null && value !== "") {
-        url.searchParams.set(key, String(value));
-      }
-    }
-
-    const response = await fetch(url, {
-      method: options.method ?? "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${config.token}`,
-      },
-      cache: "no-store",
-    });
-
-    const body = await safeJson(response);
-    if (!response.ok) {
-      const detail = extractMessage(body);
-      throw new Error(detail ? `Packers: ${detail}` : `Packers API error ${response.status}.`);
-    }
-    return body as T;
-  }
+  const request = packersRequest(config);
 
   return {
     async validateToken(): Promise<boolean> {
@@ -132,15 +105,17 @@ export function createPackersClient(config: PackersConfig) {
     },
 
     getOrder(tracking: string) {
-      return request<Record<string, unknown>>("api/v1/get/orders", {
+      return request<unknown>("api/v1/get/orders", {
         params: { tracking },
       });
     },
 
     async getRates(): Promise<PackersRate[]> {
       const response = await request<unknown>("api/v1/get/fees");
-      const root = response && typeof response === "object" ? (response as Record<string, unknown>) : {};
-      const nested = root.data && typeof root.data === "object" ? (root.data as Record<string, unknown>) : {};
+      const root =
+        response && typeof response === "object" ? (response as Record<string, unknown>) : {};
+      const nested =
+        root.data && typeof root.data === "object" ? (root.data as Record<string, unknown>) : {};
       const raw = Array.isArray(response)
         ? response
         : Array.isArray(root.livraison)
@@ -154,7 +129,8 @@ export function createPackersClient(config: PackersConfig) {
         .map((row) => {
           const stopDeskRaw = row.tarif_stopdesk ?? row.stopdesk_fee ?? null;
           const homeFee = Number(row.tarif ?? row.home_fee ?? 0);
-          const stopDeskFee = stopDeskRaw === null || stopDeskRaw === "" ? null : Number(stopDeskRaw);
+          const stopDeskFee =
+            stopDeskRaw === null || stopDeskRaw === "" ? null : Number(stopDeskRaw);
           return {
             wilayaId: Number(row.wilaya_id ?? row.code_wilaya ?? 0),
             wilayaName: String(row.wilaya_name ?? row.nom ?? row.name ?? ""),
@@ -218,4 +194,41 @@ function extractMessage(body: unknown): string | null {
     }
   }
   return null;
+}
+
+function packersRequest(config: PackersConfig) {
+  async function request<T>(
+    path: string,
+    options: {
+      method?: string;
+      params?: Record<string, string | number | boolean | null | undefined>;
+    } = {},
+  ): Promise<T> {
+    const url = new URL(path.replace(/^\//, ""), config.baseUrl);
+    url.searchParams.set("api_token", config.token);
+    for (const [key, value] of Object.entries(options.params ?? {})) {
+      if (value !== undefined && value !== null && value !== "") {
+        url.searchParams.set(key, String(value));
+      }
+    }
+
+    const response = await fetch(url, {
+      method: options.method ?? "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${config.token}`,
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
+    });
+
+    const body = await safeJson(response);
+    if (!response.ok) {
+      const detail = extractMessage(body);
+      throw new Error(detail ? `Packers: ${detail}` : `Packers API error ${response.status}.`);
+    }
+    return body as T;
+  }
+
+  return request;
 }

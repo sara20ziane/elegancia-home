@@ -63,10 +63,16 @@ export function OrdersSection({
         toast.success("Aucune commande Packers à synchroniser.");
         return;
       }
-      toast.success(
+      const notify = result.failed > 0 || result.unrecognized > 0 ? toast.warning : toast.success;
+      notify(
         `Packers synchronisé · ${result.checked} vérifiée${result.checked > 1 ? "s" : ""}` +
           ` · ${result.changed} statut${result.changed > 1 ? "s" : ""} modifié${result.changed > 1 ? "s" : ""}` +
-          (result.failed > 0 ? ` · ${result.failed} échec${result.failed > 1 ? "s" : ""}` : ""),
+          (result.failed > 0
+            ? ` · ${result.failed} échec(s), Packers temporairement inaccessible ou réponse inexploitable`
+            : "") +
+          (result.unrecognized > 0
+            ? ` · ${result.unrecognized} statut(s) non validé(s), commandes conservées`
+            : ""),
       );
     },
     onError: (error: Error, showToast) => {
@@ -126,6 +132,13 @@ export function OrdersSection({
         </span>
       </div>
 
+      {(sync.isError || (sync.data && (sync.data.failed > 0 || sync.data.unrecognized > 0))) && (
+        <p role="status" className="text-sm text-tertiary">
+          {sync.isError
+            ? sync.error.message
+            : "Certaines réponses Packers ne permettent pas de modifier les commandes. Réessayez ou vérifiez le contrat des statuts."}
+        </p>
+      )}
       <AdminOrderList orders={orders} />
 
       <Pagination
