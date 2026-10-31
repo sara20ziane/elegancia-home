@@ -1,0 +1,8 @@
+-- Historical migration marker for the production bootstrap.
+--
+-- Elegancia Home's production database applied this version before migration
+-- tracking was normalized in the repository. For clean installations, the
+-- complete bootstrap state through this historical phase is squashed into
+-- 20261030142827_openstore_base_schema.sql (copied from supabase/schema.sql).
+--
+-- Keep this file so local and remote migration version lists stay aligned.
