@@ -1,3 +1,4 @@
+import { DeleteOrderButton } from "./order-delete";
 import { invalidateAdminOrders } from "@/lib/admin-order-events";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -27,7 +28,10 @@ export function OrderDetail({
     <div className="flex flex-col gap-4 border-t border-outline px-4 py-4">
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="rounded-full bg-surface-mid px-2.5 py-1 text-on-surface-muted">
-          Source : <span className="font-medium text-on-surface">{orderSourceLabel(order.order_source)}</span>
+          Source :{" "}
+          <span className="font-medium text-on-surface">
+            {orderSourceLabel(order.order_source)}
+          </span>
         </span>
       </div>
 
@@ -90,6 +94,7 @@ export function OrderDetail({
 
       <OrderActions order={order} />
       <CarrierAction order={order} />
+      <DeleteOrderButton order={order} />
       <div className="flex flex-wrap gap-2">
         <Link
           to="/admin/slips"

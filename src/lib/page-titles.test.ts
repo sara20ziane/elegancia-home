@@ -1,3 +1,4 @@
+import ts from "typescript";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -12,12 +13,32 @@ describe("storefront page titles", () => {
   it("are never hardcoded Arabic, so an English or French visitor does not get an Arabic tab", () => {
     const offenders = readdirSync(ROUTES)
       .filter((file) => file.endsWith(".tsx") && !OWNER_ONLY.test(file))
-      .flatMap((file) =>
-        readFileSync(join(ROUTES, file), "utf8")
-          .split("\n")
-          .filter((line) => /\b(title|content):\s*"/.test(line) && ARABIC.test(line))
-          .map((line) => `${file}: ${line.trim()}`),
-      );
+      .flatMap((file) => {
+        const source = ts.createSourceFile(
+          file,
+          readFileSync(join(ROUTES, file), "utf8"),
+          ts.ScriptTarget.Latest,
+          true,
+          ts.ScriptKind.TSX,
+        );
+        const found: string[] = [];
+        const visit = (node: ts.Node, inHead = false) => {
+          const property = ts.isPropertyAssignment(node) ? node : null;
+          const key = property?.name.getText(source);
+          const inside = inHead || key === "head";
+          if (
+            inside &&
+            property &&
+            ["title", "content"].includes(key ?? "") &&
+            ts.isStringLiteral(property.initializer) &&
+            ARABIC.test(property.initializer.text)
+          )
+            found.push(`${file}: ${property.getText(source)}`);
+          ts.forEachChild(node, (child) => visit(child, inside));
+        };
+        visit(source);
+        return found;
+      });
     expect(offenders).toEqual([]);
   });
 

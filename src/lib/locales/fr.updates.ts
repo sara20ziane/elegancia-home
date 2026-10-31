@@ -1,0 +1,27 @@
+export const frUpdates = {
+  "quick.title": "Commander ce produit",
+  "copy.order": "Copier le numéro de commande",
+  "copy.done": "Numéro copié",
+  "copy.failed": "Copie indisponible. Sélectionnez la référence.",
+  "admin.delete.title": "Supprimer cette commande",
+  "admin.delete.warning":
+    "Suppression définitive. Pour une vraie commande, privilégiez une annulation. Saisissez la référence complète pour confirmer.",
+  "admin.delete.error": "Suppression impossible. Actualisez puis réessayez.",
+  "admin.delete.success": "Commande supprimée",
+  "admin.delete.blocked": "Commande confirmée, expédiée ou avec colis : suppression indisponible.",
+  "image.preview": "Aperçu avant envoi",
+  "image.full": "Image entière (conseillé pour la literie)",
+  "image.crop": "Recadrer au format galerie 4:5",
+  "image.focus": "Position du cadrage",
+  "image.upload": "Valider et envoyer",
+  "version.current": "Version dérivée actuelle",
+  "version.available": "Version OpenStore disponible",
+  "version.review": "Consulter les changements",
+  "version.manual": "Elegancia est personnalisée. Toute intégration nécessite une revue manuelle.",
+  "version.schema": "Mise à jour de base de données requise",
+  "version.unknown": "Version du schéma indisponible",
+  "version.expected": "Schéma attendu",
+  "checkout.error.too_many_items":
+    "Maximum : 20 unités par variante et 50 pièces par commande. Pour un gros achat, contactez-nous.",
+  "checkout.error.too_many_orders": "Trop de commandes sur cette connexion. Réessayez plus tard.",
+} as const;

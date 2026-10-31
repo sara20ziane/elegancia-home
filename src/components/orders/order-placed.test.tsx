@@ -50,7 +50,9 @@ describe("explicit order saving", () => {
   });
   it("saves only token/date on click, confirms success and prevents duplicate entries", async () => {
     const view = await render();
-    const button = view.container.querySelector("button")!;
+    const button = [...view.container.querySelectorAll("button")].find(
+      (item) => item.textContent === saveLabel,
+    )!;
     await act(async () => {
       button.click();
       button.click();
@@ -61,7 +63,11 @@ describe("explicit order saving", () => {
     ]);
     expect(window.localStorage.getItem(SAVED_ORDERS_KEY)).not.toContain("0555550199");
     expect(view.container).toHaveTextContent("Commande enregistrée sur cet appareil");
-    expect(view.container.querySelector("button")).toBeNull();
+    expect(
+      [...view.container.querySelectorAll("button")].some(
+        (button) => button.textContent === saveLabel,
+      ),
+    ).toBe(false);
     expect(view.container.querySelector("a")).toHaveAttribute("href", `/order/${publicToken}`);
   });
   it("recognizes a previously saved order without another write or duplicate", async () => {
@@ -69,7 +75,11 @@ describe("explicit order saving", () => {
     const write = vi.spyOn(Storage.prototype, "setItem");
     const view = await render();
     expect(view.container).toHaveTextContent("Commande enregistrée sur cet appareil");
-    expect(view.container.querySelector("button")).toBeNull();
+    expect(
+      [...view.container.querySelectorAll("button")].some(
+        (button) => button.textContent === saveLabel,
+      ),
+    ).toBe(false);
     expect(readSavedOrders()).toHaveLength(1);
     expect(write).not.toHaveBeenCalled();
   });

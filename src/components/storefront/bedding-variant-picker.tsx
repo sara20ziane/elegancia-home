@@ -1,5 +1,6 @@
 import type { CatalogueVariant } from "@/lib/queries";
 import {
+  beddingColourOptions,
   fabricOptions,
   mattressOptions,
   pieceCountOptions,
@@ -47,6 +48,72 @@ function ChoiceRow<T extends ChoiceValue>({
   );
 }
 
+function firstColourImage(variants: CatalogueVariant[], colour: string): string | null {
+  for (const variant of variants) {
+    if (variant.color_name !== colour) continue;
+    const image = [...variant.variant_images].sort((a, b) => a.sort_order - b.sort_order)[0];
+    if (image) return image.url;
+  }
+  return null;
+}
+
+function ColourChoiceRow({
+  variants,
+  selected,
+  options,
+  onSelect,
+}: {
+  variants: CatalogueVariant[];
+  selected: string | null;
+  options: BeddingOption<string>[];
+  onSelect: (colour: string) => void;
+}) {
+  if (options.length === 0) return null;
+
+  return (
+    <fieldset className="flex flex-col gap-2.5">
+      <legend className="mb-1 text-sm font-medium text-on-surface">
+        Couleur{selected ? ` : ${selected}` : ""}
+      </legend>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {options.map((option) => {
+          const image = firstColourImage(variants, option.value);
+          const active = option.value === selected;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onSelect(option.value)}
+              disabled={!option.inStock}
+              aria-pressed={active}
+              aria-label={`Couleur ${option.value}`}
+              className={cn(
+                "overflow-hidden rounded-[14px] border bg-surface text-left transition",
+                active ? "border-primary ring-2 ring-primary/20" : "border-outline hover:border-primary/50",
+                !option.inStock && "opacity-45",
+              )}
+            >
+              {image ? (
+                <img
+                  src={image}
+                  alt=""
+                  className="aspect-[4/3] w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <span className="block aspect-[4/3] w-full bg-surface-mid" aria-hidden="true" />
+              )}
+              <span className="block px-2.5 py-2 text-xs font-medium text-on-surface">
+                {option.value}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
 export function BeddingVariantPicker({
   variants,
   choice,
@@ -56,29 +123,38 @@ export function BeddingVariantPicker({
   choice: BeddingChoice;
   onChoose: (filter: Partial<BeddingChoice>) => void;
 }) {
-  const fabrics = fabricOptions(variants);
-  const setTypes = setTypeOptions(variants, choice.fabric);
-  const pieces = pieceCountOptions(variants, choice.fabric, choice.setType);
+  const colours = beddingColourOptions(variants);
+  const colour = choice.colour ?? null;
+  const fabrics = fabricOptions(variants, colour);
+  const setTypes = setTypeOptions(variants, choice.fabric, colour);
+  const pieces = pieceCountOptions(variants, choice.fabric, choice.setType, colour);
   const mattresses = mattressOptions(
     variants,
     choice.fabric,
     choice.setType,
     choice.pieceCount,
+    colour,
   );
 
   return (
     <div className="flex flex-col gap-5 rounded-[16px] border border-outline bg-surface/70 p-4 sm:p-5">
+      <ColourChoiceRow
+        variants={variants}
+        selected={colour}
+        options={colours}
+        onSelect={(nextColour) => onChoose({ colour: nextColour })}
+      />
       <ChoiceRow
         label="Tissu"
         selected={choice.fabric}
         options={fabrics}
-        onSelect={(fabric) => onChoose({ fabric })}
+        onSelect={(fabric) => onChoose({ colour, fabric })}
       />
       <ChoiceRow
         label="Type de parure"
         selected={choice.setType}
         options={setTypes}
-        onSelect={(setType) => onChoose({ fabric: choice.fabric, setType })}
+        onSelect={(setType) => onChoose({ colour, fabric: choice.fabric, setType })}
       />
       <ChoiceRow
         label="Nombre de pièces"
@@ -86,7 +162,7 @@ export function BeddingVariantPicker({
         options={pieces}
         format={(count) => `${count} pièces`}
         onSelect={(pieceCount) =>
-          onChoose({ fabric: choice.fabric, setType: choice.setType, pieceCount })
+          onChoose({ colour, fabric: choice.fabric, setType: choice.setType, pieceCount })
         }
       />
       <ChoiceRow
@@ -95,6 +171,7 @@ export function BeddingVariantPicker({
         options={mattresses}
         onSelect={(mattress) =>
           onChoose({
+            colour,
             fabric: choice.fabric,
             setType: choice.setType,
             pieceCount: choice.pieceCount,

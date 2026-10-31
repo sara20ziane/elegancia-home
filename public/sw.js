@@ -15,7 +15,7 @@
  * a service worker in front of the dev server causes confusing stale modules.
  */
 
-const VERSION = "openstore-v1";
+const VERSION = "elegancia-selected-v020-v1";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 
@@ -25,7 +25,7 @@ const STATIC_PATTERN = /\.(?:js|css|woff2?|ttf|otf|png|jpg|jpeg|webp|avif|svg|ic
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(["/", "/track"]).catch(() => undefined)),
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll(["/"]).catch(() => undefined)),
   );
   // Take over as soon as the new worker is installed rather than waiting for
   // every tab to close; this is a storefront, not a long-lived session app.
@@ -52,6 +52,8 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  // Never cache private admin, checkout or tracking navigations.
+  if (/^\/(admin|login|setup|checkout|order|track)(\/|$)/.test(url.pathname)) return;
 
   if (request.mode === "navigate") {
     event.respondWith(networkFirstNavigation(request));

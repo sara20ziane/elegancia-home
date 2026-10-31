@@ -14,8 +14,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { useCart } from "@/lib/cart";
 import { translate } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
-import { useStoreSettings } from "@/lib/queries";
-import { pickupFee, resolveDelivery, useDeliveryZones } from "@/lib/delivery";
+import { useCheckoutQuote } from "@/lib/use-checkout-quote";
 import { DeliveryChoice } from "@/components/storefront/delivery-choice";
 import { isDemoShop } from "@/components/storefront/demo-banner";
 import { OrderPlaced } from "@/components/orders/order-placed";
@@ -29,34 +28,12 @@ export const Route = createFileRoute("/checkout")({
 function CheckoutPage() {
   const { t } = useI18n();
   const cart = useCart();
-  const { data: settings } = useStoreSettings();
-  const { data: zones } = useDeliveryZones();
 
   const [form, setForm] = useState<CheckoutForm>(EMPTY_CHECKOUT_FORM);
-  const parureQuantity = cart.items.reduce((sum, line) => {
-    const marker = `${line.setType ?? ""} ${line.variantLabel ?? ""}`.toLowerCase();
-    const isParure =
-      marker.includes("parure de drap") || marker.includes("parure housse de couette");
-    return isParure ? sum + line.quantity : sum;
-  }, 0);
-
-  const delivery = resolveDelivery(
-    settings ?? null,
-    zones ?? [],
-    form.wilaya || null,
-    cart.subtotal,
-    form.delivery_method,
-    parureQuantity,
+  const { settings, delivery, homeDelivery, pickup, parureQuantity } = useCheckoutQuote(
+    form,
+    cart.items,
   );
-  const homeDelivery = resolveDelivery(
-    settings ?? null,
-    zones ?? [],
-    form.wilaya || null,
-    cart.subtotal,
-    "home",
-    parureQuantity,
-  );
-  const pickup = pickupFee(zones ?? [], form.wilaya || null, parureQuantity);
   const deliveryAvailable = !form.wilaya || delivery.available;
 
   const { submitting, error, placed, submit } = useCheckoutOrder(form, cart, delivery.available);

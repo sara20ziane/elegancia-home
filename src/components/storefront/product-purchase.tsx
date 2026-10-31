@@ -2,24 +2,13 @@ import { useEffect, useState } from "react";
 import { Check, MessageCircle, Package } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
+import { MAX_VARIANT_QUANTITY } from "@/lib/order-limits";
+import { variantLabel } from "@/lib/product-order";
 import { useCart } from "@/lib/cart";
 import { useStoreSettings, type CatalogueProduct, type CatalogueVariant } from "@/lib/queries";
 import { waLink } from "@/lib/whatsapp";
 import { saleOf } from "@/lib/sale";
 import { Button } from "@/components/ui/button";
-
-function variantLabel(variant: CatalogueVariant): string {
-  const bedding = Boolean(variant.fabric || variant.set_type || variant.piece_count !== null);
-  const parts = bedding
-    ? [
-        variant.fabric,
-        variant.set_type,
-        variant.piece_count !== null ? `${variant.piece_count} pièces` : null,
-        variant.size ? `Matelas ${variant.size}` : null,
-      ]
-    : [variant.size, variant.color_name];
-  return parts.filter(Boolean).join(" / ") || "—";
-}
 
 export function StockLine({
   selected,
@@ -139,7 +128,11 @@ export function AddToCart({
           </span>
           <button
             type="button"
-            onClick={() => setQuantity((q) => Math.min(selected?.stock ?? 100, q + 1))}
+            onClick={() =>
+              setQuantity((q) =>
+                Math.min(selected?.stock ?? MAX_VARIANT_QUANTITY, MAX_VARIANT_QUANTITY, q + 1),
+              )
+            }
             aria-label={`${t("common.quantity")} +`}
           >
             +

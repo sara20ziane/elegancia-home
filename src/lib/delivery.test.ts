@@ -11,18 +11,20 @@ const zones: DeliveryZone[] = [
 ];
 
 describe("resolveDelivery", () => {
-  it("uses the zone fee, then the flat fee", () => {
+  it("uses only a synchronized Packers fee, with no flat fallback", () => {
     expect(resolveDelivery(settings, zones, "Alger", 2500).fee).toBe(650);
-    expect(resolveDelivery(settings, zones, "Blida", 2500).fee).toBe(600);
+    expect(resolveDelivery(settings, zones, "Blida", 2500).available).toBe(false);
   });
 
   it("charges the pickup price for pickup", () => {
     expect(resolveDelivery(settings, zones, "Alger", 2500, "stopdesk").fee).toBe(400);
   });
 
-  it("is free above the threshold, whatever the method", () => {
-    expect(resolveDelivery(settings, zones, "Alger", 10000, "stopdesk").fee).toBe(0);
-    expect(resolveDelivery(settings, zones, "Oran", 12000).fee).toBe(0);
+  it("uses the parure offer, never an unrelated monetary threshold", () => {
+    expect(resolveDelivery(settings, zones, "Alger", 10000, "stopdesk").fee).toBe(400);
+    expect(resolveDelivery(settings, zones, "Alger", 10000, "stopdesk", 2).fee).toBe(0);
+    expect(resolveDelivery(settings, zones, "Oran", 12000).fee).toBe(800);
+    expect(resolveDelivery(settings, zones, "Oran", 12000, "home", 3).fee).toBe(0);
   });
 
   it("offers pickup only where it is priced", () => {

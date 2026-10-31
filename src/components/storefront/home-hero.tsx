@@ -56,7 +56,6 @@ const trustCopy = {
 
 /** Premium storefront hero tailored to Elegancia Home's bedding identity. */
 export function HomeHero({
-  settings,
   products,
 }: {
   settings: StoreSettings | null;

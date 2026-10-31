@@ -1,0 +1,47 @@
+import type { CatalogueProduct, CatalogueVariant } from "../../src/lib/queries";
+export const testVariant: CatalogueVariant = {
+  id: "aaaaaaaa-1111-4111-8111-111111111111",
+  size: "Queen",
+  color_name: null,
+  color_hex: null,
+  sku: "TEST",
+  price: 7500,
+  stock: 20,
+  is_active: true,
+  sort_order: 0,
+  fabric: "Coton",
+  fabric_origin: null,
+  set_type: "Parure de drap",
+  piece_count: 4,
+  composition: null,
+  flat_sheet_size: null,
+  fitted_sheet_size: "160 × 190",
+  duvet_cover_size: null,
+  variant_images: [
+    { id: "image1", url: "/test-a.svg", alt: null, sort_order: 0 },
+    { id: "image2", url: "/test-b.svg", alt: null, sort_order: 1 },
+  ],
+};
+export const testProduct: CatalogueProduct = {
+  id: "11111111-1111-4111-8111-111111111111",
+  slug: "test-bedding",
+  name: "TEST LITERIE",
+  name_fr: "TEST LITERIE",
+  description: "Produit de recette",
+  description_fr: "Produit de recette",
+  kind: "single",
+  status: "published",
+  category_id: null,
+  categories: null,
+  published_at: null,
+  product_variants: [
+    testVariant,
+    {
+      ...testVariant,
+      id: "aaaaaaaa-2222-4222-8222-222222222222",
+      size: "King",
+      fitted_sheet_size: "180 × 200",
+      sort_order: 1,
+    },
+  ],
+};

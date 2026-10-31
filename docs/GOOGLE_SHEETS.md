@@ -103,7 +103,10 @@ function doPost(e) {
 
   const payload = JSON.parse(body);
   const sheet = sheetFor();
-  const row = rowFrom(payload);
+  const row = rowFrom(payload).map(function (value) {
+    // A quoted CSV/JSON string can still be interpreted as a formula by Sheets.
+    return typeof value === "string" && /^[\s\uFEFF]*[=+@-]/.test(value) ? "'" + value : value;
+  });
   const id = payload.order.id;
 
   const ids = sheet

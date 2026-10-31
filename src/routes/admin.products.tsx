@@ -35,7 +35,6 @@ function useProductInvalidation() {
 }
 
 function ProductsPage() {
-  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const products = useAdminProductsPage(page);
   const [open, setOpen] = useState(false);

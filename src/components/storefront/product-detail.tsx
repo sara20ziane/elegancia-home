@@ -18,6 +18,7 @@ import {
   isBeddingProduct,
   type BeddingChoice,
 } from "@/lib/bedding-variant-options";
+import { QuickOrder } from "./quick-order";
 import { StarRating } from "./star-rating";
 import { ProductGallery } from "./product-gallery";
 import { AddToCart, StockLine } from "./product-purchase";
@@ -45,20 +46,18 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
   const [activeImage, setActiveImage] = useState(0);
 
   const colours = colourOptions(variants);
-  const sizes = sizeOptions(
-    variants,
-    colours.length > 0 ? legacyChoice.colour : null,
-  );
+  const sizes = sizeOptions(variants, colours.length > 0 ? legacyChoice.colour : null);
 
   const selected = bedding
     ? findBeddingVariant(variants, beddingChoice)
     : findVariant(variants, legacyChoice.colour, legacyChoice.size);
 
-  // A bedding model keeps one gallery across configurations; legacy products
-  // can still change their gallery with the selected colour.
   const selectedColourImages = imagesForColour(variants, legacyChoice.colour);
+  const beddingColourImages = imagesForColour(variants, beddingChoice.colour);
   const images = bedding
-    ? imagesForColour(variants, null)
+    ? beddingColourImages.length > 0
+      ? beddingColourImages
+      : imagesForColour(variants, null)
     : selectedColourImages.length > 0
       ? selectedColourImages
       : imagesForColour(variants, null);
@@ -81,6 +80,7 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
     const next = chooseBeddingVariant(variants, filter);
     if (!next) return;
     setBeddingChoice(beddingChoiceForVariant(next));
+    setActiveImage(0);
     setQuantity(1);
   };
 
@@ -90,7 +90,9 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
     : product.description_fr;
   const name = localized(locale, product.name, product.name_fr);
   const galleryAlt = bedding
-    ? [name, beddingChoice.fabric, beddingChoice.setType].filter(Boolean).join(" — ")
+    ? [name, beddingChoice.colour, beddingChoice.fabric, beddingChoice.setType]
+        .filter(Boolean)
+        .join(" — ")
     : legacyChoice.colour
       ? `${name} — ${legacyChoice.colour}`
       : name;
@@ -130,11 +132,7 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
           </>
         ) : (
           <>
-            <ColourPicker
-              colours={colours}
-              selected={legacyChoice.colour}
-              onSelect={pickColour}
-            />
+            <ColourPicker colours={colours} selected={legacyChoice.colour} onSelect={pickColour} />
             <SizePicker sizes={sizes} selected={legacyChoice.size} onSelect={pickSize} />
           </>
         )}
@@ -150,6 +148,15 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
           />
         )}
 
+        {selected && selected.stock > 0 && (
+          <QuickOrder
+            product={product}
+            name={name}
+            selected={selected}
+            images={images}
+            quantity={quantity}
+          />
+        )}
         {description && (
           <div className="flex flex-col gap-2 border-t border-outline pt-5">
             <h2 className="font-display text-base font-semibold">{t("store.description")}</h2>
