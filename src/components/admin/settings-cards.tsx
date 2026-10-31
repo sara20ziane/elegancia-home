@@ -175,45 +175,40 @@ export function LegalCard({ form, set }: { form: SettingsDraft; set: SettingsSet
 
 export function CommerceCard({ form, set }: { form: SettingsDraft; set: SettingsSetter }) {
   const { t } = useI18n();
-  const numberField = (
-    key: "delivery_fee_flat" | "delivery_eta_days" | "returns_days" | "free_shipping_threshold",
-    label: string,
-    min: number,
-    hint?: string,
-  ) => (
-    <Field label={label} hint={hint}>
-      <Input
-        type="number"
-        min={min}
-        value={form[key]}
-        onChange={(e) => set(key, Number(e.target.value) || 0)}
-        dir="ltr"
-        className="font-mono"
-      />
-    </Field>
-  );
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t("admin.settings.commerce")}</CardTitle>
       </CardHeader>
-      <CardBody className="grid gap-4 sm:grid-cols-2">
-        {numberField("delivery_fee_flat", t("admin.settings.deliveryFee"), 0)}
-        {numberField(
-          "free_shipping_threshold",
-          t("admin.settings.freeShippingFrom"),
-          0,
-          t("admin.settings.freeShippingHint"),
-        )}
-        {numberField("delivery_eta_days", t("admin.settings.etaDays"), 1)}
-        {numberField("returns_days", t("admin.settings.returnsDays"), 0)}
-        <div className="sm:col-span-2">
-          <Switch
-            label={t("checkout.codTitle")}
-            checked={form.accepts_cod}
-            onChange={(e) => set("accepts_cod", e.target.checked)}
-          />
+      <CardBody className="flex flex-col gap-4">
+        <div className="rounded-[12px] border border-primary/20 bg-primary/5 px-4 py-3">
+          <p className="text-sm font-semibold text-on-surface">
+            {t("admin.settings.packersManaged")}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-on-surface-muted">
+            {t("admin.settings.packersManagedHint")}
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={t("admin.settings.etaDays")}>
+            <Input
+              type="number"
+              min={1}
+              value={form.delivery_eta_days}
+              onChange={(e) => set("delivery_eta_days", Math.max(1, Number(e.target.value) || 1))}
+              dir="ltr"
+              className="font-mono"
+            />
+          </Field>
+          <div className="flex items-end pb-1">
+            <Switch
+              label={t("checkout.codTitle")}
+              checked={form.accepts_cod}
+              onChange={(e) => set("accepts_cod", e.target.checked)}
+            />
+          </div>
         </div>
       </CardBody>
     </Card>
