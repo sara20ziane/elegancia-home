@@ -3,6 +3,7 @@ import type {
   PackersActionResult,
   PackersConnectionResult,
   PackersRateSyncResult,
+  PackersStatusSyncResult,
   PackersStopDeskResult,
 } from "./packers-server";
 
@@ -25,6 +26,13 @@ export const syncPackersRates = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<PackersRateSyncResult> => {
     const { runSyncPackersRates } = await import("./packers-server");
     return runSyncPackersRates(data);
+  });
+
+export const syncPackersOrderStatuses = createServerFn({ method: "POST" })
+  .validator((input: { accessToken: string }) => input)
+  .handler(async ({ data }): Promise<PackersStatusSyncResult> => {
+    const { runSyncPackersOrderStatuses } = await import("./packers-server");
+    return runSyncPackersOrderStatuses(data);
   });
 
 export const listPackersStopDeskCommunes = createServerFn({ method: "GET" })
