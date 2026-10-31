@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Download, PhoneCall, Printer, RefreshCw } from "lucide-react";
+import { Download, PhoneCall, Plus, Printer, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AdminOrderList } from "./order-list";
+import { ManualOrderDialog } from "./manual-order-dialog";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { useI18n } from "@/lib/i18n-context";
@@ -47,6 +48,7 @@ export function OrdersSection({
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const autoSyncStarted = useRef(false);
+  const [manualOrderOpen, setManualOrderOpen] = useState(false);
 
   const sync = useMutation({
     mutationFn: async (showToast: boolean) => {
@@ -103,6 +105,10 @@ export function OrdersSection({
           <span className="font-mono text-xs text-on-surface-muted" data-testid="orders-total">
             {total}
           </span>
+          <Button size="sm" onClick={() => setManualOrderOpen(true)}>
+            <Plus size={15} aria-hidden="true" />
+            Nouvelle commande
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -147,6 +153,8 @@ export function OrdersSection({
         onPageChange={onPageChange}
         testId="orders-pagination"
       />
+
+      <ManualOrderDialog open={manualOrderOpen} onClose={() => setManualOrderOpen(false)} />
     </section>
   );
 }
