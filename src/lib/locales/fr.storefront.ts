@@ -220,4 +220,24 @@ export const frStorefront = {
   "search.placeholder": "Rechercher un produit...",
   "search.for": "Résultats pour",
   "nav.search": "Recherche",
+  "order.savedTitle": "Mes commandes sauvegardées",
+  "order.savedDeviceNote":
+    "Ces références sont enregistrées uniquement sur cet appareil. Elles permettent d’accéder à votre suivi : gardez-les privées. Effacer les données du navigateur les supprime.",
+  "order.savedEmpty": "Aucune commande enregistrée sur cet appareil.",
+  "order.savedLoadFailed": "Suivi temporairement indisponible. Votre référence est conservée.",
+  "order.removeSaved": "Retirer de mes commandes",
+  "order.storageUnavailable":
+    "Enregistrement local indisponible. Conservez votre référence pour retrouver le suivi.",
+  "order.savedOnDevice": "Commande enregistrée sur cet appareil",
+  "order.trackingPending": "Le numéro de suivi sera disponible après la création du colis.",
+  "order.packersTracking": "Numéro de suivi Packers",
+  "order.copyTracking": "Copier le numéro de suivi",
+  "order.trackingCopied": "Numéro de suivi copié",
+  "order.copyFailed": "Copie indisponible. Sélectionnez le numéro pour le copier manuellement.",
+  "checkout.rateUnavailable":
+    "Tarif Packers indisponible pour cette wilaya. Réessaie après synchronisation des tarifs.",
+  "checkout.communeRequired": "La commune est obligatoire pour la livraison.",
+  "checkout.stopdeskUnavailable": "Le Stop Desk n’est pas disponible pour la commune sélectionnée.",
+  "order.saveOnDevice": "Enregistrer cette commande sur cet appareil",
+  "order.sharedDeviceWarning": "Évite cette option sur un appareil partagé.",
 };

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Circle, MapPin, Package, Phone, Truck } from "lucide-react";
 import { StoreLayout } from "@/components/storefront/store-layout";
+import { TrackingNumber } from "@/components/orders/tracking-number";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
@@ -69,6 +70,7 @@ function OrderPage() {
             )}
 
             <Timeline status={data.status} />
+            <TrackingNumber key={data.tracking_number} tracking={data.tracking_number} />
 
             <section className="flex flex-col gap-3 rounded-[16px] border border-outline bg-surface p-5">
               <h2 className="flex items-center gap-2 font-medium">

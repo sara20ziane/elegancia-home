@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { translate } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
+import { SavedOrders } from "@/components/orders/saved-orders";
 import { isTokenShaped } from "@/lib/order";
 
 export const Route = createFileRoute("/track")({
@@ -64,6 +65,7 @@ function TrackPage() {
             {t("order.lookup")}
           </Button>
         </form>
+        <SavedOrders />
       </div>
     </StoreLayout>
   );

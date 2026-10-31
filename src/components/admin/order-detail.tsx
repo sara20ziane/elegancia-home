@@ -1,3 +1,4 @@
+import { invalidateAdminOrders } from "@/lib/admin-order-events";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -115,7 +116,7 @@ function OrderActions({ order }: { order: AdminOrder }) {
       await setOrderStatus(order.id, input.status, extra);
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin_orders"] });
+      invalidateAdminOrders(queryClient);
       setRefusing(false);
       setReason("");
     },

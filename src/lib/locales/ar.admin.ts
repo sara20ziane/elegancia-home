@@ -146,4 +146,11 @@ export const arAdmin = {
   "admin.settings.announcementEnabled": "إظهار الإعلان",
   "admin.settings.returnsNote": "سياسة الإرجاع",
   "admin.settings.returnsNoteHint": "ما يجب أن يعرفه المشتري قبل الطلب. يظهر في أسفل الصفحة.",
+  "admin.orders.newReceived": "تم استلام طلب جديد",
+  "admin.orders.live.connecting": "جارٍ الاتصال بالإشعارات…",
+  "admin.orders.live.connected": "الإشعارات المباشرة مفعّلة",
+  "admin.orders.live.unavailable": "الإشعارات غير متاحة. حدّثي الطلبات يدويًا.",
+  "admin.orders.soundOn": "الصوت مفعّل",
+  "admin.orders.soundOff": "تفعيل الصوت",
+  "admin.orders.soundUnavailable": "الصوت غير متاح في هذا المتصفح.",
 };
