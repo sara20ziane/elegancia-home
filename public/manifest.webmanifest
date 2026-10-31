@@ -1,15 +1,15 @@
 {
-  "name": "OpenStore DZ",
-  "short_name": "OpenStore",
-  "description": "متجر إلكتروني مع الدفع عند الاستلام والتوصيل إلى 58 ولاية.",
-  "lang": "ar",
-  "dir": "rtl",
+  "name": "Elegancia Home",
+  "short_name": "Elegancia",
+  "description": "Literie et linge de maison élégants avec paiement à la livraison en Algérie.",
+  "lang": "fr",
+  "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#faf7f4",
-  "theme_color": "#d9480f",
+  "background_color": "#F7F3EA",
+  "theme_color": "#A65E23",
   "categories": ["shopping", "business"],
   "icons": [
     {
@@ -33,7 +33,7 @@
   ],
   "shortcuts": [
     {
-      "name": "تتبع طلب",
+      "name": "Suivre une commande",
       "url": "/track",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
