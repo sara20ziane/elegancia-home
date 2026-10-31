@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
+import { orderSourceLabel } from "@/lib/manual-order";
 import { wilayaLabel } from "@/lib/wilayas";
 import { setOrderStatus, type AdminOrder, type OrderStatus } from "@/lib/admin";
 import type { PhoneHistory } from "@/lib/admin-phones";
@@ -24,6 +25,12 @@ export function OrderDetail({
   const { t, locale } = useI18n();
   return (
     <div className="flex flex-col gap-4 border-t border-outline px-4 py-4">
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="rounded-full bg-surface-mid px-2.5 py-1 text-on-surface-muted">
+          Source : <span className="font-medium text-on-surface">{orderSourceLabel(order.order_source)}</span>
+        </span>
+      </div>
+
       <ul className="flex flex-col gap-2 text-sm">
         {order.order_items.map((item) => (
           <li key={item.id} className="flex items-start justify-between gap-3">

@@ -4,6 +4,7 @@ import { StatusBadge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/feedback";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDateTime, formatDzd } from "@/lib/format";
+import { orderSourceLabel } from "@/lib/manual-order";
 import { wilayaLabel } from "@/lib/wilayas";
 import type { AdminOrder } from "@/lib/admin";
 import { OrderDetail } from "./order-detail";
@@ -55,6 +56,9 @@ function OrderRow({ order, history }: { order: AdminOrder; history: PhoneHistory
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-medium">{order.customer_name}</p>
             <StatusBadge status={order.status} />
+            <span className="rounded-full bg-surface-mid px-2 py-0.5 text-[11px] text-on-surface-muted">
+              {orderSourceLabel(order.order_source)}
+            </span>
             <PhoneBadge history={history} />
             {pending && (
               <span className="text-xs font-medium text-tertiary">
