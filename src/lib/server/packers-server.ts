@@ -1,4 +1,5 @@
 import "@tanstack/react-start/server-only";
+import { notifyPackersParcel } from "./telegram-server";
 import { assertAdmin } from "./packers-auth";
 import { syncPackersStatuses } from "./packers-status-sync";
 import { normalize, resolveWilayaCode } from "./packers-delivery-server";
@@ -131,12 +132,19 @@ export async function runCreatePackersParcel(input: {
       note: order.note ? String(order.note) : null,
     });
 
-    if (created.success !== true || !created.tracking) {
+    if (
+      created.success !== true ||
+      typeof created.tracking !== "string" ||
+      !created.tracking.trim() ||
+      created.tracking.trim().length > 200 ||
+      /\s/.test(created.tracking.trim()) ||
+      [...created.tracking].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
+    ) {
       return { ok: false, error: created.message || "Packers a refusé la création du colis." };
     }
 
-    const tracking = String(created.tracking);
-    const { error: saveError } = await auth.supabase
+    const tracking = created.tracking.trim();
+    const { data: saved, error: saveError } = await auth.supabase
       .from("orders")
       .update({
         carrier: "Packers",
@@ -144,9 +152,20 @@ export async function runCreatePackersParcel(input: {
         carrier_status: null,
         carrier_status_updated_at: null,
       })
-      .eq("id", order.id);
-    if (saveError) return { ok: false, error: saveError.message };
-
+      .eq("id", order.id)
+      .select("tracking_number")
+      .maybeSingle();
+    if (saveError || saved?.tracking_number !== tracking) {
+      return {
+        ok: false,
+        error: saveError?.message ?? "Le suivi Packers n’a pas pu être enregistré.",
+      };
+    }
+    try {
+      await notifyPackersParcel({ ...order, tracking_number: tracking });
+    } catch {
+      // Telegram cannot invalidate the saved parcel, even if the integration unexpectedly throws.
+    }
     return { ok: true, tracking, stage: "created" };
   } catch (createError) {
     return {
