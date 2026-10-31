@@ -39,9 +39,15 @@ describe("saved orders", () => {
       publicToken,
       createdAt,
       name: "Private",
+      customer_name: "Private",
       phone: "0555555555",
       address: "Private",
       tracking_number: "TEST",
+      wilaya: "Alger",
+      commune: "Alger Centre",
+      status: "shipped",
+      total: 15000,
+      items: [{ product_name: "Private purchase", quantity: 2 }],
     };
     saveOrderLocally(input);
     expect(JSON.parse(window.localStorage.getItem(SAVED_ORDERS_KEY)!)).toEqual([

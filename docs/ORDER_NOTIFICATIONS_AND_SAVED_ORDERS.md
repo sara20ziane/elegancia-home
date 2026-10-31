@@ -10,10 +10,18 @@ Supabase de la notification : son événement ne contient que l'id et la référ
 jamais le nom, le téléphone ou l'adresse. Un futur service externe devra écouter
 les créations côté serveur ; aucun service externe n'est intégré ici.
 
-Le checkout continue d'appeler `place_order`. `useCheckoutOrder` enregistre ensuite
-le public_token avec sa date dans localStorage, indépendamment de Packers. Un
-stockage refusé n'annule jamais la commande. La confirmation indique honnêtement
-si l'enregistrement a réussi et conserve le lien `/order/$token` dans les deux cas.
+Le checkout continue d'appeler `place_order`. `useCheckoutOrder` conserve uniquement
+en mémoire le public_token et sa date après création et vide le panier. Il n'appelle
+pas le stockage local. Sur la confirmation, la cliente peut choisir « Enregistrer
+cette commande sur cet appareil », avec l'avertissement « Évite cette option sur un
+appareil partagé. » Ces textes sont traduits en FR/AR/EN. Le token donne accès aux
+informations retournées par `track_order` : sa persistance exige donc ce clic explicite.
+
+Après le clic, seuls le public_token et sa date sont enregistrés. La confirmation
+reconnaît aussi une référence déjà sauvegardée sans l'écrire de nouveau. En cas
+d'échec, elle affiche le message de stockage indisponible et permet de réessayer.
+Le lien `/order/$token` reste accessible avant toute sauvegarde, après succès et en
+cas d'échec. Une panne de localStorage ne peut pas affecter la création de commande.
 
 `/track` conserve son formulaire existant et ajoute « Mes commandes sauvegardées ».
 Chaque carte recharge son état par le RPC existant `track_order(public_token)` et
@@ -91,22 +99,23 @@ socket Docker indisponible. Le test Realtime authentifié reste à faire après 
 
 ## Tests et qualité
 
-29 nouveaux tests couvrent stockage du token, déduplication, suppression, corruption,
+31 nouveaux tests couvrent sauvegarde explicite du token, déduplication, suppression, corruption,
 champs autorisés uniquement, quota/stockage bloqué, bornage, checkout réussi/échoué,
-double clic, confirmation, tracking absent puis présent, copie et fallback, erreur RPC,
+double clic, absence de sauvegarde au checkout, consentement, appareil partagé,
+commande déjà enregistrée, confirmation et suivi malgré un échec de stockage, tracking absent puis présent, copie et fallback, erreur RPC,
 changement d'onglet, StrictMode, nettoyage, reconnexion, données minimales transmises,
 invalidation des queries et son facultatif.
 
 Comparaison locale avec un worktree indépendant de `main` :
 
-| Contrôle | Branche | Main |
-| --- | --- | --- |
-| Typecheck | 25 erreurs préexistantes | 25 erreurs |
-| Lint global | 50 erreurs préexistantes, 9 avertissements | 57 erreurs, 9 avertissements |
-| Tests | 29 nouveaux réussis ; 3 échecs préexistants | 116 réussis, 3 échecs |
-| Knip | 9 fichiers, 13 exports, 2 types inutilisés, préexistants | Identique |
-| Build | Réussi | Réussi |
-| Lint des fichiers concernés | Réussi | — |
+| Contrôle                    | Branche                                                  | Main                         |
+| --------------------------- | -------------------------------------------------------- | ---------------------------- |
+| Typecheck                   | 25 erreurs préexistantes                                 | 25 erreurs                   |
+| Lint global                 | 50 erreurs préexistantes, 9 avertissements               | 57 erreurs, 9 avertissements |
+| Tests                       | 31 nouveaux réussis ; 3 échecs préexistants              | 116 réussis, 3 échecs        |
+| Knip                        | 9 fichiers, 13 exports, 2 types inutilisés, préexistants | Identique                    |
+| Build                       | Réussi                                                   | Réussi                       |
+| Lint des fichiers concernés | Réussi                                                   | —                            |
 
 Les trois échecs existants concernent `delivery.test.ts` (2 anciennes attentes
 sur les tarifs) et `page-titles.test.ts`. Les erreurs TypeScript concernent les types

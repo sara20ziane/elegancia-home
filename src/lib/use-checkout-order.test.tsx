@@ -30,25 +30,28 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.clearAllMocks();
 });
-it("automatically saves only the public token/date after successful checkout", async () => {
+it("creates the order and clears the cart without writing any token to localStorage", async () => {
+  const write = vi.spyOn(Storage.prototype, "setItem");
   const view = await renderTest(<Harness />);
   await act(async () => {
     await result.submit(event);
   });
-  expect(readSavedOrders()).toEqual([{ publicToken, createdAt: expect.any(String) }]);
-  expect(result.placed).toEqual({ token: publicToken, saved: true });
+  expect(write).not.toHaveBeenCalled();
+  expect(readSavedOrders()).toEqual([]);
+  expect(result.placed).toEqual({ token: publicToken, createdAt: expect.any(String) });
   expect(clear).toHaveBeenCalledTimes(1);
   await view.unmount();
 });
 it("preserves the successful order and follow-up token when storage is blocked", async () => {
-  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+  const write = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
     throw new Error("blocked");
   });
   const view = await renderTest(<Harness />);
   await act(async () => {
     await result.submit(event);
   });
-  expect(result.placed).toEqual({ token: publicToken, saved: false });
+  expect(result.placed).toEqual({ token: publicToken, createdAt: expect.any(String) });
+  expect(write).not.toHaveBeenCalled();
   expect(clear).toHaveBeenCalledTimes(1);
   await view.unmount();
 });

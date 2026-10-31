@@ -60,7 +60,8 @@ function CheckoutPage() {
   const deliveryAvailable = !form.wilaya || delivery.available;
 
   const { submitting, error, placed, submit } = useCheckoutOrder(form, cart, delivery.available);
-  if (placed) return <OrderPlaced token={placed.token} phone={form.phone} saved={placed.saved} />;
+  if (placed)
+    return <OrderPlaced token={placed.token} phone={form.phone} createdAt={placed.createdAt} />;
   if (settings && !settings.accepts_cod) {
     return <NothingToCheckOut title={t("shop.closed")} body={t("shop.closedBody")} />;
   }

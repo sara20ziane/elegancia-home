@@ -234,4 +234,6 @@ export const enStorefront = {
     "Packers rates are unavailable for this wilaya. Try again after rates are synchronized.",
   "checkout.communeRequired": "A commune is required for delivery.",
   "checkout.stopdeskUnavailable": "Stop Desk is unavailable in the selected commune.",
+  "order.saveOnDevice": "Save this order on this device",
+  "order.sharedDeviceWarning": "Avoid this option on a shared device.",
 };

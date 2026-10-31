@@ -3,9 +3,8 @@ import type { CheckoutForm } from "@/components/storefront/checkout-panels";
 import type { CartItem } from "./cart";
 import { useI18n } from "./i18n-context";
 import { placeOrder } from "./order";
-import { saveOrderLocally } from "./saved-orders";
 
-/** The RPC creates the order; local storage is only a best-effort bookmark afterwards. */
+/** The RPC creates the order. Persisting its tracking token requires a separate explicit action. */
 export function useCheckoutOrder(
   form: CheckoutForm,
   cart: { items: CartItem[]; clear: () => void },
@@ -15,7 +14,7 @@ export function useCheckoutOrder(
   const inFlight = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [placed, setPlaced] = useState<{ token: string; saved: boolean } | null>(null);
+  const [placed, setPlaced] = useState<{ token: string; createdAt: string } | null>(null);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (inFlight.current) return;
@@ -47,11 +46,7 @@ export function useCheckoutOrder(
         );
         return;
       }
-      const saved = saveOrderLocally({
-        publicToken: result.token,
-        createdAt: new Date().toISOString(),
-      });
-      setPlaced({ token: result.token, saved });
+      setPlaced({ token: result.token, createdAt: new Date().toISOString() });
       cart.clear();
     } catch {
       setError(t("common.somethingWrong"));

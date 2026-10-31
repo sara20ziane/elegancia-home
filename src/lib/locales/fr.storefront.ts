@@ -238,4 +238,6 @@ export const frStorefront = {
     "Tarif Packers indisponible pour cette wilaya. Réessaie après synchronisation des tarifs.",
   "checkout.communeRequired": "La commune est obligatoire pour la livraison.",
   "checkout.stopdeskUnavailable": "Le Stop Desk n’est pas disponible pour la commune sélectionnée.",
+  "order.saveOnDevice": "Enregistrer cette commande sur cet appareil",
+  "order.sharedDeviceWarning": "Évite cette option sur un appareil partagé.",
 };

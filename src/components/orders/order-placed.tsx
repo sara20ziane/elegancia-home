@@ -1,19 +1,31 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CheckCircle2 } from "lucide-react";
 import { StoreLayout } from "@/components/storefront/store-layout";
 import { Button } from "@/components/ui/button";
+import { saveOrderLocally } from "@/lib/saved-orders";
+import { useSavedOrders } from "@/lib/use-saved-orders";
 import { useI18n } from "@/lib/i18n-context";
 
 export function OrderPlaced({
   token,
   phone,
-  saved,
+  createdAt,
 }: {
   token: string;
   phone: string;
-  saved: boolean;
+  createdAt: string;
 }) {
   const { t } = useI18n();
+  const savedOrders = useSavedOrders();
+  const [saveState, setSaveState] = useState<"idle" | "saved" | "failed">("idle");
+  const saved =
+    saveState === "saved" ||
+    savedOrders.some((order) => order.publicToken === token.trim().toLowerCase());
+  const save = () => {
+    if (saved) return;
+    setSaveState(saveOrderLocally({ publicToken: token, createdAt }) ? "saved" : "failed");
+  };
   return (
     <StoreLayout>
       <div className="container-page flex flex-col items-center gap-5 py-20 text-center">
@@ -23,9 +35,30 @@ export function OrderPlaced({
         <p className="rounded-[10px] border border-outline bg-surface px-4 py-3 font-mono text-xs">
           {token}
         </p>
-        <p role="status" className="max-w-md text-sm text-on-surface-muted">
-          {t(saved ? "order.savedOnDevice" : "order.storageUnavailable")}
-        </p>
+        <div className="flex max-w-md flex-col items-center gap-2">
+          {saved ? (
+            <p role="status" className="text-sm">
+              {t("order.savedOnDevice")}
+            </p>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={save}
+              aria-describedby="save-order-device-warning"
+            >
+              {t("order.saveOnDevice")}
+            </Button>
+          )}
+          <p id="save-order-device-warning" className="text-sm text-on-surface-muted">
+            {t("order.sharedDeviceWarning")}
+          </p>
+          {!saved && saveState === "failed" && (
+            <p role="status" className="text-sm text-on-surface-muted">
+              {t("order.storageUnavailable")}
+            </p>
+          )}
+        </div>
         <Button asChild size="lg">
           <Link to="/order/$token" params={{ token }}>
             {t("checkout.trackNow")}

@@ -6,7 +6,6 @@ import { renderTest } from "../../../scripts/testing/react-render";
 import { I18nProvider } from "@/lib/i18n-context";
 import { saveOrderLocally, readSavedOrders } from "@/lib/saved-orders";
 import { SavedOrders } from "./saved-orders";
-import { OrderPlaced } from "./order-placed";
 
 const { trackOrder, writeText } = vi.hoisted(() => ({
   trackOrder: vi.fn(),
@@ -113,13 +112,5 @@ describe("saved order tracking", () => {
       window.dispatchEvent(new StorageEvent("storage", { key: "elegancia-saved-orders-v1" }));
     });
     expect(view.container).toHaveTextContent(publicToken);
-  });
-  it.each([true, false])("checkout confirmation accurately reports saving: %s", async (saved) => {
-    const view = await render(<OrderPlaced token={publicToken} phone="0555550199" saved={saved} />);
-    expect(view.container).toHaveTextContent(
-      saved ? "Commande enregistrée sur cet appareil" : "Enregistrement local indisponible",
-    );
-    expect(view.container).toHaveTextContent("Suivre ma commande");
-    expect(view.container.querySelector("a")).toHaveAttribute("href", `/order/${publicToken}`);
   });
 });

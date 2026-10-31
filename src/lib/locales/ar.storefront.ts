@@ -228,4 +228,6 @@ export const arStorefront = {
   "checkout.rateUnavailable": "تعريفة Packers غير متاحة لهذه الولاية. حاولي بعد مزامنة التعريفات.",
   "checkout.communeRequired": "البلدية مطلوبة للتوصيل.",
   "checkout.stopdeskUnavailable": "نقطة الاستلام غير متاحة في البلدية المختارة.",
+  "order.saveOnDevice": "حفظ هذا الطلب على هذا الجهاز",
+  "order.sharedDeviceWarning": "تجنّبي هذا الخيار على جهاز مشترك.",
 };
