@@ -216,4 +216,22 @@ export const enStorefront = {
   "search.placeholder": "Search for a product...",
   "search.for": "Results for",
   "nav.search": "Search",
+  "order.savedTitle": "My saved orders",
+  "order.savedDeviceNote":
+    "These references are saved only on this device. They give access to order tracking: keep them private. Clearing browser data removes them.",
+  "order.savedEmpty": "No orders saved on this device.",
+  "order.savedLoadFailed": "Tracking is temporarily unavailable. Your reference is still saved.",
+  "order.removeSaved": "Remove from my orders",
+  "order.storageUnavailable":
+    "Local saving is unavailable. Keep your reference to find your order.",
+  "order.savedOnDevice": "Order saved on this device",
+  "order.trackingPending": "The tracking number will be available after the parcel is created.",
+  "order.packersTracking": "Packers tracking number",
+  "order.copyTracking": "Copy tracking number",
+  "order.trackingCopied": "Tracking number copied",
+  "order.copyFailed": "Copy unavailable. Select the number to copy it manually.",
+  "checkout.rateUnavailable":
+    "Packers rates are unavailable for this wilaya. Try again after rates are synchronized.",
+  "checkout.communeRequired": "A commune is required for delivery.",
+  "checkout.stopdeskUnavailable": "Stop Desk is unavailable in the selected commune.",
 };

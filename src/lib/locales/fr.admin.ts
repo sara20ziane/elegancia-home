@@ -153,4 +153,12 @@ export const frAdmin = {
   "admin.settings.returnsNote": "Politique de retour",
   "admin.settings.returnsNoteHint":
     "Ce que l'acheteur doit savoir avant de commander. Affiché en pied de page.",
+  "admin.orders.newReceived": "Nouvelle commande reçue",
+  "admin.orders.live.connecting": "Connexion aux notifications…",
+  "admin.orders.live.connected": "Notifications en direct actives",
+  "admin.orders.live.unavailable":
+    "Notifications indisponibles. Actualisez les commandes manuellement.",
+  "admin.orders.soundOn": "Son activé",
+  "admin.orders.soundOff": "Activer le son",
+  "admin.orders.soundUnavailable": "Son indisponible dans ce navigateur.",
 };

@@ -24,3 +24,6 @@ if (!window.ResizeObserver) {
     disconnect() {}
   };
 }
+
+// React DOM act() integration, without adding a test renderer dependency.
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });

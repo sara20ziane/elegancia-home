@@ -150,4 +150,11 @@ export const enAdmin = {
   "admin.settings.returnsNote": "Returns policy",
   "admin.settings.returnsNoteHint":
     "What a buyer should know before ordering. Shown in the footer.",
+  "admin.orders.newReceived": "New order received",
+  "admin.orders.live.connecting": "Connecting notifications…",
+  "admin.orders.live.connected": "Live notifications active",
+  "admin.orders.live.unavailable": "Notifications unavailable. Refresh orders manually.",
+  "admin.orders.soundOn": "Sound enabled",
+  "admin.orders.soundOff": "Enable sound",
+  "admin.orders.soundUnavailable": "Sound is unavailable in this browser.",
 };

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, Gift } from "lucide-react";
+import { ArrowLeft, Gift } from "lucide-react";
 import { StoreLayout } from "@/components/storefront/store-layout";
 import {
   AddressFields,
@@ -18,7 +18,8 @@ import { useStoreSettings } from "@/lib/queries";
 import { pickupFee, resolveDelivery, useDeliveryZones } from "@/lib/delivery";
 import { DeliveryChoice } from "@/components/storefront/delivery-choice";
 import { isDemoShop } from "@/components/storefront/demo-banner";
-import { placeOrder } from "@/lib/order";
+import { OrderPlaced } from "@/components/orders/order-placed";
+import { useCheckoutOrder } from "@/lib/use-checkout-order";
 
 export const Route = createFileRoute("/checkout")({
   head: ({ match }) => ({ meta: [{ title: translate(match.context.locale, "checkout.title") }] }),
@@ -32,20 +33,10 @@ function CheckoutPage() {
   const { data: zones } = useDeliveryZones();
 
   const [form, setForm] = useState<CheckoutForm>(EMPTY_CHECKOUT_FORM);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [placedToken, setPlacedToken] = useState<string | null>(null);
-
-  if (placedToken) return <OrderPlaced token={placedToken} phone={form.phone} />;
-
-  if (settings && !settings.accepts_cod) {
-    return <NothingToCheckOut title={t("shop.closed")} body={t("shop.closedBody")} />;
-  }
-  if (cart.items.length === 0) return <NothingToCheckOut title={t("cart.empty")} />;
-
   const parureQuantity = cart.items.reduce((sum, line) => {
     const marker = `${line.setType ?? ""} ${line.variantLabel ?? ""}`.toLowerCase();
-    const isParure = marker.includes("parure de drap") || marker.includes("parure housse de couette");
+    const isParure =
+      marker.includes("parure de drap") || marker.includes("parure housse de couette");
     return isParure ? sum + line.quantity : sum;
   }, 0);
 
@@ -68,40 +59,12 @@ function CheckoutPage() {
   const pickup = pickupFee(zones ?? [], form.wilaya || null, parureQuantity);
   const deliveryAvailable = !form.wilaya || delivery.available;
 
-  const submit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setError(null);
-
-    if (!form.wilaya || !delivery.available) {
-      setError("Tarif Packers indisponible pour cette wilaya. Réessaie après synchronisation des tarifs.");
-      return;
-    }
-    if (!form.commune.trim()) {
-      setError("La commune est obligatoire pour la livraison.");
-      return;
-    }
-    if (form.delivery_method === "stopdesk" && !form.stopdesk_name) {
-      setError("Le Stop Desk n’est pas disponible pour la commune sélectionnée.");
-      return;
-    }
-
-    setSubmitting(true);
-    const result = await placeOrder(
-      toCustomer(form),
-      cart.items.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })),
-    );
-    setSubmitting(false);
-    if (result.error || !result.token) {
-      setError(
-        result.code
-          ? t(`checkout.error.${result.code}`)
-          : (result.error ?? t("common.somethingWrong")),
-      );
-      return;
-    }
-    cart.clear();
-    setPlacedToken(result.token);
-  };
+  const { submitting, error, placed, submit } = useCheckoutOrder(form, cart, delivery.available);
+  if (placed) return <OrderPlaced token={placed.token} phone={form.phone} saved={placed.saved} />;
+  if (settings && !settings.accepts_cod) {
+    return <NothingToCheckOut title={t("shop.closed")} body={t("shop.closedBody")} />;
+  }
+  if (cart.items.length === 0) return <NothingToCheckOut title={t("cart.empty")} />;
 
   return (
     <StoreLayout>
@@ -135,18 +98,27 @@ function CheckoutPage() {
               <div>
                 <p className="font-medium text-on-surface">Offre livraison Elegancia</p>
                 {parureQuantity >= 3 ? (
-                  <p className="mt-1 text-on-surface-muted">Livraison offerte à domicile ou en Stop Desk pour vos {parureQuantity} parures.</p>
+                  <p className="mt-1 text-on-surface-muted">
+                    Livraison offerte à domicile ou en Stop Desk pour vos {parureQuantity} parures.
+                  </p>
                 ) : parureQuantity >= 2 ? (
-                  <p className="mt-1 text-on-surface-muted">Livraison Stop Desk offerte. Ajoutez encore 1 parure pour profiter aussi de la livraison à domicile gratuite.</p>
+                  <p className="mt-1 text-on-surface-muted">
+                    Livraison Stop Desk offerte. Ajoutez encore 1 parure pour profiter aussi de la
+                    livraison à domicile gratuite.
+                  </p>
                 ) : (
-                  <p className="mt-1 text-on-surface-muted">2 parures achetées : Stop Desk offert · 3 parures achetées : livraison à domicile offerte.</p>
+                  <p className="mt-1 text-on-surface-muted">
+                    2 parures achetées : Stop Desk offert · 3 parures achetées : livraison à
+                    domicile offerte.
+                  </p>
                 )}
               </div>
             </div>
 
             {form.wilaya && !homeDelivery.available && (
               <p className="rounded-[12px] border border-tertiary/30 bg-tertiary/10 px-4 py-3 text-sm text-tertiary">
-                Tarif Packers indisponible pour cette wilaya. La commande reste bloquée tant que les tarifs ne sont pas synchronisés.
+                Tarif Packers indisponible pour cette wilaya. La commande reste bloquée tant que les
+                tarifs ne sont pas synchronisés.
               </p>
             )}
             <DeliveryChoice
@@ -179,41 +151,6 @@ function CheckoutPage() {
       </div>
     </StoreLayout>
   );
-}
-
-function OrderPlaced({ token, phone }: { token: string; phone: string }) {
-  const { t } = useI18n();
-  return (
-    <StoreLayout>
-      <div className="container-page flex flex-col items-center gap-5 py-20 text-center">
-        <CheckCircle2 size={40} className="text-positive" aria-hidden="true" />
-        <h1 className="font-display text-2xl font-semibold">{t("checkout.orderPlaced")}</h1>
-        <p className="max-w-md text-on-surface-muted">{t("checkout.orderPlacedBody", { phone })}</p>
-        <p className="rounded-[10px] border border-outline bg-surface px-4 py-3 font-mono text-xs">
-          {token}
-        </p>
-        <Button asChild size="lg">
-          <Link to="/order/$token" params={{ token }}>
-            {t("checkout.trackNow")}
-          </Link>
-        </Button>
-      </div>
-    </StoreLayout>
-  );
-}
-
-function toCustomer(form: CheckoutForm) {
-  return {
-    customer_name: form.customer_name,
-    phone: form.phone,
-    wilaya: form.wilaya,
-    commune: form.commune.trim(),
-    address: form.address,
-    note: form.note || null,
-    delivery_method: form.delivery_method,
-    stopdesk_id: null,
-    stopdesk_name: form.stopdesk_name || null,
-  };
 }
 
 function NothingToCheckOut({ title, body }: { title: string; body?: string }) {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
+import { OrderNotifications } from "@/components/admin/order-notifications";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/feedback";
@@ -103,6 +104,9 @@ function AdminLayout() {
         </div>
 
         <main className="container-page py-6 sm:py-8">
+          <div className="mb-4">
+            <OrderNotifications key={user?.id} />
+          </div>
           <Outlet />
         </main>
       </div>

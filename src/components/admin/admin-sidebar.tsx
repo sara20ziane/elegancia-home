@@ -15,6 +15,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n-context";
+import { usePendingOrdersCount } from "@/lib/admin";
 import { cn } from "@/lib/utils";
 
 /**
@@ -52,6 +53,7 @@ export function AdminSidebar({
 }) {
   const { t } = useI18n();
   const { signOut } = useAuth();
+  const pending = usePendingOrdersCount();
 
   return (
     <>
@@ -99,6 +101,14 @@ export function AdminSidebar({
                 >
                   <link.icon aria-hidden="true" />
                   <span className="admin-nav-label">{t(link.labelKey)}</span>
+                  {link.to === "/admin" && (pending.data ?? 0) > 0 && (
+                    <span
+                      className="rounded-full bg-tertiary px-2 py-0.5 text-xs text-on-tertiary"
+                      aria-label={`${t("admin.orders.needsCall")} : ${pending.data}`}
+                    >
+                      {pending.data}
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}
