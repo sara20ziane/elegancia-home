@@ -2,7 +2,8 @@ import { useRef, useState, type FormEvent } from "react";
 import type { CheckoutForm } from "@/components/storefront/checkout-panels";
 import type { CartItem } from "./cart";
 import { useI18n } from "./i18n-context";
-import { placeOrder } from "./order";
+import { isTokenShaped, placeOrder } from "./order";
+import { notifyTelegramNewOrder } from "./server/telegram-actions";
 
 /** The RPC creates the order. Persisting its tracking token requires a separate explicit action. */
 export function useCheckoutOrder(
@@ -48,6 +49,12 @@ export function useCheckoutOrder(
       }
       setPlaced({ token: result.token, createdAt: new Date().toISOString() });
       cart.clear();
+      // This separate request owns the awaited server work. Never await it in checkout.
+      if (isTokenShaped(result.token)) {
+        void Promise.resolve()
+          .then(() => notifyTelegramNewOrder({ data: { publicToken: result.token! } }))
+          .catch(() => {});
+      }
     } catch {
       setError(t("common.somethingWrong"));
     } finally {
