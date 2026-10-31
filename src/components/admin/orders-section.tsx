@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Download, PhoneCall, Printer } from "lucide-react";
+import { Download, PhoneCall, Printer, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AdminOrderList } from "./order-list";
 import { Button } from "@/components/ui/button";
@@ -8,17 +9,21 @@ import { Pagination } from "@/components/ui/pagination";
 import { useI18n } from "@/lib/i18n-context";
 import type { AdminOrder } from "@/lib/admin";
 import { downloadText, fetchOrders, ordersToCsv } from "@/lib/orders-file";
+import { getSupabase } from "@/lib/supabase/client";
+import { syncPackersOrderStatuses } from "@/lib/server/packers-actions";
+
+async function accessToken() {
+  const { data } = await getSupabase().auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error("Session administrateur introuvable.");
+  return token;
+}
 
 /**
  * The orders section of the dashboard.
  *
- * Extracted from the page when that function passed the 120-line limit, and the
- * seam is the real one: this is one self-contained block with its own controls,
- * and the page around it is analytics.
- *
- * The queue is a filter, not a re-sort. Its count comes from the server, so the
- * badge reports the real queue size rather than however many rows happen to be
- * loaded, and the list pages independently of it.
+ * The queue is a filter, not a re-sort. Packers statuses are refreshed once in
+ * the background when this section mounts, and can also be refreshed manually.
  */
 export function OrdersSection({
   orders,
@@ -40,6 +45,41 @@ export function OrdersSection({
   onPageChange: (page: number) => void;
 }) {
   const { t } = useI18n();
+  const queryClient = useQueryClient();
+  const autoSyncStarted = useRef(false);
+
+  const sync = useMutation({
+    mutationFn: async (showToast: boolean) => {
+      const token = await accessToken();
+      const result = await syncPackersOrderStatuses({ data: { accessToken: token } });
+      if (!result.ok) throw new Error(result.error);
+      return { ...result, showToast };
+    },
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin_orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin_orders_count"] });
+      if (!result.showToast) return;
+      if (result.checked === 0) {
+        toast.success("Aucune commande Packers à synchroniser.");
+        return;
+      }
+      toast.success(
+        `Packers synchronisé · ${result.checked} vérifiée${result.checked > 1 ? "s" : ""}` +
+          ` · ${result.changed} statut${result.changed > 1 ? "s" : ""} modifié${result.changed > 1 ? "s" : ""}` +
+          (result.failed > 0 ? ` · ${result.failed} échec${result.failed > 1 ? "s" : ""}` : ""),
+      );
+    },
+    onError: (error: Error, showToast) => {
+      if (showToast) toast.error(error.message);
+    },
+  });
+
+  const runSync = sync.mutate;
+  useEffect(() => {
+    if (autoSyncStarted.current) return;
+    autoSyncStarted.current = true;
+    runSync(false);
+  }, [runSync]);
 
   return (
     <section className="flex flex-col gap-3">
@@ -53,12 +93,23 @@ export function OrdersSection({
             </span>
           )}
         </h2>
-        <span className="flex items-center gap-2">
-          {/* How many orders exist in total, not how many are on screen. Without
-              it, a page of fifteen and a shop with fifteen look identical. */}
+        <span className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-xs text-on-surface-muted" data-testid="orders-total">
             {total}
           </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={sync.isPending}
+            onClick={() => sync.mutate(true)}
+          >
+            <RefreshCw
+              size={15}
+              className={sync.isPending ? "animate-spin" : undefined}
+              aria-hidden="true"
+            />
+            {sync.isPending ? "Synchronisation…" : "Synchroniser Packers"}
+          </Button>
           <Link to="/admin/slips" className="btn btn-ghost btn-sm">
             <Printer size={15} aria-hidden="true" />
             {t("admin.slip.printConfirmed")}
