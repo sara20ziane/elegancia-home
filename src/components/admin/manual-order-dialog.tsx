@@ -96,7 +96,6 @@ export function ManualOrderDialog({ open, onClose }: { open: boolean; onClose: (
   };
 
   const close = () => {
-    if (submitting) return;
     reset();
     onClose();
   };
