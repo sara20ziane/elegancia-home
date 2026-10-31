@@ -1,6 +1,7 @@
 import type { CatalogueVariant } from "./queries";
 
 export type BeddingChoice = {
+  colour: string | null;
   fabric: string | null;
   setType: string | null;
   pieceCount: number | null;
@@ -26,6 +27,7 @@ export function isBeddingProduct(variants: CatalogueVariant[]): boolean {
 
 export function beddingChoiceForVariant(variant: CatalogueVariant | undefined): BeddingChoice {
   return {
+    colour: variant?.color_name ?? null,
     fabric: variant?.fabric ?? null,
     setType: variant?.set_type ?? null,
     pieceCount: variant?.piece_count ?? null,
@@ -41,6 +43,7 @@ export function initialBeddingChoice(variants: CatalogueVariant[]): BeddingChoic
 type BeddingFilter = Partial<BeddingChoice>;
 
 function matchesFilter(variant: CatalogueVariant, filter: BeddingFilter): boolean {
+  if (filter.colour !== undefined && variant.color_name !== filter.colour) return false;
   if (filter.fabric !== undefined && variant.fabric !== filter.fabric) return false;
   if (filter.setType !== undefined && variant.set_type !== filter.setType) return false;
   if (filter.pieceCount !== undefined && variant.piece_count !== filter.pieceCount) return false;
@@ -78,15 +81,31 @@ function uniqueOptions<T extends string | number>(
   return [...options.values()];
 }
 
-export function fabricOptions(variants: CatalogueVariant[]): BeddingOption<string>[] {
-  return uniqueOptions(variants, (variant) => variant.fabric);
+function matchesColour(variant: CatalogueVariant, colour: string | null): boolean {
+  return colour === null || variant.color_name === colour;
+}
+
+export function beddingColourOptions(variants: CatalogueVariant[]): BeddingOption<string>[] {
+  return uniqueOptions(variants, (variant) => variant.color_name);
+}
+
+export function fabricOptions(
+  variants: CatalogueVariant[],
+  colour: string | null = null,
+): BeddingOption<string>[] {
+  const filtered = variants.filter((variant) => matchesColour(variant, colour));
+  return uniqueOptions(filtered, (variant) => variant.fabric);
 }
 
 export function setTypeOptions(
   variants: CatalogueVariant[],
   fabric: string | null,
+  colour: string | null = null,
 ): BeddingOption<string>[] {
-  const filtered = variants.filter((variant) => fabric === null || variant.fabric === fabric);
+  const filtered = variants.filter(
+    (variant) =>
+      matchesColour(variant, colour) && (fabric === null || variant.fabric === fabric),
+  );
   return uniqueOptions(filtered, (variant) => variant.set_type);
 }
 
@@ -94,9 +113,11 @@ export function pieceCountOptions(
   variants: CatalogueVariant[],
   fabric: string | null,
   setType: string | null,
+  colour: string | null = null,
 ): BeddingOption<number>[] {
   const filtered = variants.filter(
     (variant) =>
+      matchesColour(variant, colour) &&
       (fabric === null || variant.fabric === fabric) &&
       (setType === null || variant.set_type === setType),
   );
@@ -108,9 +129,11 @@ export function mattressOptions(
   fabric: string | null,
   setType: string | null,
   pieceCount: number | null,
+  colour: string | null = null,
 ): BeddingOption<string>[] {
   const filtered = variants.filter(
     (variant) =>
+      matchesColour(variant, colour) &&
       (fabric === null || variant.fabric === fabric) &&
       (setType === null || variant.set_type === setType) &&
       (pieceCount === null || variant.piece_count === pieceCount),
