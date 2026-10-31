@@ -1,3 +1,4 @@
+import { exceedsOrderLimits } from "./order-limits";
 import { getSupabase } from "./supabase/client";
 import type { Json } from "./supabase/types";
 
@@ -62,7 +63,12 @@ export function isTokenShaped(token: string): boolean {
 }
 
 /** Refusals raised by `validate_order()` with a `hint`, translated at checkout. */
-const ORDER_ERROR_CODES = ["phone_blocked", "too_many_pending"] as const;
+const ORDER_ERROR_CODES = [
+  "phone_blocked",
+  "too_many_pending",
+  "too_many_items",
+  "too_many_orders",
+] as const;
 export type OrderErrorCode = (typeof ORDER_ERROR_CODES)[number];
 
 /**
@@ -78,6 +84,8 @@ export async function placeOrder(
   if (lines.length === 0) {
     return { token: null, error: "Your cart is empty." };
   }
+  if (exceedsOrderLimits(lines))
+    return { token: null, error: "Order quantity limit exceeded.", code: "too_many_items" };
   const { data, error } = await getSupabase().rpc("place_order", {
     p_customer: customer as unknown as Json,
     p_items: lines as unknown as Json,

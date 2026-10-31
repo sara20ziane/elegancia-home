@@ -1,36 +1,4 @@
-/**
- * GENERATED FILE — do not hand-edit the shape of it.
- *
- * Regenerate after every schema change:
- *   npx supabase gen types typescript --project-id <project-ref> \
- *     > src/lib/supabase/types.ts
- * or the `generate_typescript_types` MCP tool against the linked project.
- *
- * The project ref is deliberately not recorded here. This repository is public
- * and meant to be forked, so it should not pin the original author's live
- * backend; `VITE_SUPABASE_PROJECT_ID` in `.env` is the source of that value.
- *
- * Two deviations from the raw generator output, both documented:
- *
- * 1. `order_items.product_name` and `unit_price` are marked required on Insert
- *    because they carry no SQL DEFAULT. They are actually filled by the
- *    `validate_order_item` BEFORE INSERT trigger from the catalogue. Clients
- *    never insert into `order_items` directly — `place_order()` is the path — so
- *    this only shows up if someone bypasses the RPC.
- *
- * 2. The `CompositeTypes` branch that indexes `DefaultSchema["CompositeTypes"]`
- *    is narrowed to `never`. This schema defines no composite types, so that
- *    mapped type is `{}`, and TypeScript 5 refuses to index `{}` with a generic
- *    type parameter. If a composite type is ever added, restore the generated
- *    branch.
- *
- * One addition rather than a deviation: `order_export_log` and
- * `order_export_targets` were written by hand in the generator's exact shape,
- * because regenerating the whole file to add two tables is a large diff to review
- * for no benefit. Regenerating will reproduce them; if it ever differs, the
- * generator wins.
- */
-
+// Generated from Elegancia Supabase. Nullable catalogue filters reflect SQL null defaults.
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -146,6 +114,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      guepex_webhook_events: {
+        Row: {
+          created_at: string;
+          data: Json;
+          event_id: string;
+          id: string;
+          note: string | null;
+          occurred_at: string | null;
+          processed_at: string | null;
+          type: string;
+        };
+        Insert: {
+          created_at?: string;
+          data?: Json;
+          event_id: string;
+          id?: string;
+          note?: string | null;
+          occurred_at?: string | null;
+          processed_at?: string | null;
+          type: string;
+        };
+        Update: {
+          created_at?: string;
+          data?: Json;
+          event_id?: string;
+          id?: string;
+          note?: string | null;
+          occurred_at?: string | null;
+          processed_at?: string | null;
+          type?: string;
+        };
+        Relationships: [];
+      };
       order_export_log: {
         Row: {
           created_at: string;
@@ -176,17 +177,17 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "order_export_log_target_id_fkey";
-            columns: ["target_id"];
-            isOneToOne: false;
-            referencedRelation: "order_export_targets";
-            referencedColumns: ["id"];
-          },
-          {
             foreignKeyName: "order_export_log_order_id_fkey";
             columns: ["order_id"];
             isOneToOne: false;
             referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "order_export_log_target_id_fkey";
+            columns: ["target_id"];
+            isOneToOne: false;
+            referencedRelation: "order_export_targets";
             referencedColumns: ["id"];
           },
         ];
@@ -273,16 +274,19 @@ export type Database = {
         Row: {
           address: string;
           carrier: string | null;
+          carrier_status: string | null;
+          carrier_status_updated_at: string | null;
           commune: string | null;
           confirmed_at: string | null;
           confirmed_by: string | null;
           created_at: string;
           customer_name: string;
           delivered_at: string | null;
-          delivery_method: string;
           delivery_fee: number;
+          delivery_method: string;
           id: string;
           note: string | null;
+          order_source: string;
           phone: string;
           public_token: string;
           refused_at: string | null;
@@ -301,16 +305,19 @@ export type Database = {
         Insert: {
           address: string;
           carrier?: string | null;
+          carrier_status?: string | null;
+          carrier_status_updated_at?: string | null;
           commune?: string | null;
           confirmed_at?: string | null;
           confirmed_by?: string | null;
           created_at?: string;
           customer_name: string;
           delivered_at?: string | null;
-          delivery_method?: string;
           delivery_fee?: number;
+          delivery_method?: string;
           id?: string;
           note?: string | null;
+          order_source?: string;
           phone: string;
           public_token?: string;
           refused_at?: string | null;
@@ -329,16 +336,19 @@ export type Database = {
         Update: {
           address?: string;
           carrier?: string | null;
+          carrier_status?: string | null;
+          carrier_status_updated_at?: string | null;
           commune?: string | null;
           confirmed_at?: string | null;
           confirmed_by?: string | null;
           created_at?: string;
           customer_name?: string;
           delivered_at?: string | null;
-          delivery_method?: string;
           delivery_fee?: number;
+          delivery_method?: string;
           id?: string;
           note?: string | null;
+          order_source?: string;
           phone?: string;
           public_token?: string;
           refused_at?: string | null;
@@ -395,18 +405,62 @@ export type Database = {
           },
         ];
       };
+      product_categories: {
+        Row: {
+          category_id: string;
+          created_at: string;
+          product_id: string;
+          sort_order: number;
+        };
+        Insert: {
+          category_id: string;
+          created_at?: string;
+          product_id: string;
+          sort_order?: number;
+        };
+        Update: {
+          category_id?: string;
+          created_at?: string;
+          product_id?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_categories_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_categories_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       product_variants: {
         Row: {
           color_hex: string | null;
           color_name: string | null;
           compare_at_price: number | null;
+          composition: string | null;
           created_at: string;
+          duvet_cover_size: string | null;
+          fabric: string | null;
+          fabric_origin: string | null;
+          fitted_sheet_size: string | null;
+          flat_sheet_size: string | null;
           height_cm: number | null;
           id: string;
           is_active: boolean;
           length_cm: number | null;
+          piece_count: number | null;
           price: number;
           product_id: string;
+          set_type: string | null;
           size: string | null;
           sku: string | null;
           sort_order: number;
@@ -419,13 +473,21 @@ export type Database = {
           color_hex?: string | null;
           color_name?: string | null;
           compare_at_price?: number | null;
+          composition?: string | null;
           created_at?: string;
+          duvet_cover_size?: string | null;
+          fabric?: string | null;
+          fabric_origin?: string | null;
+          fitted_sheet_size?: string | null;
+          flat_sheet_size?: string | null;
           height_cm?: number | null;
           id?: string;
           is_active?: boolean;
           length_cm?: number | null;
+          piece_count?: number | null;
           price: number;
           product_id: string;
+          set_type?: string | null;
           size?: string | null;
           sku?: string | null;
           sort_order?: number;
@@ -438,13 +500,21 @@ export type Database = {
           color_hex?: string | null;
           color_name?: string | null;
           compare_at_price?: number | null;
+          composition?: string | null;
           created_at?: string;
+          duvet_cover_size?: string | null;
+          fabric?: string | null;
+          fabric_origin?: string | null;
+          fitted_sheet_size?: string | null;
+          flat_sheet_size?: string | null;
           height_cm?: number | null;
           id?: string;
           is_active?: boolean;
           length_cm?: number | null;
+          piece_count?: number | null;
           price?: number;
           product_id?: string;
+          set_type?: string | null;
           size?: string | null;
           sku?: string | null;
           sort_order?: number;
@@ -506,7 +576,15 @@ export type Database = {
           status?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       reviews: {
         Row: {
@@ -540,13 +618,6 @@ export type Database = {
           rating?: number;
         };
         Relationships: [
-          {
-            foreignKeyName: "products_category_id_fkey";
-            columns: ["category_id"];
-            isOneToOne: false;
-            referencedRelation: "categories";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "reviews_product_id_fkey";
             columns: ["product_id"];
@@ -607,21 +678,24 @@ export type Database = {
         Row: {
           accepts_cod: boolean;
           address: string | null;
+          address_fr: string | null;
+          announcement: string | null;
+          announcement_enabled: boolean;
           banner_url: string | null;
           brand_color: string | null;
           created_at: string;
-          address_fr: string | null;
-          description_fr: string | null;
-          tagline_fr: string | null;
           currency: string;
           delivery_eta_days: number;
           delivery_fee_flat: number;
           delivery_wilayas: string[];
           description: string | null;
+          description_fr: string | null;
           email: string | null;
+          facebook_url: string | null;
           free_shipping_threshold: number;
           guepex_from_wilaya: string | null;
           id: number;
+          instagram_url: string | null;
           legal_name: string | null;
           logo_url: string | null;
           name: string;
@@ -629,34 +703,34 @@ export type Database = {
           phone: string | null;
           rc_number: string | null;
           returns_days: number;
+          returns_note: string | null;
           tagline: string | null;
+          tagline_fr: string | null;
+          tiktok_url: string | null;
           updated_at: string;
           whatsapp: string | null;
-          announcement: string | null;
-          announcement_enabled: boolean;
-          facebook_url: string | null;
-          instagram_url: string | null;
-          returns_note: string | null;
-          tiktok_url: string | null;
         };
         Insert: {
           accepts_cod?: boolean;
           address?: string | null;
+          address_fr?: string | null;
+          announcement?: string | null;
+          announcement_enabled?: boolean;
           banner_url?: string | null;
           brand_color?: string | null;
           created_at?: string;
-          address_fr?: string | null;
-          description_fr?: string | null;
-          tagline_fr?: string | null;
           currency?: string;
           delivery_eta_days?: number;
           delivery_fee_flat?: number;
           delivery_wilayas?: string[];
           description?: string | null;
+          description_fr?: string | null;
           email?: string | null;
+          facebook_url?: string | null;
           free_shipping_threshold?: number;
           guepex_from_wilaya?: string | null;
           id?: number;
+          instagram_url?: string | null;
           legal_name?: string | null;
           logo_url?: string | null;
           name?: string;
@@ -664,34 +738,34 @@ export type Database = {
           phone?: string | null;
           rc_number?: string | null;
           returns_days?: number;
+          returns_note?: string | null;
           tagline?: string | null;
+          tagline_fr?: string | null;
+          tiktok_url?: string | null;
           updated_at?: string;
           whatsapp?: string | null;
-          announcement?: string | null;
-          announcement_enabled?: boolean;
-          facebook_url?: string | null;
-          instagram_url?: string | null;
-          returns_note?: string | null;
-          tiktok_url?: string | null;
         };
         Update: {
           accepts_cod?: boolean;
           address?: string | null;
+          address_fr?: string | null;
+          announcement?: string | null;
+          announcement_enabled?: boolean;
           banner_url?: string | null;
           brand_color?: string | null;
           created_at?: string;
-          address_fr?: string | null;
-          description_fr?: string | null;
-          tagline_fr?: string | null;
           currency?: string;
           delivery_eta_days?: number;
           delivery_fee_flat?: number;
           delivery_wilayas?: string[];
           description?: string | null;
+          description_fr?: string | null;
           email?: string | null;
+          facebook_url?: string | null;
           free_shipping_threshold?: number;
           guepex_from_wilaya?: string | null;
           id?: number;
+          instagram_url?: string | null;
           legal_name?: string | null;
           logo_url?: string | null;
           name?: string;
@@ -699,15 +773,12 @@ export type Database = {
           phone?: string | null;
           rc_number?: string | null;
           returns_days?: number;
+          returns_note?: string | null;
           tagline?: string | null;
+          tagline_fr?: string | null;
+          tiktok_url?: string | null;
           updated_at?: string;
           whatsapp?: string | null;
-          announcement?: string | null;
-          announcement_enabled?: boolean;
-          facebook_url?: string | null;
-          instagram_url?: string | null;
-          returns_note?: string | null;
-          tiktok_url?: string | null;
         };
         Relationships: [];
       };
@@ -751,10 +822,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      admin_analytics: {
-        Args: { p_days?: number };
-        Returns: Json;
+      admin_analytics: { Args: { p_days?: number }; Returns: Json };
+      admin_exists: { Args: never; Returns: boolean };
+      // Added by 20261031175750_selected_openstore_safety.sql (not yet deployed).
+      delete_elegancia_order: {
+        Args: { p_id: string; p_reference: string };
+        Returns: undefined;
       };
+      elegancia_schema_version: { Args: never; Returns: number };
       admin_phone_history: {
         Args: { p_phones: string[] };
         Returns: {
@@ -765,17 +840,7 @@ export type Database = {
           refused: number;
         }[];
       };
-      admin_exists: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
-      category_product_counts: {
-        Args: Record<PropertyKey, never>;
-        Returns: {
-          category_id: string;
-          product_count: number;
-        }[];
-      };
+      canonical_dz_phone: { Args: { raw: string }; Returns: string };
       catalogue_page: {
         Args: {
           p_category_slug?: string | null;
@@ -791,13 +856,24 @@ export type Database = {
         };
         Returns: Json;
       };
-      normalize_arabic: {
-        Args: { input: string };
-        Returns: string;
+      category_product_counts: {
+        Args: never;
+        Returns: {
+          category_id: string;
+          product_count: number;
+        }[];
       };
       claim_store: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: Database["public"]["Enums"]["admin_role"];
+      };
+      delivery_fee_for: {
+        Args: { p_method?: string; p_subtotal: number; p_wilaya: string };
+        Returns: number;
+      };
+      expire_stale_pending_orders: {
+        Args: { p_max_age?: string };
+        Returns: number;
       };
       has_admin_role: {
         Args: {
@@ -805,6 +881,22 @@ export type Database = {
           _user_id: string;
         };
         Returns: boolean;
+      };
+      is_valid_dz_phone: { Args: { raw: string }; Returns: boolean };
+      normalise_dz_phone: { Args: { raw: string }; Returns: string };
+      normalize_arabic: { Args: { input: string }; Returns: string };
+      order_export_payload: {
+        Args: { p_event: string; p_order_id: string };
+        Returns: Json;
+      };
+      place_admin_order: {
+        Args: {
+          p_confirmed?: boolean;
+          p_customer: Json;
+          p_items: Json;
+          p_source?: string;
+        };
+        Returns: string;
       };
       place_order: {
         Args: { p_customer: Json; p_items: Json };
@@ -814,6 +906,7 @@ export type Database = {
         Args: { p_order_id: string };
         Returns: undefined;
       };
+      sync_packers_delivery_rates: { Args: { p_rows: Json }; Returns: number };
       track_order: { Args: { p_token: string }; Returns: Json };
     };
     Enums: {
@@ -935,9 +1028,9 @@ export type CompositeTypes<
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : never;
-// The non-schema branch is `never` on purpose — see the header note. This schema
-// defines no composite types, so the generated branch would index `{}`.
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never;
 
 export const Constants = {
   public: {

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Circle, MapPin, Package, Phone, Truck } from "lucide-react";
 import { StoreLayout } from "@/components/storefront/store-layout";
+import { OrderReference } from "@/components/orders/order-reference";
 import { TrackingNumber } from "@/components/orders/tracking-number";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,9 +57,7 @@ function OrderPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-outline bg-surface p-5">
               <div>
                 <p className="text-xs text-on-surface-muted">{t("order.tokenLabel")}</p>
-                <p className="font-mono text-xs" dir="ltr">
-                  {data.token}
-                </p>
+                <OrderReference token={data.token} />
               </div>
               <StatusBadge status={data.status} />
             </div>

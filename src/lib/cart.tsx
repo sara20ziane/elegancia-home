@@ -41,7 +41,7 @@ const CartContext = createContext<CartValue | null>(null);
 
 const STORAGE_KEY = "openstore-cart-v1";
 const MAX_LINES = 50;
-const MAX_PER_LINE = 100;
+const MAX_PER_LINE = 20; // Same retail limit enforced by place_order in PostgreSQL.
 
 function readCart(): CartItem[] {
   if (typeof window === "undefined") return [];
@@ -81,7 +81,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready || typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      /* Cart remains usable when browser storage is blocked. */
+    }
   }, [items, ready]);
 
   const add = useCallback((item: Omit<CartItem, "quantity">, quantity = 1) => {

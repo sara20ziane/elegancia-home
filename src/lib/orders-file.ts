@@ -1,3 +1,4 @@
+import { spreadsheetText } from "./spreadsheet";
 import { ORDER_SELECT, type AdminOrder } from "./admin";
 import { orderSourceLabel } from "./manual-order";
 import { getSupabase } from "./supabase/client";
@@ -52,7 +53,7 @@ const COLUMNS = [
 
 /** RFC 4180 quoting: wrap every field, double any quote inside it. */
 function cell(value: string | number | null): string {
-  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+  return `"${String(spreadsheetText(value) ?? "").replace(/"/g, '""')}"`;
 }
 
 /**

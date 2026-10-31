@@ -149,7 +149,7 @@ function ZonesCard() {
   );
 }
 
-function ZoneRow({ zone, locale }: { zone: DeliveryZone; locale: "ar" | "fr" }) {
+function ZoneRow({ zone, locale }: { zone: DeliveryZone; locale: "ar" | "fr" | "en" }) {
   const match = WILAYAS.find((w) => w.ar === zone.wilaya || w.fr === zone.wilaya);
   const label = match ? (locale === "ar" ? match.ar : match.fr) : zone.wilaya;
 

@@ -1,0 +1,27 @@
+export const enUpdates = {
+  "quick.title": "Order this product",
+  "copy.order": "Copy order number",
+  "copy.done": "Number copied",
+  "copy.failed": "Copy unavailable. Select the reference.",
+  "admin.delete.title": "Delete this order",
+  "admin.delete.warning":
+    "Permanent deletion. Prefer cancellation for real orders. Type the full reference to confirm.",
+  "admin.delete.error": "Unable to delete. Refresh and try again.",
+  "admin.delete.success": "Order deleted",
+  "admin.delete.blocked": "Confirmed, shipped or existing parcel: deletion unavailable.",
+  "image.preview": "Preview before upload",
+  "image.full": "Full image (recommended for bedding)",
+  "image.crop": "Crop to gallery ratio 4:5",
+  "image.focus": "Crop position",
+  "image.upload": "Confirm and upload",
+  "version.current": "Current upstream baseline",
+  "version.available": "Available OpenStore version",
+  "version.review": "Review changes",
+  "version.manual": "Elegancia is customized. Every integration needs manual review.",
+  "version.schema": "Database update required",
+  "version.unknown": "Schema version unavailable",
+  "version.expected": "Expected schema",
+  "checkout.error.too_many_items":
+    "Maximum: 20 per variant and 50 pieces per order. Contact us for bulk purchases.",
+  "checkout.error.too_many_orders": "Too many orders on this connection. Try again later.",
+} as const;

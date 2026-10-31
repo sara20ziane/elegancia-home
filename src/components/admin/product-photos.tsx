@@ -1,3 +1,5 @@
+import { ImageUploadPreview } from "./image-upload-preview";
+import type { ImageFrame } from "@/lib/image-frame";
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Camera, Loader2, X } from "lucide-react";
@@ -34,6 +36,7 @@ export function ProductPhotos({
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const ids = variants.map((variant) => variant.id);
   const urls = productUrls(variants);
@@ -41,22 +44,24 @@ export function ProductPhotos({
   const invalidate = () =>
     void queryClient.invalidateQueries({ queryKey: ["admin_product", productId] });
 
-  const addFiles = async (files: File[]) => {
-    if (ids.length === 0) return;
+  const addFiles = async (files: File[], frame?: ImageFrame) => {
+    if (ids.length === 0) return false;
     setUploading(true);
     let added = 0;
 
     for (const [index, file] of files.entries()) {
-      const { url, error } = await uploadProductImage(file, productId);
-      if (error || !url) {
-        toast.error(`${file.name}: ${error ?? t("common.somethingWrong")}`);
-        continue;
-      }
       try {
+        const { url, error } = await uploadProductImage(file, productId, frame);
+        if (error || !url) {
+          toast.error(`${file.name}: ${error ?? t("common.somethingWrong")}`);
+          continue;
+        }
         await attachToVariants(ids, url, urls.length + index);
         added += 1;
       } catch (attachError) {
-        toast.error((attachError as Error).message);
+        toast.error(
+          attachError instanceof Error ? attachError.message : t("common.somethingWrong"),
+        );
       }
     }
 
@@ -65,6 +70,7 @@ export function ProductPhotos({
       invalidate();
       toast.success(t("admin.photos.added", { count: added }));
     }
+    return added > 0;
   };
 
   const remove = useMutation({
@@ -90,7 +96,7 @@ export function ProductPhotos({
           multiple
           className="sr-only"
           onChange={(event) => {
-            void addFiles(Array.from(event.target.files ?? []));
+            setPendingFiles(Array.from(event.target.files ?? []));
             event.target.value = "";
           }}
         />
@@ -98,7 +104,7 @@ export function ProductPhotos({
           type="button"
           variant="secondary"
           size="sm"
-          disabled={uploading || ids.length === 0}
+          disabled={uploading || pendingFiles.length > 0 || ids.length === 0}
           onClick={() => input.current?.click()}
         >
           {uploading ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
@@ -106,6 +112,17 @@ export function ProductPhotos({
         </Button>
       </div>
 
+      {pendingFiles[0] && (
+        <ImageUploadPreview
+          key={pendingFiles[0].name}
+          file={pendingFiles[0]}
+          onCancel={() => setPendingFiles([])}
+          onUpload={async (frame) => {
+            if (await addFiles([pendingFiles[0]], frame))
+              setPendingFiles((files) => files.slice(1));
+          }}
+        />
+      )}
       {urls.length > 0 ? (
         <div className="flex flex-wrap gap-3">
           {urls.map((url) => (

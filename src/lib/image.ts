@@ -1,3 +1,4 @@
+import { cropRect, type ImageFrame } from "./image-frame";
 import { getSupabase } from "./supabase/client";
 
 /**
@@ -53,9 +54,14 @@ function dimensions(source: ImageBitmap | HTMLImageElement): { w: number; h: num
  * their own size rather than upscaled — enlarging a 600px photo only makes the
  * file bigger without adding detail.
  */
-async function resizeImage(file: File): Promise<Blob> {
+async function resizeImage(file: File, frame?: ImageFrame): Promise<Blob> {
   const source = await decode(file);
-  const { w, h } = dimensions(source);
+  const full = dimensions(source);
+  if (full.w * full.h > 50_000_000) {
+    if ("close" in source) source.close();
+    throw new Error("Image dimensions are too large.");
+  }
+  const { sx, sy, cw: w, ch: h } = cropRect(full.w, full.h, frame);
   const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
   const width = Math.max(1, Math.round(w * scale));
   const height = Math.max(1, Math.round(h * scale));
@@ -67,7 +73,7 @@ async function resizeImage(file: File): Promise<Blob> {
   if (!ctx) throw new Error("This browser cannot process images.");
 
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(source as CanvasImageSource, 0, 0, width, height);
+  ctx.drawImage(source as CanvasImageSource, sx, sy, w, h, 0, 0, width, height);
   if ("close" in source) source.close();
 
   const asWebp = await toBlob(canvas, "image/webp");
@@ -75,8 +81,7 @@ async function resizeImage(file: File): Promise<Blob> {
   const asJpeg = await toBlob(canvas, "image/jpeg");
   if (asJpeg) return asJpeg;
 
-  // Last resort: send the original rather than failing the upload.
-  return file;
+  throw new Error("This browser cannot encode the image.");
 }
 
 function toBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
@@ -100,14 +105,21 @@ function extensionFor(type: string): string {
  * a browser holding the old URL cannot serve a stale photo — and it removes any
  * need to sanitise a user-supplied filename.
  */
-export async function uploadProductImage(file: File, productId: string): Promise<UploadOutcome> {
-  if (!file.type.startsWith("image/")) {
+export async function uploadProductImage(
+  file: File,
+  productId: string,
+  frame?: ImageFrame,
+): Promise<UploadOutcome> {
+  if (
+    !["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"].includes(file.type) ||
+    file.size > 20 * 1024 * 1024
+  ) {
     return { url: null, error: "That file is not an image." };
   }
 
   let blob: Blob;
   try {
-    blob = await resizeImage(file);
+    blob = await resizeImage(file, frame);
   } catch (error) {
     return {
       url: null,

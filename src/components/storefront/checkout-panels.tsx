@@ -1,7 +1,7 @@
 import { Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
-import { useCart } from "@/lib/cart";
+import { useCart, type CartItem } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
 import { WILAYAS } from "@/lib/wilayas";
@@ -166,19 +166,23 @@ export function CodNotice() {
 
 export function CheckoutSummary({
   deliveryFee,
+  lines,
   hasWilaya,
   deliveryAvailable,
   error,
   submitting,
 }: {
   deliveryFee: number;
+  lines?: CartItem[];
   hasWilaya: boolean;
   deliveryAvailable: boolean;
   error: string | null;
   submitting: boolean;
 }) {
   const { t, locale } = useI18n();
-  const { items, subtotal } = useCart();
+  const cart = useCart();
+  const items = lines ?? cart.items;
+  const subtotal = items.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
   const total = subtotal + (deliveryAvailable ? deliveryFee : 0);
 
   return (

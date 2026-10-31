@@ -18,6 +18,7 @@ import {
   isBeddingProduct,
   type BeddingChoice,
 } from "@/lib/bedding-variant-options";
+import { QuickOrder } from "./quick-order";
 import { StarRating } from "./star-rating";
 import { ProductGallery } from "./product-gallery";
 import { AddToCart, StockLine } from "./product-purchase";
@@ -45,10 +46,7 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
   const [activeImage, setActiveImage] = useState(0);
 
   const colours = colourOptions(variants);
-  const sizes = sizeOptions(
-    variants,
-    colours.length > 0 ? legacyChoice.colour : null,
-  );
+  const sizes = sizeOptions(variants, colours.length > 0 ? legacyChoice.colour : null);
 
   const selected = bedding
     ? findBeddingVariant(variants, beddingChoice)
@@ -130,11 +128,7 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
           </>
         ) : (
           <>
-            <ColourPicker
-              colours={colours}
-              selected={legacyChoice.colour}
-              onSelect={pickColour}
-            />
+            <ColourPicker colours={colours} selected={legacyChoice.colour} onSelect={pickColour} />
             <SizePicker sizes={sizes} selected={legacyChoice.size} onSelect={pickSize} />
           </>
         )}
@@ -150,6 +144,15 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
           />
         )}
 
+        {selected && selected.stock > 0 && (
+          <QuickOrder
+            product={product}
+            name={name}
+            selected={selected}
+            images={images}
+            quantity={quantity}
+          />
+        )}
         {description && (
           <div className="flex flex-col gap-2 border-t border-outline pt-5">
             <h2 className="font-display text-base font-semibold">{t("store.description")}</h2>
