@@ -4,6 +4,7 @@ import { CatalogueView } from "@/components/storefront/catalogue-view";
 import { useI18n } from "@/lib/i18n-context";
 import { categoriesQuery, useCategories } from "@/lib/queries";
 import { localized } from "@/lib/i18n";
+import { canonicalUrl } from "@/lib/seo";
 import { EMPTY_FILTERS, cataloguePageQuery } from "@/lib/catalogue";
 
 export const Route = createFileRoute("/category/$slug")({
@@ -19,17 +20,23 @@ export const Route = createFileRoute("/category/$slug")({
   },
   head: ({ loaderData, match }) => {
     const category = loaderData?.category;
-    if (!category) return { meta: [{ title: "OpenStore DZ" }] };
+    if (!category) return { meta: [{ title: "Elegancia Home" }] };
     const name = localized(match.context.locale, category.name, category.name_fr);
-    const title = `${name} | OpenStore DZ`;
-    const description = category.description?.trim() || title;
+    const title = `${name} | Elegancia Home`;
+    const description = category.description?.trim() || `${name} — collection Elegancia Home.`;
+    const url = canonicalUrl(`/category/${category.slug}`);
     return {
       meta: [
         { title },
         { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Elegancia Home" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
   component: CategoryPage,
@@ -49,17 +56,12 @@ function CategoryPage() {
   return (
     <StoreLayout>
       <div className="container-page py-10">
-        {/* The view owns its own query, loading and empty states now: filtering and
-            paging happen in the database, so a component handed a list could only
-            ever filter the list it was given. */}
         <CatalogueView
           heading={heading}
           subheading={category.description ?? undefined}
           initialFilters={{ ...EMPTY_FILTERS, categorySlug: category.slug }}
         />
 
-        {/* Other categories, so a buyer who landed here from search can keep
-            browsing instead of hitting a dead end. */}
         {others.length > 0 && (
           <nav
             className="mt-12 flex flex-col gap-3 border-t border-outline pt-8"

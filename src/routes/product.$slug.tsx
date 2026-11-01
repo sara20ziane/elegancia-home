@@ -4,11 +4,19 @@ import { ProductDetail } from "@/components/storefront/product-detail";
 import { SizeGuide } from "@/components/storefront/size-guide";
 import { ReviewForm, ReviewList } from "@/components/storefront/reviews";
 import { ErrorState } from "@/components/ui/feedback";
-import { productQuery, reviewsQuery, useProduct } from "@/lib/queries";
+import {
+  priceRange,
+  productImage,
+  productQuery,
+  reviewsQuery,
+  sortVariants,
+  useProduct,
+} from "@/lib/queries";
 import { sizeGuidesQuery } from "@/lib/size-guides";
 import { RelatedProducts } from "@/components/storefront/related-products";
 import { localized } from "@/lib/i18n";
 import { useT } from "@/lib/i18n-context";
+import { absoluteUrl, canonicalUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ context, params }) => {
@@ -26,20 +34,67 @@ export const Route = createFileRoute("/product/$slug")({
   },
   head: ({ loaderData, match }) => {
     const product = loaderData?.product;
-    if (!product) return { meta: [{ title: "OpenStore DZ" }] };
+    if (!product) return { meta: [{ title: "Elegancia Home" }] };
     const locale = match.context.locale;
     const name = localized(locale, product.name, product.name_fr);
     const description =
       localized(locale, product.description ?? "", product.description_fr)
         .trim()
         .slice(0, 155) || name;
+    const url = canonicalUrl(`/product/${product.slug}`);
+    const image = absoluteUrl(productImage(product));
+    const range = priceRange(product);
+    const activeVariants = sortVariants(product.product_variants);
+
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name,
+      description,
+      url,
+      ...(image ? { image: [image] } : {}),
+      brand: { "@type": "Brand", name: "Elegancia Home" },
+      ...(range
+        ? {
+            offers: {
+              "@type": "AggregateOffer",
+              priceCurrency: "DZD",
+              lowPrice: range.min,
+              highPrice: range.max,
+              offerCount: activeVariants.length,
+              url,
+            },
+          }
+        : {}),
+    };
+
     return {
       meta: [
-        { title: name },
+        { title: `${name} | Elegancia Home` },
         { name: "description", content: description },
         { property: "og:title", content: name },
         { property: "og:description", content: description },
         { property: "og:type", content: "product" },
+        { property: "og:site_name", content: "Elegancia Home" },
+        { property: "og:url", content: url },
+        ...(image ? [{ property: "og:image", content: image }] : []),
+        ...(range
+          ? [
+              { property: "product:price:amount", content: String(range.min) },
+              { property: "product:price:currency", content: "DZD" },
+            ]
+          : []),
+        { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+        { name: "twitter:title", content: name },
+        { name: "twitter:description", content: description },
+        ...(image ? [{ name: "twitter:image", content: image }] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(structuredData),
+        },
       ],
     };
   },
