@@ -1,5 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
 Disallow: /cart
 Disallow: /checkout
+Disallow: /track
 Disallow: /*?*sort=
+
+Sitemap: https://elegancia-home.vercel.app/sitemap.xml
