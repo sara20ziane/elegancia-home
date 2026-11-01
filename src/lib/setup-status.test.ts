@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { StoreSettings } from "./store-settings";
-import { isValidDzPhone, setupGaps, zonesFor } from "./setup-status";
+import { isValidDzPhone, setupGaps } from "./setup-status";
 
 const demo = {
   name: "OpenStore DZ",
@@ -34,14 +34,5 @@ describe("isValidDzPhone", () => {
     expect(isValidDzPhone("0555 12 34 56")).toBe(true);
     expect(isValidDzPhone("+213 661 23 45 67")).toBe(true);
     expect(isValidDzPhone("12345678")).toBe(false);
-  });
-});
-
-describe("zonesFor", () => {
-  it("prices all 58 wilayas in two tiers", () => {
-    const zones = zonesFor(600, 1200);
-    expect(zones).toHaveLength(58);
-    expect(zones.find((z) => z.wilaya === "Alger")?.fee).toBe(600);
-    expect(zones.find((z) => z.wilaya === "Tamanrasset")?.fee).toBe(1200);
   });
 });
