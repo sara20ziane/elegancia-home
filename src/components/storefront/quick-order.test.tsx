@@ -81,6 +81,9 @@ it("orders the selected bedding variant/quantity directly without changing the c
     </I18nProvider>,
   );
   cleanup = view.unmount;
+
+  expect(view.container).not.toHaveTextContent("Adresse test");
+  await view.click("Commander maintenant");
   await view.click("Adresse test");
   await act(async () => {
     view.container
