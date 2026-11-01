@@ -13,6 +13,12 @@ import { localized } from "@/lib/i18n";
 import { saleOf } from "@/lib/sale";
 import { StarRating } from "./star-rating";
 
+function colourLabel(locale: "fr" | "en" | "ar", count: number) {
+  if (locale === "ar") return `${count} ألوان`;
+  if (locale === "en") return `${count} colours`;
+  return `${count} coloris`;
+}
+
 /**
  * Catalogue card.
  *
@@ -25,16 +31,16 @@ function ProductCard({ product }: { product: CatalogueProduct }) {
 
   const image = productImage(product);
   const range = priceRange(product);
-  // The cheapest variant sets the headline price, so its sale is the one shown.
-  const cheapest = sortVariants(product.product_variants).find((v) => v.price === range?.min);
+  const activeVariants = sortVariants(product.product_variants);
+  const cheapest = activeVariants.find((v) => v.price === range?.min);
   const sale = cheapest ? saleOf(cheapest) : null;
   const stock = totalStock(product);
   const soldOut = stock <= 0;
   const rating = product.rating_avg ?? null;
   const ratingCount = product.rating_count ?? 0;
-  // Display only, not a link: the whole card is already an anchor, and a nested
-  // anchor is invalid HTML. Category navigation lives on the category pages and
-  // the category strip.
+  const colourCount = new Set(
+    activeVariants.map((variant) => variant.color_name?.trim()).filter(Boolean),
+  ).size;
   const category = product.categories
     ? localized(locale, product.categories.name, product.categories.name_fr)
     : undefined;
@@ -48,6 +54,11 @@ function ProductCard({ product }: { product: CatalogueProduct }) {
           <ImageOff size={44} aria-hidden="true" />
         )}
         {soldOut ? <span className="pc-flag out">{t("store.outOfStock")}</span> : null}
+        {!soldOut && colourCount > 1 ? (
+          <span className="absolute end-2.5 top-2.5 rounded-full border border-white/70 bg-white/90 px-2.5 py-1 text-[0.68rem] font-semibold text-[#4B392E] shadow-sm backdrop-blur-sm">
+            {colourLabel(locale, colourCount)}
+          </span>
+        ) : null}
       </div>
 
       <div className="pc-body">

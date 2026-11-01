@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { Banknote, ShieldCheck, Truck } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { averageRating, sortVariants, useReviews, type CatalogueProduct } from "@/lib/queries";
 import {
@@ -25,6 +25,12 @@ import { AddToCart, StockLine } from "./product-purchase";
 import { localized } from "@/lib/i18n";
 import { ColourPicker, SizePicker } from "./variant-picker";
 import { BeddingVariantDetails, BeddingVariantPicker } from "./bedding-variant-picker";
+
+const reassuranceCopy = {
+  fr: ["Paiement à la livraison", "Livraison en Algérie", "Commande suivie"],
+  en: ["Cash on delivery", "Delivery in Algeria", "Order tracking"],
+  ar: ["الدفع عند الاستلام", "التوصيل في الجزائر", "تتبع الطلب"],
+} as const;
 
 /**
  * Product page layout.
@@ -96,6 +102,8 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
     : legacyChoice.colour
       ? `${name} — ${legacyChoice.colour}`
       : name;
+  const reassurance = reassuranceCopy[locale];
+  const reassuranceIcons = [Banknote, Truck, ShieldCheck] as const;
 
   return (
     <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
@@ -157,17 +165,30 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
             quantity={quantity}
           />
         )}
+
+        <div className="grid grid-cols-3 gap-2 border-t border-outline pt-5">
+          {reassurance.map((label, index) => {
+            const Icon = reassuranceIcons[index];
+            return (
+              <div
+                key={label}
+                className="flex min-w-0 flex-col items-center gap-2 rounded-[12px] bg-surface-mid px-2 py-3 text-center"
+              >
+                <Icon size={17} className="text-primary" aria-hidden="true" />
+                <span className="text-[0.68rem] font-medium leading-4 text-on-surface-muted sm:text-xs">
+                  {label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
         {description && (
           <div className="flex flex-col gap-2 border-t border-outline pt-5">
             <h2 className="font-display text-base font-semibold">{t("store.description")}</h2>
             <p className="whitespace-pre-line text-sm text-on-surface-muted">{description}</p>
           </div>
         )}
-
-        <p className="flex items-center gap-2 rounded-[10px] bg-surface-mid px-4 py-3 text-xs text-on-surface-muted">
-          <ShieldCheck size={15} className="shrink-0 text-primary" aria-hidden="true" />
-          {t("checkout.codBody")}
-        </p>
       </div>
     </div>
   );
