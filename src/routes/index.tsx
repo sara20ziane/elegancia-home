@@ -98,7 +98,7 @@ function Home() {
   return (
     <StoreLayout>
       <HomeHero settings={settings} products={list} />
-      <StyleDiscovery />
+      <TrustBar />
 
       <section id="catalogue" className="container-page scroll-mt-20 py-12 sm:py-16">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
@@ -145,9 +145,9 @@ function Home() {
       </section>
 
       <CategoryStrip />
-      <BrandStory />
-      <TrustBar />
+      <StyleDiscovery />
       <ReviewWall />
+      <BrandStory />
       <ClosingCta storeName={settings?.name ?? "Elegancia Home"} />
     </StoreLayout>
   );
