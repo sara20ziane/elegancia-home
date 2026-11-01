@@ -17,6 +17,7 @@ import { supabaseConfigProblem } from "@/lib/supabase/client";
 import { reviewsQuery, storeSettingsQuery } from "@/lib/queries";
 import { EMPTY_FILTERS, cataloguePageQuery, useCataloguePage } from "@/lib/catalogue";
 import { useI18n } from "@/lib/i18n-context";
+import { canonicalUrl } from "@/lib/seo";
 
 const emptyCopy = {
   fr: {
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/")({
       (ar
         ? "مفروشات وبياضات منزلية أنيقة مع الدفع عند الاستلام."
         : "Literie et linge de maison élégants avec paiement à la livraison.");
+    const url = canonicalUrl("/");
     return {
       meta: [
         { title },
@@ -62,7 +64,13 @@ export const Route = createFileRoute("/")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Elegancia Home" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
   component: Home,
