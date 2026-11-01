@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
+import { ColourPhotos } from "@/components/admin/colour-photos";
 import { VariantEditor } from "@/components/admin/variant-editor";
 import { ProductPhotos } from "@/components/admin/product-photos";
 import { ProductFieldsCard, type ProductDraft } from "@/components/admin/product-fields";
@@ -108,6 +109,7 @@ function ProductEditPage() {
   const publishable = product.product_variants.length > 0;
   const published = product.status === "published";
   const busy = save.isPending || saveDetails.isPending;
+  const hasColours = product.product_variants.some((variant) => Boolean(variant.color_name?.trim()));
 
   const togglePublish = () =>
     save.mutate({
@@ -160,10 +162,16 @@ function ProductEditPage() {
       {product.product_variants.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Photos du modèle</CardTitle>
+            <CardTitle>Photos et couleurs</CardTitle>
           </CardHeader>
-          <CardBody>
-            <ProductPhotos productId={id} variants={product.product_variants} />
+          <CardBody className="flex flex-col gap-5">
+            <ColourPhotos productId={id} variants={product.product_variants} />
+
+            {!hasColours && (
+              <div className="border-t border-outline pt-5">
+                <ProductPhotos productId={id} variants={product.product_variants} />
+              </div>
+            )}
           </CardBody>
         </Card>
       )}
