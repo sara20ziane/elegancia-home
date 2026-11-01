@@ -1,10 +1,11 @@
-import { Field, Input, Switch } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
 import { ColorField, LogoField } from "./brand-fields";
 import { useI18n } from "@/lib/i18n-context";
 
 /**
- * The four screens of the first-run wizard. Each is a plain form over a shared
- * draft; the route owns saving and moving between them.
+ * The three screens of the first-run wizard. Delivery is deliberately managed
+ * outside this wizard by Packers / EcoTrack so setup can never invent or
+ * overwrite carrier rates.
  */
 export type SetupDraft = {
   name: string;
@@ -15,12 +16,6 @@ export type SetupDraft = {
   whatsapp: string;
   email: string;
   address: string;
-  north: string;
-  south: string;
-  pickupNorth: string;
-  pickupSouth: string;
-  freeAbove: string;
-  applyZones: boolean;
   legal_name: string;
   nif: string;
   rc_number: string;
@@ -93,47 +88,6 @@ export function ContactStep({ draft, set, phoneError }: StepProps & { phoneError
       <Field label={t("checkout.address")}>
         <Input value={draft.address} onChange={(e) => set("address", e.target.value)} />
       </Field>
-    </>
-  );
-}
-
-export function DeliveryStep({ draft, set, zoneCount }: StepProps & { zoneCount: number }) {
-  const { t } = useI18n();
-  const number = (
-    key: "north" | "south" | "pickupNorth" | "pickupSouth" | "freeAbove",
-    label: string,
-  ) => (
-    <Field label={label}>
-      <Input
-        type="number"
-        min={0}
-        inputMode="numeric"
-        dir="ltr"
-        value={draft[key]}
-        onChange={(e) => set(key, e.target.value)}
-      />
-    </Field>
-  );
-  return (
-    <>
-      <p className="text-sm text-on-surface-muted">{t("admin.setup.deliveryHint")}</p>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {number("north", t("admin.setup.north"))}
-        {number("south", t("admin.setup.south"))}
-        {number("pickupNorth", t("admin.setup.pickupNorth"))}
-        {number("pickupSouth", t("admin.setup.pickupSouth"))}
-      </div>
-      {number("freeAbove", t("admin.setup.freeAbove"))}
-      <Switch
-        label={t("admin.setup.applyAll")}
-        checked={draft.applyZones}
-        onChange={(e) => set("applyZones", e.target.checked)}
-      />
-      {zoneCount > 0 && (
-        <p className="text-xs text-on-surface-muted">
-          {t("admin.setup.zonesExist", { count: zoneCount })}
-        </p>
-      )}
     </>
   );
 }

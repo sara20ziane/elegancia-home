@@ -4,39 +4,26 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/feedback";
-import {
-  ContactStep,
-  DeliveryStep,
-  LegalStep,
-  ShopStep,
-  type SetupDraft,
-} from "@/components/admin/setup-steps";
+import { ContactStep, LegalStep, ShopStep, type SetupDraft } from "@/components/admin/setup-steps";
 import { saveStoreSettings } from "@/lib/admin";
-import { useDeliveryZones } from "@/lib/delivery";
 import { useI18n } from "@/lib/i18n-context";
 import { useStoreSettings, type StoreSettings } from "@/lib/queries";
-import { isPlaceholder, isValidDzPhone, saveAllZones } from "@/lib/setup-status";
+import { isPlaceholder, isValidDzPhone } from "@/lib/setup-status";
 
 export const Route = createFileRoute("/admin/welcome")({
   component: WelcomePage,
 });
 
-const STEPS = [
-  "admin.setup.shop",
-  "admin.setup.contact",
-  "admin.setup.delivery",
-  "admin.setup.legal",
-] as const;
+const STEPS = ["admin.setup.shop", "admin.setup.contact", "admin.setup.legal"] as const;
 
 function WelcomePage() {
   const settings = useStoreSettings();
-  const zones = useDeliveryZones();
-  if (settings.isPending || zones.isPending) return <LoadingState />;
-  return <Wizard settings={settings.data ?? null} zoneCount={zones.data?.length ?? 0} />;
+  if (settings.isPending) return <LoadingState />;
+  return <Wizard settings={settings.data ?? null} />;
 }
 
 /** Demo values start blank, so an owner cannot click through and keep them. */
-function initialDraft(s: StoreSettings | null, zoneCount: number): SetupDraft {
+function initialDraft(s: StoreSettings | null): SetupDraft {
   const real = (value: string | null | undefined) => (isPlaceholder(value) ? "" : (value ?? ""));
   const name = s?.name ?? "";
   return {
@@ -48,12 +35,6 @@ function initialDraft(s: StoreSettings | null, zoneCount: number): SetupDraft {
     whatsapp: real(s?.whatsapp),
     email: s?.email ?? "",
     address: s?.address ?? "",
-    north: String(s?.delivery_fee_flat ?? 600),
-    south: "1200",
-    pickupNorth: "",
-    pickupSouth: "",
-    freeAbove: String(s?.free_shipping_threshold ?? 0),
-    applyZones: zoneCount === 0,
     legal_name: s?.legal_name ?? "",
     nif: real(s?.nif),
     rc_number: real(s?.rc_number),
@@ -61,18 +42,16 @@ function initialDraft(s: StoreSettings | null, zoneCount: number): SetupDraft {
 }
 
 /**
- * First-run setup.
- *
- * The page a new owner lands on straight after claiming the shop, and the one
- * the dashboard sends them back to while anything buyers see is still a demo
- * value. Each step saves on Continue, so closing the tab halfway loses nothing.
+ * First-run setup for buyer-facing identity, contact and legal information.
+ * Delivery is intentionally absent: Packers / EcoTrack is the sole authority
+ * for delivery zones and prices and is configured from /admin/delivery.
  */
-function Wizard({ settings, zoneCount }: { settings: StoreSettings | null; zoneCount: number }) {
+function Wizard({ settings }: { settings: StoreSettings | null }) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState(() => initialDraft(settings, zoneCount));
+  const [draft, setDraft] = useState(() => initialDraft(settings));
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const set = <K extends keyof SetupDraft>(key: K, value: SetupDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
@@ -81,7 +60,6 @@ function Wizard({ settings, zoneCount }: { settings: StoreSettings | null; zoneC
     mutationFn: (current: number) => saveStep(current, draft),
     onSuccess: (_, current) => {
       void queryClient.invalidateQueries({ queryKey: ["store_settings"] });
-      void queryClient.invalidateQueries({ queryKey: ["delivery_zones"] });
       if (current === STEPS.length - 1) void navigate({ to: "/admin" });
       else setStep(current + 1);
     },
@@ -108,7 +86,7 @@ function Wizard({ settings, zoneCount }: { settings: StoreSettings | null; zoneC
         {step === 0 && (
           <p className="mt-1 text-sm text-on-surface-muted">{t("admin.setup.intro")}</p>
         )}
-        <div className="mt-4 grid grid-cols-4 gap-1.5" aria-hidden="true">
+        <div className="mt-4 grid grid-cols-3 gap-1.5" aria-hidden="true">
           {STEPS.map((key, index) => (
             <span
               key={key}
@@ -132,8 +110,7 @@ function Wizard({ settings, zoneCount }: { settings: StoreSettings | null; zoneC
         <h2 className="font-display text-lg font-semibold">{t(STEPS[step])}</h2>
         {step === 0 && <ShopStep draft={draft} set={set} />}
         {step === 1 && <ContactStep draft={draft} set={set} phoneError={phoneError} />}
-        {step === 2 && <DeliveryStep draft={draft} set={set} zoneCount={zoneCount} />}
-        {step === 3 && <LegalStep draft={draft} set={set} />}
+        {step === 2 && <LegalStep draft={draft} set={set} />}
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {step > 0 && (
@@ -177,22 +154,6 @@ async function saveStep(current: number, draft: SetupDraft): Promise<void> {
       email: nullable(draft.email),
       address: nullable(draft.address),
     });
-  } else if (current === 2) {
-    const north = Math.max(0, Number(draft.north) || 0);
-    const south = Math.max(0, Number(draft.south) || north);
-    await saveStoreSettings({
-      delivery_fee_flat: north,
-      free_shipping_threshold: Math.max(0, Number(draft.freeAbove) || 0),
-    });
-    // Empty pickup prices mean pickup is not offered, not that it is free.
-    const optional = (value: string) =>
-      value.trim() === "" ? null : Math.max(0, Number(value) || 0);
-    if (draft.applyZones) {
-      await saveAllZones(north, south, {
-        north: optional(draft.pickupNorth),
-        south: optional(draft.pickupSouth),
-      });
-    }
   } else {
     await saveStoreSettings({
       legal_name: nullable(draft.legal_name),
