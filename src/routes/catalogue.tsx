@@ -4,6 +4,7 @@ import { CatalogueView } from "@/components/storefront/catalogue-view";
 import { EMPTY_FILTERS, cataloguePageQuery } from "@/lib/catalogue";
 import { translate } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
+import { canonicalUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/catalogue")({
   // Prefetched so the server sends products rather than an empty grid.
@@ -12,15 +13,24 @@ export const Route = createFileRoute("/catalogue")({
       .ensureQueryData(cataloguePageQuery(EMPTY_FILTERS, 1))
       .catch(() => null);
   },
-  head: ({ match }) => ({
-    meta: [
-      { title: translate(match.context.locale, "nav.products") },
-      {
-        name: "description",
-        content: translate(match.context.locale, "catalogue.description"),
-      },
-    ],
-  }),
+  head: ({ match }) => {
+    const title = `${translate(match.context.locale, "nav.products")} | Elegancia Home`;
+    const description = translate(match.context.locale, "catalogue.description");
+    const url = canonicalUrl("/catalogue");
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Elegancia Home" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: CatalogueRoute,
 });
 
