@@ -1,0 +1,72 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { getSupabase } from "@/lib/supabase/client";
+import { SITE_URL, escapeXml } from "@/lib/seo";
+
+type SitemapEntry = {
+  loc: string;
+  lastmod?: string | null;
+  changefreq?: "daily" | "weekly" | "monthly";
+  priority?: number;
+};
+
+function xmlEntry(entry: SitemapEntry): string {
+  return [
+    "  <url>",
+    `    <loc>${escapeXml(entry.loc)}</loc>`,
+    entry.lastmod ? `    <lastmod>${escapeXml(entry.lastmod)}</lastmod>` : "",
+    entry.changefreq ? `    <changefreq>${entry.changefreq}</changefreq>` : "",
+    entry.priority !== undefined ? `    <priority>${entry.priority.toFixed(1)}</priority>` : "",
+    "  </url>",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+export const Route = createFileRoute("/sitemap.xml")({
+  server: {
+    handlers: {
+      GET: async () => {
+        const supabase = getSupabase();
+        const [productsResult, categoriesResult] = await Promise.all([
+          supabase
+            .from("products")
+            .select("slug, published_at, updated_at")
+            .eq("status", "published")
+            .order("published_at", { ascending: false }),
+          supabase
+            .from("categories")
+            .select("slug")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+        ]);
+
+        const entries: SitemapEntry[] = [
+          { loc: `${SITE_URL}/`, changefreq: "daily", priority: 1 },
+          { loc: `${SITE_URL}/catalogue`, changefreq: "daily", priority: 0.9 },
+          ...(categoriesResult.data ?? []).map((category) => ({
+            loc: `${SITE_URL}/category/${encodeURIComponent(category.slug)}`,
+            changefreq: "weekly" as const,
+            priority: 0.8,
+          })),
+          ...(productsResult.data ?? []).map((product) => ({
+            loc: `${SITE_URL}/product/${encodeURIComponent(product.slug)}`,
+            lastmod: product.updated_at ?? product.published_at,
+            changefreq: "weekly" as const,
+            priority: 0.8,
+          })),
+        ];
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries
+          .map(xmlEntry)
+          .join("\n")}\n</urlset>`;
+
+        return new Response(xml, {
+          headers: {
+            "Content-Type": "application/xml; charset=utf-8",
+            "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+          },
+        });
+      },
+    },
+  },
+});
