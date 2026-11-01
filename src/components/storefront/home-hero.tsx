@@ -135,7 +135,14 @@ export function HomeHero({
           />
 
           {shots.length > 0 ? (
-            <div className="grid grid-cols-3 items-start gap-3 sm:gap-4">
+            <div
+              className={cn(
+                "grid items-start gap-3 sm:gap-4",
+                shots.length === 1 && "mx-auto max-w-[260px] grid-cols-1",
+                shots.length === 2 && "mx-auto max-w-[460px] grid-cols-2",
+                shots.length >= 3 && "grid-cols-3",
+              )}
+            >
               {shots.map(({ product, image }, index) => {
                 const name = localized(locale, product.name, product.name_fr);
                 return (
@@ -145,7 +152,7 @@ export function HomeHero({
                     params={{ slug: product.slug }}
                     className={cn(
                       "group relative block overflow-hidden rounded-[22px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(76,55,40,0.14)]",
-                      index === 1 && "mt-10 sm:mt-14",
+                      shots.length > 1 && index === 1 && "mt-10 sm:mt-14",
                     )}
                   >
                     <img
