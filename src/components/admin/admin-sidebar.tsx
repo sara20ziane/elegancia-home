@@ -9,6 +9,8 @@ import {
   Store,
   Tags,
   Truck,
+  Wallet,
+  Receipt,
   X,
 } from "lucide-react";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -37,6 +39,8 @@ const LINKS = [
   { to: "/admin/categories", labelKey: "admin.nav.categories", icon: Tags, exact: false },
   { to: "/admin/reviews", labelKey: "admin.reviews.title", icon: Star, exact: false },
   { to: "/admin/delivery", labelKey: "admin.delivery.title", icon: Truck, exact: false },
+  { to: "/admin/finance", labelKey: "finance.title", icon: Wallet, exact: false, owner: true },
+  { to: "/admin/invoices", labelKey: "finance.invoicing", icon: Receipt, exact: false },
   { to: "/admin/settings", labelKey: "admin.settings.title", icon: Settings, exact: false },
 ] as const;
 
@@ -52,7 +56,7 @@ export function AdminSidebar({
   onToggleCollapse: () => void;
 }) {
   const { t } = useI18n();
-  const { signOut } = useAuth();
+  const { signOut, role } = useAuth();
   const pending = usePendingOrdersCount();
 
   return (
@@ -89,7 +93,7 @@ export function AdminSidebar({
         <nav className="admin-sidebar-nav">
           <p className="admin-nav-group-label">{t("admin.nav.manage")}</p>
           <ul>
-            {LINKS.map((link) => (
+            {LINKS.filter((link) => !("owner" in link) || role === "owner").map((link) => (
               <li key={link.to}>
                 <Link
                   to={link.to}

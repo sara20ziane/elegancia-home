@@ -4,6 +4,7 @@ import { CheckCircle2, Circle, MapPin, Package, Phone, Truck } from "lucide-reac
 import { StoreLayout } from "@/components/storefront/store-layout";
 import { OrderReference } from "@/components/orders/order-reference";
 import { TrackingNumber } from "@/components/orders/tracking-number";
+import { InvoiceDownload } from "@/components/orders/invoice-download";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
@@ -70,6 +71,7 @@ function OrderPage() {
 
             <Timeline status={data.status} />
             <TrackingNumber key={data.tracking_number} tracking={data.tracking_number} />
+            <InvoiceDownload token={token} />
 
             <section className="flex flex-col gap-3 rounded-[16px] border border-outline bg-surface p-5">
               <h2 className="flex items-center gap-2 font-medium">

@@ -15,7 +15,7 @@
  * a service worker in front of the dev server causes confusing stale modules.
  */
 
-const VERSION = "elegancia-selected-v020-v1";
+const VERSION = "elegancia-native-finance-v1";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 
@@ -53,7 +53,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   // Never cache private admin, checkout or tracking navigations.
-  if (/^\/(admin|login|setup|checkout|order|track)(\/|$)/.test(url.pathname)) return;
+  if (/^\/(api|admin|login|setup|checkout|order|track)(\/|$)/.test(url.pathname)) return;
 
   if (request.mode === "navigate") {
     event.respondWith(networkFirstNavigation(request));

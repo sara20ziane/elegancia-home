@@ -14,6 +14,7 @@ import { setOrderStatus, type AdminOrder, type OrderStatus } from "@/lib/admin";
 import type { PhoneHistory } from "@/lib/admin-phones";
 import { BlockPhoneButton } from "./phone-guard";
 import { CarrierAction, PickupOffice } from "./carrier-action";
+import { OrderFinanceSection } from "@/components/finance/order-section";
 
 /** Expanded order: lines, money, recipient, and the status transitions. */
 export function OrderDetail({
@@ -94,6 +95,7 @@ export function OrderDetail({
 
       <OrderActions order={order} />
       <CarrierAction order={order} />
+      <OrderFinanceSection orderId={order.id} status={order.status} />
       <DeleteOrderButton order={order} />
       <div className="flex flex-wrap gap-2">
         <Link

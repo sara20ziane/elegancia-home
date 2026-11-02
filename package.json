@@ -39,6 +39,8 @@
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/outfit": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@pdfme/generator": "6.2.8",
+    "@pdfme/schemas": "6.2.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/supabase-js": "^2.105.4",
     "@tanstack/react-query": "^5.83.0",
@@ -58,7 +60,9 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@electric-sql/pglite": "0.5.14",
     "@eslint/js": "^9.32.0",
+    "@pdfme/pdf-lib": "6.2.8",
     "@playwright/test": "^1.64.0",
     "@tailwindcss/vite": "^4.2.1",
     "@testing-library/jest-dom": "^6.6.3",
