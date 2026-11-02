@@ -4,6 +4,7 @@ import { Menu } from "lucide-react";
 import { UpdateNotices } from "@/components/admin/update-notices";
 import { OrderNotifications } from "@/components/admin/order-notifications";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { FinanceQueueRunner } from "@/components/admin/finance-queue";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/feedback";
 import { useAuth } from "@/lib/auth";
@@ -109,6 +110,7 @@ function AdminLayout() {
             <OrderNotifications key={user?.id} />
           </div>
           <UpdateNotices />
+          <FinanceQueueRunner />
           <Outlet />
         </main>
       </div>

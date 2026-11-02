@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getSupabase } from "./supabase/client";
 import type { Database } from "./supabase/types";
 import type { StoreSettings } from "./queries";
+import { requestFinanceSync } from "./finance";
 
 export type OrderStatus = Database["public"]["Enums"]["order_status"];
 
@@ -153,6 +154,7 @@ export async function setOrderStatus(
     .update({ status, ...extra })
     .eq("id", id);
   if (error) throw new Error(error.message);
+  void requestFinanceSync({ orderId: id });
 }
 
 export async function saveStoreSettings(patch: Partial<StoreSettings>): Promise<void> {

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { OrderCustomer, OrderLine } from "./order";
 import { getSupabase } from "./supabase/client";
 import type { Json } from "./supabase/types";
+import { requestFinanceSync } from "./finance";
 
 export const MANUAL_ORDER_SOURCES = [
   "instagram",
@@ -128,5 +129,6 @@ export async function placeManualOrder(
   if (typeof data !== "string" || data.length === 0) {
     throw new Error("La commande a été créée sans référence exploitable.");
   }
+  if (confirmed) void requestFinanceSync({ publicToken: data });
   return data;
 }
