@@ -17,6 +17,7 @@ import { Route as LivraisonRouteImport } from './routes/livraison'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
@@ -30,6 +31,9 @@ import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as OrderTokenRouteImport } from './routes/order.$token'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as AdminProductIdRouteImport } from './routes/admin.product.$id'
+import { Route as ApiErpnextSyncRouteImport } from './routes/api.erpnext.sync'
+import { Route as ApiInvoicesTokenRouteImport } from './routes/api.invoices.$token'
+import { Route as ApiOrdersOrderIdInvoiceRouteImport } from './routes/api.orders.$orderId.invoice'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -69,6 +73,11 @@ const SearchRoute = SearchRouteImport.update({
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrackRoute = TrackRouteImport.update({
@@ -136,6 +145,21 @@ const AdminProductIdRoute = AdminProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiErpnextSyncRoute = ApiErpnextSyncRouteImport.update({
+  id: '/api/erpnext/sync',
+  path: '/api/erpnext/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiInvoicesTokenRoute = ApiInvoicesTokenRouteImport.update({
+  id: '/api/invoices/$token',
+  path: '/api/invoices/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOrdersOrderIdInvoiceRoute = ApiOrdersOrderIdInvoiceRouteImport.update({
+  id: '/api/orders/$orderId/invoice',
+  path: '/api/orders/$orderId/invoice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -146,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -159,6 +184,9 @@ export interface FileRoutesByFullPath {
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/api/erpnext/sync': typeof ApiErpnextSyncRoute
+  '/api/invoices/$token': typeof ApiInvoicesTokenRoute
+  '/api/orders/$orderId/invoice': typeof ApiOrdersOrderIdInvoiceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -168,6 +196,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -181,6 +210,9 @@ export interface FileRoutesByTo {
   '/product/$slug': typeof ProductSlugRoute
   '/admin': typeof AdminIndexRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/api/erpnext/sync': typeof ApiErpnextSyncRoute
+  '/api/invoices/$token': typeof ApiInvoicesTokenRoute
+  '/api/orders/$orderId/invoice': typeof ApiOrdersOrderIdInvoiceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -192,6 +224,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -205,6 +238,9 @@ export interface FileRoutesById {
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/api/erpnext/sync': typeof ApiErpnextSyncRoute
+  '/api/invoices/$token': typeof ApiInvoicesTokenRoute
+  '/api/orders/$orderId/invoice': typeof ApiOrdersOrderIdInvoiceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -217,6 +253,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/setup'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/categories'
     | '/admin/delivery'
@@ -230,6 +267,9 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin/'
     | '/admin/product/$id'
+    | '/api/erpnext/sync'
+    | '/api/invoices/$token'
+    | '/api/orders/$orderId/invoice'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -239,6 +279,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/setup'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/categories'
     | '/admin/delivery'
@@ -252,6 +293,9 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin'
     | '/admin/product/$id'
+    | '/api/erpnext/sync'
+    | '/api/invoices/$token'
+    | '/api/orders/$orderId/invoice'
   id:
     | '__root__'
     | '/'
@@ -262,6 +306,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/setup'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/categories'
     | '/admin/delivery'
@@ -275,6 +320,9 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin/'
     | '/admin/product/$id'
+    | '/api/erpnext/sync'
+    | '/api/invoices/$token'
+    | '/api/orders/$orderId/invoice'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -286,10 +334,14 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SearchRoute: typeof SearchRoute
   SetupRoute: typeof SetupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackRoute: typeof TrackRoute
   CategorySlugRoute: typeof CategorySlugRoute
   OrderTokenRoute: typeof OrderTokenRoute
   ProductSlugRoute: typeof ProductSlugRoute
+  ApiErpnextSyncRoute: typeof ApiErpnextSyncRoute
+  ApiInvoicesTokenRoute: typeof ApiInvoicesTokenRoute
+  ApiOrdersOrderIdInvoiceRoute: typeof ApiOrdersOrderIdInvoiceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -348,6 +400,13 @@ declare module '@tanstack/react-router' {
       path: '/setup'
       fullPath: '/setup'
       preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/track': {
@@ -441,6 +500,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/erpnext/sync': {
+      id: '/api/erpnext/sync'
+      path: '/api/erpnext/sync'
+      fullPath: '/api/erpnext/sync'
+      preLoaderRoute: typeof ApiErpnextSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/invoices/$token': {
+      id: '/api/invoices/$token'
+      path: '/api/invoices/$token'
+      fullPath: '/api/invoices/$token'
+      preLoaderRoute: typeof ApiInvoicesTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/orders/$orderId/invoice': {
+      id: '/api/orders/$orderId/invoice'
+      path: '/api/orders/$orderId/invoice'
+      fullPath: '/api/orders/$orderId/invoice'
+      preLoaderRoute: typeof ApiOrdersOrderIdInvoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -479,10 +559,14 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
   SetupRoute: SetupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackRoute: TrackRoute,
   CategorySlugRoute: CategorySlugRoute,
   OrderTokenRoute: OrderTokenRoute,
   ProductSlugRoute: ProductSlugRoute,
+  ApiErpnextSyncRoute: ApiErpnextSyncRoute,
+  ApiInvoicesTokenRoute: ApiInvoicesTokenRoute,
+  ApiOrdersOrderIdInvoiceRoute: ApiOrdersOrderIdInvoiceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

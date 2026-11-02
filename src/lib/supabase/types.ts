@@ -1,3 +1,12 @@
+import type { Finance } from "../erpnext/types";
+
+type FinanceTable<Row, Insert = Partial<Row>> = {
+  Row: Row;
+  Insert: Insert;
+  Update: Partial<Row>;
+  Relationships: [];
+};
+
 // Generated from Elegancia Supabase. Nullable catalogue filters reflect SQL null defaults.
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -9,6 +18,28 @@ export type Database = {
   };
   public: {
     Tables: {
+      order_finance: FinanceTable<Finance, Partial<Finance> & { order_id: string }>;
+      erp_customers: FinanceTable<
+        { phone: string; erp_customer_id: string },
+        { phone: string; erp_customer_id: string }
+      >;
+      erp_item_mappings: FinanceTable<
+        { variant_id: string; erp_item_code: string; sku: string | null; updated_at: string },
+        { variant_id: string; erp_item_code: string; sku?: string | null }
+      >;
+      erp_sync_queue: FinanceTable<{
+        order_id: string;
+        revision: number;
+        processed_revision: number;
+        claimed_revision: number | null;
+        lock_token: string | null;
+        locked_until: string | null;
+        attempts: number;
+        started_at: string | null;
+        blocked: boolean;
+        next_attempt_at: string;
+      }>;
+
       admin_users: {
         Row: {
           created_at: string;
@@ -822,6 +853,23 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      erp_request_sync: { Args: { p_order_id: string }; Returns: undefined };
+      erp_claim_sync: { Args: { p_order_id?: string }; Returns: Json };
+      erp_save_sync: {
+        Args: {
+          p_order_id: string;
+          p_lock: string;
+          p_patch: Json;
+          p_complete?: boolean;
+          p_retryable?: boolean;
+        };
+        Returns: boolean;
+      };
+      erp_record_cod_receipt: {
+        Args: { p_order_id: string; p_amount: number; p_reference: string; p_received_at: string };
+        Returns: undefined;
+      };
+
       admin_analytics: { Args: { p_days?: number }; Returns: Json };
       admin_exists: { Args: never; Returns: boolean };
       // Added by 20261031175750_selected_openstore_safety.sql (not yet deployed).

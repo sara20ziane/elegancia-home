@@ -1,0 +1,195 @@
+{% set company = frappe.get_doc('Company', doc.company) %}
+<style>
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+  .print-format {
+    /* Frappe extracts these PDF options from the print-format class. */
+    page-size: A4;
+    margin-top: 16mm;
+    margin-bottom: 16mm;
+    margin-left: 16mm;
+    margin-right: 16mm;
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    color: #302b27;
+  }
+  .eh-header {
+    border-bottom: 2px solid #9b8065;
+    padding-bottom: 16px;
+    margin-bottom: 22px;
+  }
+  .eh-logo {
+    max-width: 160px;
+    max-height: 65px;
+    margin-bottom: 10px;
+  }
+  .eh-title {
+    font-size: 25pt;
+    letter-spacing: 3px;
+    margin: 0 0 8px;
+    color: #715b47;
+  }
+  .eh-columns {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .eh-columns td {
+    vertical-align: top;
+    width: 50%;
+    padding: 0 12px 0 0;
+  }
+  .eh-muted {
+    color: #786e65;
+    font-size: 9pt;
+  }
+  .eh-lines {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+  .eh-lines thead {
+    display: table-header-group;
+    background: #f4f0eb;
+  }
+  .eh-lines th,
+  .eh-lines td {
+    padding: 9px 6px;
+    border-bottom: 1px solid #e5ddd4;
+    vertical-align: top;
+  }
+  .eh-number {
+    text-align: right;
+    white-space: nowrap;
+  }
+  .eh-total {
+    width: 58%;
+    margin-left: auto;
+    border-collapse: collapse;
+  }
+  .eh-total td {
+    padding: 6px;
+  }
+  .eh-grand {
+    background: #f4f0eb;
+    font-size: 13pt;
+    font-weight: bold;
+  }
+  .eh-footer {
+    margin-top: 26px;
+    padding-top: 12px;
+    border-top: 1px solid #e5ddd4;
+  }
+  tr {
+    page-break-inside: avoid;
+  }
+</style>
+<div lang="fr">
+  <div class="eh-header">
+    {% if company.company_logo %}<img
+      class="eh-logo"
+      src="{{ company.company_logo | e }}"
+      alt="Elegancia Home"
+    />{% endif %}
+    <table class="eh-columns">
+      <tr>
+        <td>
+          <strong>{{ company.name | e }}</strong><br />
+          {% if company.custom_elegancia_legal_address %}{{ company.custom_elegancia_legal_address |
+          e }}<br />{% endif %} {% if company.phone_no %}{{ company.phone_no | e }}<br />{% endif %}
+          {% if company.email %}{{ company.email | e }}{% endif %}
+        </td>
+        <td class="eh-number">
+          <h1 class="eh-title">FACTURE</h1>
+          <strong>{{ doc.name | e }}</strong><br />
+          Date : {{ frappe.utils.formatdate(doc.posting_date, 'dd/MM/yyyy') }}<br />
+          <span class="eh-muted">Commande Elegancia : {{ doc.custom_elegancia_order_id | e }}</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <table class="eh-columns">
+    <tr>
+      <td>
+        <div class="eh-muted">FACTURÉ À</div>
+        <strong>{{ doc.customer_name | e }}</strong><br />
+        {% if doc.custom_elegancia_phone %}Tél. : {{ doc.custom_elegancia_phone | e }}<br />{% endif
+        %} {% if doc.custom_elegancia_address %}{{ doc.custom_elegancia_address | e }}<br />{% endif
+        %} {% if doc.custom_elegancia_commune %}{{ doc.custom_elegancia_commune | e }}{% endif %} {%
+        if doc.custom_elegancia_wilaya %} — {{ doc.custom_elegancia_wilaya | e }}{% endif %}
+      </td>
+      <td>
+        {% if doc.custom_elegancia_delivery %}
+        <div class="eh-muted">LIVRAISON</div>
+        {{ doc.custom_elegancia_delivery | e }}{% endif %}
+      </td>
+    </tr>
+  </table>
+  <table class="eh-lines">
+    <thead>
+      <tr>
+        <th>Produit / variante</th>
+        <th>Référence / SKU</th>
+        <th class="eh-number">Qté</th>
+        <th class="eh-number">Prix unitaire</th>
+        <th class="eh-number">Remise</th>
+        <th class="eh-number">Montant</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in doc.items %}
+      <tr>
+        <td>{{ item.description | striptags | e }}</td>
+        <td>{{ (item.custom_elegancia_sku or item.item_code) | e }}</td>
+        <td class="eh-number">{{ item.qty }}</td>
+        <td class="eh-number">{{ item.get_formatted('rate', doc) }}</td>
+        <td class="eh-number">
+          {% if item.discount_amount %}{{ item.get_formatted('discount_amount', doc) }}{% else %}—{%
+          endif %}
+        </td>
+        <td class="eh-number">{{ item.get_formatted('amount', doc) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table class="eh-total">
+    <tr>
+      <td>Sous-total produits</td>
+      <td class="eh-number">
+        {{ frappe.utils.fmt_money(doc.total - (doc.custom_elegancia_delivery_fee or 0),
+        currency=doc.currency) }}
+      </td>
+    </tr>
+    <tr>
+      <td>Frais de livraison</td>
+      <td class="eh-number">
+        {% if doc.custom_elegancia_delivery_fee %}{{
+        frappe.utils.fmt_money(doc.custom_elegancia_delivery_fee, currency=doc.currency) }}{% else
+        %}Offerts{% endif %}
+      </td>
+    </tr>
+    {% for tax in doc.taxes %}{% if tax.tax_amount %}
+    <tr>
+      <td>{% if tax.included_in_print_rate %}Dont {% endif %}{{ tax.description | e }}</td>
+      <td class="eh-number">{{ tax.get_formatted('tax_amount', doc) }}</td>
+    </tr>
+    {% endif %}{% endfor %} {% if doc.discount_amount %}
+    <tr>
+      <td>Remise</td>
+      <td class="eh-number">{{ doc.get_formatted('discount_amount') }}</td>
+    </tr>
+    {% endif %}
+    <tr class="eh-grand">
+      <td>TOTAL</td>
+      <td class="eh-number">{{ doc.get_formatted('grand_total') }}</td>
+    </tr>
+  </table>
+  <div class="eh-footer eh-muted">
+    {% if company.custom_elegancia_rc %}RC : {{ company.custom_elegancia_rc | e }} · {% endif %} {%
+    if company.custom_elegancia_nif %}NIF : {{ company.custom_elegancia_nif | e }} · {% endif %} {%
+    if company.custom_elegancia_nis %}NIS : {{ company.custom_elegancia_nis | e }} · {% endif %} {%
+    if company.custom_elegancia_ai %}AI : {{ company.custom_elegancia_ai | e }}{% endif %}
+    <p>Elegancia Home</p>
+  </div>
+</div>
