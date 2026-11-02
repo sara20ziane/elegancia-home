@@ -114,6 +114,9 @@ function SetupForm({ onAwaitingEmail }: { onAwaitingEmail: () => void }) {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
     });
 
     if (signUpError) {
