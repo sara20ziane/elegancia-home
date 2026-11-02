@@ -17,10 +17,13 @@ import { Route as LivraisonRouteImport } from './routes/livraison'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
+import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
+import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -30,6 +33,8 @@ import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as OrderTokenRouteImport } from './routes/order.$token'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as AdminProductIdRouteImport } from './routes/admin.product.$id'
+import { Route as ApiOrderInvoiceTokenRouteImport } from './routes/api.order-invoice.$token'
+import { Route as ApiFinanceIdPdfRouteImport } from './routes/api.finance.$id.pdf'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -71,6 +76,11 @@ const SetupRoute = SetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackRoute = TrackRouteImport.update({
   id: '/track',
   path: '/track',
@@ -89,6 +99,16 @@ const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
 const AdminDeliveryRoute = AdminDeliveryRouteImport.update({
   id: '/delivery',
   path: '/delivery',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInvoicesRoute = AdminInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminProductsRoute = AdminProductsRouteImport.update({
@@ -136,6 +156,16 @@ const AdminProductIdRoute = AdminProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiOrderInvoiceTokenRoute = ApiOrderInvoiceTokenRouteImport.update({
+  id: '/api/order-invoice/$token',
+  path: '/api/order-invoice/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFinanceIdPdfRoute = ApiFinanceIdPdfRouteImport.update({
+  id: '/api/finance/$id/pdf',
+  path: '/api/finance/$id/pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -146,9 +176,12 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -159,6 +192,8 @@ export interface FileRoutesByFullPath {
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/api/order-invoice/$token': typeof ApiOrderInvoiceTokenRoute
+  '/api/finance/$id/pdf': typeof ApiFinanceIdPdfRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -168,9 +203,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -181,6 +219,8 @@ export interface FileRoutesByTo {
   '/product/$slug': typeof ProductSlugRoute
   '/admin': typeof AdminIndexRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/api/order-invoice/$token': typeof ApiOrderInvoiceTokenRoute
+  '/api/finance/$id/pdf': typeof ApiFinanceIdPdfRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -192,9 +232,12 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/search': typeof SearchRoute
   '/setup': typeof SetupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/delivery': typeof AdminDeliveryRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -205,6 +248,8 @@ export interface FileRoutesById {
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/api/order-invoice/$token': typeof ApiOrderInvoiceTokenRoute
+  '/api/finance/$id/pdf': typeof ApiFinanceIdPdfRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -217,9 +262,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/setup'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/categories'
     | '/admin/delivery'
+    | '/admin/finance'
+    | '/admin/invoices'
     | '/admin/products'
     | '/admin/reviews'
     | '/admin/settings'
@@ -230,6 +278,8 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin/'
     | '/admin/product/$id'
+    | '/api/order-invoice/$token'
+    | '/api/finance/$id/pdf'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -239,9 +289,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/setup'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/categories'
     | '/admin/delivery'
+    | '/admin/finance'
+    | '/admin/invoices'
     | '/admin/products'
     | '/admin/reviews'
     | '/admin/settings'
@@ -252,6 +305,8 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin'
     | '/admin/product/$id'
+    | '/api/order-invoice/$token'
+    | '/api/finance/$id/pdf'
   id:
     | '__root__'
     | '/'
@@ -262,9 +317,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/setup'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/categories'
     | '/admin/delivery'
+    | '/admin/finance'
+    | '/admin/invoices'
     | '/admin/products'
     | '/admin/reviews'
     | '/admin/settings'
@@ -275,6 +333,8 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin/'
     | '/admin/product/$id'
+    | '/api/order-invoice/$token'
+    | '/api/finance/$id/pdf'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -286,10 +346,13 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SearchRoute: typeof SearchRoute
   SetupRoute: typeof SetupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackRoute: typeof TrackRoute
   CategorySlugRoute: typeof CategorySlugRoute
   OrderTokenRoute: typeof OrderTokenRoute
   ProductSlugRoute: typeof ProductSlugRoute
+  ApiOrderInvoiceTokenRoute: typeof ApiOrderInvoiceTokenRoute
+  ApiFinanceIdPdfRoute: typeof ApiFinanceIdPdfRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -350,6 +413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/track': {
       id: '/track'
       path: '/track'
@@ -376,6 +446,20 @@ declare module '@tanstack/react-router' {
       path: '/delivery'
       fullPath: '/admin/delivery'
       preLoaderRoute: typeof AdminDeliveryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/invoices': {
+      id: '/admin/invoices'
+      path: '/invoices'
+      fullPath: '/admin/invoices'
+      preLoaderRoute: typeof AdminInvoicesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/products': {
@@ -441,12 +525,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/order-invoice/$token': {
+      id: '/api/order-invoice/$token'
+      path: '/api/order-invoice/$token'
+      fullPath: '/api/order-invoice/$token'
+      preLoaderRoute: typeof ApiOrderInvoiceTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/finance/$id/pdf': {
+      id: '/api/finance/$id/pdf'
+      path: '/api/finance/$id/pdf'
+      fullPath: '/api/finance/$id/pdf'
+      preLoaderRoute: typeof ApiFinanceIdPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
+  AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -459,6 +559,8 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
+  AdminFinanceRoute: AdminFinanceRoute,
+  AdminInvoicesRoute: AdminInvoicesRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
@@ -479,10 +581,13 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
   SetupRoute: SetupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackRoute: TrackRoute,
   CategorySlugRoute: CategorySlugRoute,
   OrderTokenRoute: OrderTokenRoute,
   ProductSlugRoute: ProductSlugRoute,
+  ApiOrderInvoiceTokenRoute: ApiOrderInvoiceTokenRoute,
+  ApiFinanceIdPdfRoute: ApiFinanceIdPdfRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
