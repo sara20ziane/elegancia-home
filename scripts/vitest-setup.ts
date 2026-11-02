@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
 /** jsdom implements neither of these; Radix and Supabase both call them. */
-if (!window.matchMedia) {
+if (typeof window !== "undefined" && !window.matchMedia) {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: (query: string) => ({
@@ -17,7 +17,7 @@ if (!window.matchMedia) {
   });
 }
 
-if (!window.ResizeObserver) {
+if (typeof window !== "undefined" && !window.ResizeObserver) {
   window.ResizeObserver = class {
     observe() {}
     unobserve() {}
