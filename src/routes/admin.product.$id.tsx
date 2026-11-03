@@ -1,3 +1,5 @@
+import { CatalogChecklist } from "@/components/admin/catalog-checklist";
+import { catalogReadiness } from "@/lib/catalog-readiness";
 import { PackBuilder } from "@/components/admin/pack-builder";
 import { ProductConfigurations } from "@/components/admin/product-configurations";
 import { ProductFieldsCard, type ProductDraft } from "@/components/admin/product-fields";
@@ -98,7 +100,7 @@ function ProductEditPage() {
   const set = <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) =>
     setDraft((current) => (current ? { ...current, [key]: value } : current));
 
-  const publishable = product.product_variants.length > 0;
+  const publishable = catalogReadiness(product).every((check) => check.ok || !check.blocking);
   const published = product.status === "published";
   const busy = save.isPending || saveDetails.isPending;
   const hasColours = product.product_variants.some((variant) =>
@@ -125,12 +127,16 @@ function ProductEditPage() {
         onSaveFields={saveFields}
       />
 
-      <PublishHint publishable={publishable} />
+      <CatalogChecklist product={product} />
       <ProductFieldsCard
         draft={draft}
         set={set}
         status={product.status}
-        onStatusChange={(status) => save.mutate({ status })}
+        onStatusChange={(status) => {
+          if (status === "published" && !publishable)
+            return toast.error("Vérifie les champs requis avant publication.");
+          save.mutate({ status });
+        }}
         onSave={saveFields}
         saving={saveDetails.isPending}
       />
@@ -204,18 +210,6 @@ function ProductHeader({
         </Button>
       </div>
     </div>
-  );
-}
-
-function PublishHint({ publishable }: { publishable: boolean }) {
-  return (
-    <>
-      {!publishable && (
-        <p className="rounded-[10px] border border-tertiary/40 bg-tertiary/5 px-4 py-3 text-sm">
-          Ajoute au moins une configuration de vente avant de publier ce modèle.
-        </p>
-      )}
-    </>
   );
 }
 

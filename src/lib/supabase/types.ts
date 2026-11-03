@@ -822,6 +822,9 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      catalog_generate: { Args: { p: Json }; Returns: string };
+      catalog_presets: { Args: { p?: Json }; Returns: Json };
+      catalog_apply_common: { Args: { p_product: string; p_patch: Json }; Returns: number };
       admin_analytics: { Args: { p_days?: number }; Returns: Json };
       admin_exists: { Args: never; Returns: boolean };
       // Added by 20261031175750_selected_openstore_safety.sql (not yet deployed).

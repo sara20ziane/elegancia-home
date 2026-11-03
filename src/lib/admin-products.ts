@@ -126,27 +126,6 @@ export function suggestSlug(name: string): string {
   return slugify(name) || `product-${Date.now()}`;
 }
 
-export async function createProduct(input: {
-  name: string;
-  slug: string;
-  kind: "single" | "pack";
-  category_id?: string | null;
-}): Promise<string> {
-  const { data, error } = await getSupabase()
-    .from("products")
-    .insert({
-      name: input.name.trim(),
-      slug: input.slug.trim(),
-      kind: input.kind,
-      category_id: input.category_id ?? null,
-      status: "draft",
-    })
-    .select("id")
-    .single();
-  if (error) throw new Error(error.message);
-  return data.id as string;
-}
-
 export async function updateProduct(
   id: string,
   patch: Partial<

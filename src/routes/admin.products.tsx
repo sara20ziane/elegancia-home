@@ -1,22 +1,20 @@
 import { useState } from "react";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageOff, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
-import { Dialog } from "@/components/ui/dialog";
-import { Field, Input } from "@/components/ui/form";
+import { catalogReadiness } from "@/lib/catalog-readiness";
+import { CreateProductDialog } from "@/components/admin/create-product-dialog";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
 import { priceRange, productImage } from "@/lib/queries";
 import {
-  createProduct,
   deleteProduct,
   setProductStatus,
-  suggestSlug,
   useAdminProductsPage,
   type AdminProduct,
 } from "@/lib/admin-products";
@@ -163,7 +161,11 @@ function ProductRow({ product }: { product: AdminProduct }) {
         <Button
           variant="secondary"
           size="sm"
-          disabled={toggle.isPending || configurations === 0}
+          disabled={
+            toggle.isPending ||
+            (product.status !== "published" &&
+              catalogReadiness(product).some((check) => check.blocking && !check.ok))
+          }
           onClick={() => toggle.mutate()}
         >
           {product.status === "published" ? "Dépublier" : "Publier"}
@@ -183,60 +185,5 @@ function ProductRow({ product }: { product: AdminProduct }) {
         </button>
       </div>
     </li>
-  );
-}
-
-function CreateProductDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const navigate = useNavigate();
-  const invalidate = useProductInvalidation();
-  const [name, setName] = useState("");
-
-  const create = useMutation({
-    mutationFn: () => {
-      const cleanName = name.trim();
-      return createProduct({ name: cleanName, slug: suggestSlug(cleanName), kind: "single" });
-    },
-    onSuccess: (id) => {
-      invalidate();
-      onClose();
-      setName("");
-      toast.success("Modèle créé");
-      void navigate({ to: "/admin/product/$id", params: { id } });
-    },
-    onError: (mutationError: Error) => toast.error(mutationError.message),
-  });
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Nouveau modèle Elegancia"
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button disabled={!name.trim() || create.isPending} onClick={() => create.mutate()}>
-            {create.isPending ? "Création…" : "Créer le modèle"}
-          </Button>
-        </>
-      }
-    >
-      <div className="flex flex-col gap-4">
-        <Field label="Nom du modèle" hint="Ex. Aveline, Velina, Sunny" required>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            maxLength={120}
-            autoFocus
-            placeholder="Aveline"
-          />
-        </Field>
-        <p className="text-xs leading-5 text-on-surface-muted">
-          Après création, tu pourras ajouter les photos, la catégorie et toutes les configurations
-          de tissu, pièces, dimensions, prix et stock.
-        </p>
-      </div>
-    </Dialog>
   );
 }

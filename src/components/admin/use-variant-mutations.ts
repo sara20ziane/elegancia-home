@@ -1,3 +1,4 @@
+import { validateVariant } from "@/lib/variant-generator";
 import { deleteVariant, upsertVariant } from "@/lib/admin-products";
 import { useI18n } from "@/lib/i18n-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,8 +18,10 @@ export function useVariantMutations(productId: string) {
       draft: VariantDraft;
       is_active: boolean;
       sort_order: number;
-    }) =>
-      upsertVariant({
+    }) => {
+      const error = validateVariant(input.draft);
+      if (error) throw new Error(error);
+      return upsertVariant({
         id: input.id,
         product_id: productId,
         size: input.draft.size.trim() || null,
@@ -39,7 +42,8 @@ export function useVariantMutations(productId: string) {
         duvet_cover_size: input.draft.duvet_cover_size.trim() || null,
         sort_order: input.sort_order,
         is_active: input.is_active,
-      }),
+      });
+    },
     onSuccess: () => {
       invalidate();
       toast.success(t("common.save"));

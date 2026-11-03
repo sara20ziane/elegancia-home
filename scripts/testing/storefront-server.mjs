@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { handleCatalogAdmin, testAdminId } from "./catalog-admin.mjs";
 import { nativeTestDatabase } from "./native-database.ts";
 import { product, productId, settings, variants } from "./storefront-fixtures.mjs";
 
@@ -30,16 +31,20 @@ for (const variant of variants)
       variant.piece_count,
     ],
   );
+await db.query("insert into auth.users(id) values($1);", [testAdminId]);
+await db.query("insert into admin_users(user_id,role) values($1,'owner')", [testAdminId]);
 let queue = Promise.resolve();
 
 async function handle(req, res) {
   const path = new URL(req.url, "http://127.0.0.1:54329").pathname;
-  const send = (data, status = 200) => {
+  const send = (data, status = 200, extraHeaders = {}) => {
     res.writeHead(status, {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "http://127.0.0.1:8080",
       "Access-Control-Allow-Headers": "*",
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+      "Access-Control-Expose-Headers": "Content-Range",
+      ...extraHeaders,
     });
     res.end(JSON.stringify(data));
   };
@@ -51,6 +56,7 @@ async function handle(req, res) {
     if (raw.length > 100000) return send({ message: "Too large" }, 413);
   }
   const body = raw ? JSON.parse(raw) : {};
+  if (await handleCatalogAdmin(db, req, path, body, send)) return;
   if (path.endsWith("/rpc/catalogue_page"))
     return send({
       products: [product],
@@ -83,7 +89,7 @@ async function handle(req, res) {
     return send([]);
   if (path.endsWith("/rpc/place_order") || path.endsWith("/rpc/track_order")) {
     // Queue the role change and query together so concurrent HTTP requests cannot share role state.
-    queue = queue.then(async () => {
+    {
       await db.exec("set role anon");
       try {
         const result = path.endsWith("/place_order")
@@ -98,14 +104,16 @@ async function handle(req, res) {
       } finally {
         await db.exec("reset role");
       }
-    });
-    return queue;
+    }
+    return;
   }
   return send({ message: "Access denied in isolated test adapter" }, 403);
 }
 createServer((req, res) => {
-  void handle(req, res).catch(() => {
-    res.writeHead(500);
-    res.end();
-  });
+  queue = queue
+    .then(() => handle(req, res))
+    .catch(() => {
+      res.writeHead(500);
+      res.end();
+    });
 }).listen(54329, "127.0.0.1", () => process.stdout.write("Synthetic E2E backend ready\n"));

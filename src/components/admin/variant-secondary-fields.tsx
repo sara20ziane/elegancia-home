@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
 import type { VariantDraft } from "./variant-draft";
@@ -88,6 +89,16 @@ export function VariantSecondaryFields({
               className="font-mono"
               maxLength={40}
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (window.confirm("Vider le SKU pour le régénérer au prochain enregistrement ?"))
+                  set("sku", "");
+              }}
+            >
+              Régénérer le SKU
+            </Button>
           </Field>
         </div>
       </section>

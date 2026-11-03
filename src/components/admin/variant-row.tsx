@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/form";
 import type { AdminVariant } from "@/lib/admin-products";
 import { useI18n } from "@/lib/i18n-context";
 import { Copy, Save, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toDraft, type VariantDraft } from "./variant-draft";
 import { DraftFields } from "./variant-fields";
 
@@ -29,6 +29,21 @@ export function VariantRow({
 }) {
   const { t } = useI18n();
   const [draft, setDraft] = useState<VariantDraft>(() => toDraft(variant));
+  const baseline = useRef(variant);
+  useEffect(() => {
+    const before = toDraft(baseline.current);
+    const after = toDraft(variant);
+    setDraft(
+      (current) =>
+        Object.fromEntries(
+          Object.entries(current).map(([key, value]) => [
+            key,
+            value === before[key as keyof VariantDraft] ? after[key as keyof VariantDraft] : value,
+          ]),
+        ) as VariantDraft,
+    );
+    baseline.current = variant;
+  }, [variant]);
   const [active, setActive] = useState(variant.is_active);
 
   return (

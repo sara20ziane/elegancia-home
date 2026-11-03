@@ -79,3 +79,16 @@ done
 finance_docker exec "$finance_container" psql -U postgres -v ON_ERROR_STOP=1 -c \
   "do \$\$ begin if (select count(*) from invoices where number is not null)<>1 or (select count(*) from cod_settlements)<>1 or (select count(*) from financial_movements where domain='cash')<>1 or (select status from invoices)<>'paid' then raise exception 'Concurrent actions duplicated or incomplete'; end if; end \$\$;"
 echo 'PASS: all migrations + SQL regression; 40 concurrent numbers; 16 concurrent issues; 16 concurrent COD receipts.'
+
+# The SKU reservation primary key also arbitrates independent PostgreSQL sessions.
+catalog_pids=()
+for catalog_n in $(seq 1 16); do
+  finance_docker exec "$finance_container" psql -U postgres -Atv ON_ERROR_STOP=1 \
+    -c "insert into product_variants(product_id,price,stock,size,set_type,color_name) values('ffffffff-4000-4000-8000-000000000001',9500,1,'Queen size','Parure housse de couette','Écru')" \
+    > "$finance_tmp/catalog-$catalog_n" &
+  catalog_pids+=("$!")
+done
+for catalog_pid in "${catalog_pids[@]}"; do wait "$catalog_pid"; done
+finance_docker exec "$finance_container" psql -U postgres -v ON_ERROR_STOP=1 -c \
+  "do \$\$ begin if (select count(distinct sku) from product_variants where color_name='Écru')<>16 then raise exception 'Duplicate concurrent SKUs'; end if; end \$\$;"
+echo 'PASS: 16 concurrent catalogue inserts have unique SKUs.'
