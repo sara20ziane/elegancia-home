@@ -6,7 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
-import { BED_SIZE_OPTIONS } from "@/lib/bedding-presets";
+import { BED_SIZE_OPTIONS, INITIAL_BEDDING_PRESETS } from "@/lib/bedding-presets";
 import { useBeddingPresets } from "@/lib/catalog-automation";
 import {
   generateBeddingVariants,
@@ -40,6 +40,7 @@ export function BeddingGeneration({
   const [differentPrices, setDifferentPrices] = useState(false);
   const [differentStock, setDifferentStock] = useState(false);
   const presets = useBeddingPresets();
+  const availablePresets = presets.data?.length ? presets.data : INITIAL_BEDDING_PRESETS;
   const conflicts = configurationConflicts(
     rows.map((row) => row.draft),
     existingVariants,
@@ -74,7 +75,7 @@ export function BeddingGeneration({
       modelName,
       base,
       [...sizes, ...(other ? [custom] : [])],
-      presets.data ?? [],
+      availablePresets,
     );
     if (!next.length) return toast.error("Choisis au moins une taille.");
     changeRows(next);
@@ -83,7 +84,8 @@ export function BeddingGeneration({
     <div className="flex flex-col gap-4">
       <h3 className="font-semibold">2 — Valeurs communes et tailles</h3>
       <p className="text-sm text-on-surface-muted">
-        Saisis ces informations une seule fois. Les tailles recevront les mêmes valeurs de départ.
+        Saisis les informations communes une seule fois. Composition, dimensions et SKU sont générés
+        automatiquement pour chaque taille dans l’aperçu.
       </p>
       <fieldset disabled={save.isPending} className="flex min-w-0 flex-col gap-4">
         <DraftFields draft={base} onChange={setBase} common />
@@ -101,12 +103,10 @@ export function BeddingGeneration({
           differentStock={differentStock}
           setDifferentStock={setDifferentStock}
           unavailable={presets.isError}
+          retrying={presets.isFetching}
+          onRetry={() => void presets.refetch()}
         />
-        <Button
-          variant="secondary"
-          disabled={presets.isPending || presets.isError}
-          onClick={generate}
-        >
+        <Button variant="secondary" onClick={generate}>
           {rows.length ? "Générer un nouvel aperçu" : "Afficher l’aperçu"}
         </Button>
         {rows.length > 0 && (

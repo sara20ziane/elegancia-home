@@ -121,11 +121,19 @@ export function DraftFields({
       </section>
 
       {!common && <PresetRecalculation draft={draft} onChange={onChange} />}
+      {common && (
+        <p className="rounded-[12px] border border-outline bg-surface-mid/20 p-3 text-sm text-on-surface-muted">
+          La composition, les dimensions et le SKU seront générés automatiquement pour chaque taille
+          dans l’aperçu. Tu pourras ensuite les modifier individuellement si nécessaire.
+        </p>
+      )}
       <details>
         <summary className="cursor-pointer text-sm font-medium">
-          Composition, dimensions et gestion (facultatif)
+          {common
+            ? "Prix barré et poids (facultatif)"
+            : "Composition, dimensions et gestion (facultatif)"}
         </summary>
-        <VariantSecondaryFields draft={draft} onChange={onChange} />
+        <VariantSecondaryFields draft={draft} onChange={onChange} common={common} />
       </details>
     </div>
   );

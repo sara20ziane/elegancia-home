@@ -62,7 +62,9 @@ export function useBeddingPresets() {
   return useQuery({
     queryKey: ["catalog_presets"],
     queryFn: async () => {
-      const { data, error } = await getSupabase().rpc("catalog_presets");
+      // Pass the optional argument explicitly so PostgREST always resolves the
+      // intended RPC signature after a fresh schema reload/deployment.
+      const { data, error } = await getSupabase().rpc("catalog_presets", { p: null });
       if (error) throw new Error(error.message);
       return data as unknown as BeddingPreset[];
     },
