@@ -1,5 +1,7 @@
 # OpenStore DZ
 
+> **Elegancia database safety:** follow [MIGRATIONS.md](supabase/MIGRATIONS.md) and [production hardening](docs/PRODUCTION_HARDENING.md). The upstream setup prompts below are historical. Never apply/re-run `schema.sql` on an existing project; use the ordered migrations. Finance Production stays OFF.
+
 **Free, self-hosted e-commerce for Algerian small businesses and individuals.**
 
 [![License: AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-blue.svg)](LICENSE)

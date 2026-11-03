@@ -1,3 +1,28 @@
+## CI isolée (recommandée)
+
+```bash
+npm ci
+npx playwright install chromium
+npm run test:e2e:ci
+```
+
+Cette suite n’utilise aucun secret ni environnement distant. Elle démarre le vrai
+storefront et un adaptateur HTTP loopback, avec catalogue synthétique et RPC SQL
+sur PostgreSQL WASM jetable. Les tests bloquent les requêtes navigateur externes.
+Desktop et 360 px, arabe/RTL, variante, panier, validation, livraison/COD, accès
+anonyme, PDF interdit et SEO. Elle ne remplace pas une recette des services
+Auth/Storage/PostgREST Supabase ni les headers déployés par Vercel.
+
+## Suites connectées existantes
+
+Ces tests peuvent écrire des commandes. Le globalSetup refuse de démarrer sans
+`E2E_ALLOW_WRITES=true`, `E2E_TEST_PROJECT_REF` et une `VITE_SUPABASE_URL`
+correspondante. Le projet Supabase Production et le domaine Production sont
+explicitement interdits. Utiliser uniquement « Elegancia Home Test » et une
+Preview connectée à cette base, sans données clientes copiées. Les anciens
+conseils de nettoyage ci-dessous concernent exclusivement les fixtures de Test ;
+aucun nettoyage ne doit être exécuté sur Production.
+
 # End-to-end tests
 
 `npm run test:e2e` runs Playwright against a dev server on port 8080, reusing one

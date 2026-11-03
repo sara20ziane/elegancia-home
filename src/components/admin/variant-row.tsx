@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Copy, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/form";
-import { useI18n } from "@/lib/i18n-context";
 import type { AdminVariant } from "@/lib/admin-products";
-import { DraftFields, type VariantDraft, toDraft } from "./variant-fields";
+import { useI18n } from "@/lib/i18n-context";
+import { Copy, Save, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toDraft, type VariantDraft } from "./variant-draft";
+import { DraftFields } from "./variant-fields";
 
 /**
  * One Elegancia configuration row.
@@ -44,22 +45,11 @@ export function VariantRow({
           <Save size={15} aria-hidden="true" />
           {t("common.save")}
         </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={busy}
-          onClick={() => onDuplicate(draft)}
-        >
+        <Button variant="secondary" size="sm" disabled={busy} onClick={() => onDuplicate(draft)}>
           <Copy size={15} aria-hidden="true" />
           Dupliquer
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={busy}
-          onClick={onDelete}
-          className="text-error"
-        >
+        <Button variant="ghost" size="sm" disabled={busy} onClick={onDelete} className="text-error">
           <Trash2 size={15} aria-hidden="true" />
           {t("common.delete")}
         </Button>

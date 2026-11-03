@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public localStorage namespace, not a credential (two historical false positives)."
+regexTarget = "secret"
+regexes = ['''^elegancia-saved-orders-v1$''']

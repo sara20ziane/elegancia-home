@@ -1,11 +1,11 @@
-import { Save } from "lucide-react";
-import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
-import { useI18n } from "@/lib/i18n-context";
-import { localized } from "@/lib/i18n";
-import { useCategories } from "@/lib/queries";
+import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import type { AdminProduct } from "@/lib/admin-products";
+import { localized } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
+import { useCategories } from "@/lib/queries";
+import { Save } from "lucide-react";
 
 export type ProductDraft = {
   name: string;
@@ -61,19 +61,7 @@ export function ProductFieldsCard({
   saving: boolean;
 }) {
   const { t, locale } = useI18n();
-  const { data: categories } = useCategories();
   const labels = fieldLabels[locale];
-
-  const toggleCategory = (categoryId: string) => {
-    const selected = draft.category_ids.includes(categoryId);
-    set(
-      "category_ids",
-      selected
-        ? draft.category_ids.filter((id) => id !== categoryId)
-        : [...draft.category_ids, categoryId],
-    );
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -115,41 +103,7 @@ export function ProductFieldsCard({
           />
         </Field>
 
-        <div className="sm:col-span-2">
-          <Field
-            label={labels.categories}
-            hint={
-              categories && categories.length === 0
-                ? t("admin.products.noCategories")
-                : labels.categoriesHint
-            }
-          >
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {(categories ?? []).map((category) => {
-                const checked = draft.category_ids.includes(category.id);
-                return (
-                  <label
-                    key={category.id}
-                    className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-[12px] border px-3 py-2.5 text-sm transition-colors ${
-                      checked
-                        ? "border-primary bg-primary/5 text-on-surface"
-                        : "border-outline bg-surface hover:border-primary/60"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleCategory(category.id)}
-                      className="size-4 accent-[var(--primary)]"
-                    />
-                    <span>{localized(locale, category.name, category.name_fr)}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </Field>
-        </div>
-
+        <ProductCategoryFields draft={draft} set={set} />
         <Field label={t("common.status")}>
           <Select
             value={status}
@@ -169,5 +123,64 @@ export function ProductFieldsCard({
         </div>
       </CardBody>
     </Card>
+  );
+}
+
+function ProductCategoryFields({
+  draft,
+  set,
+}: {
+  draft: ProductDraft;
+  set: <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) => void;
+}) {
+  const { t, locale } = useI18n();
+  const { data: categories } = useCategories();
+  const labels = fieldLabels[locale];
+
+  const toggleCategory = (categoryId: string) => {
+    const selected = draft.category_ids.includes(categoryId);
+    set(
+      "category_ids",
+      selected
+        ? draft.category_ids.filter((id) => id !== categoryId)
+        : [...draft.category_ids, categoryId],
+    );
+  };
+
+  return (
+    <div className="sm:col-span-2">
+      <Field
+        label={labels.categories}
+        hint={
+          categories && categories.length === 0
+            ? t("admin.products.noCategories")
+            : labels.categoriesHint
+        }
+      >
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {(categories ?? []).map((category) => {
+            const checked = draft.category_ids.includes(category.id);
+            return (
+              <label
+                key={category.id}
+                className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-[12px] border px-3 py-2.5 text-sm transition-colors ${
+                  checked
+                    ? "border-primary bg-primary/5 text-on-surface"
+                    : "border-outline bg-surface hover:border-primary/60"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleCategory(category.id)}
+                  className="size-4 accent-[var(--primary)]"
+                />
+                <span>{localized(locale, category.name, category.name_fr)}</span>
+              </label>
+            );
+          })}
+        </div>
+      </Field>
+    </div>
   );
 }

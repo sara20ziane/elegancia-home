@@ -1,12 +1,13 @@
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/feedback";
+import { trackEcommerce } from "@/lib/analytics-events";
+import { useCart, type CartItem } from "@/lib/cart";
+import { formatDzd } from "@/lib/format";
+import { useI18n } from "@/lib/i18n-context";
+import { useStoreSettings } from "@/lib/queries";
 import { Link } from "@tanstack/react-router";
 import { ShoppingBag, Trash2, X } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { useCart, type CartItem } from "@/lib/cart";
-import { useI18n } from "@/lib/i18n-context";
-import { formatDzd } from "@/lib/format";
-import { useStoreSettings } from "@/lib/queries";
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/feedback";
 
 /**
  * Cart drawer.
@@ -22,6 +23,12 @@ export function CartDrawer() {
   const { items, subtotal, count, isOpen, closeCart } = useCart();
   const { data: settings } = useStoreSettings();
   const ref = useRef<HTMLDialogElement>(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (isOpen && !wasOpen.current)
+      trackEcommerce("view_cart", { quantity: count, amount: subtotal });
+    wasOpen.current = isOpen;
+  }, [isOpen, count, subtotal]);
 
   useEffect(() => {
     const el = ref.current;

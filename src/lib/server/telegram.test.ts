@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-vi.mock("@tanstack/react-start/server-only", () => ({}));
 import { sendTelegram } from "./telegram";
+vi.mock("@tanstack/react-start/server-only", () => ({}));
 const fetchMock = vi.fn();
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
@@ -36,7 +36,10 @@ describe("Telegram delivery", () => {
     [new Response("private response", { status: 500 }), "api_http_500"],
     [new Response('{"ok":false}'), "api_rejected"],
     [new Response("invalid-json"), "api_invalid_response"],
-    [new Response('{"ok":false,"description":"Bad Request: chat not found"}', { status: 400 }), "api_chat_not_found"],
+    [
+      new Response('{"ok":false,"description":"Bad Request: chat not found"}', { status: 400 }),
+      "api_chat_not_found",
+    ],
     [new Response('{"ok":false}', { status: 401 }), "api_unauthorized"],
     [new Response('{"ok":false}', { status: 403 }), "api_forbidden"],
   ])("swallows Telegram errors with a safe reason", async (response, reason) => {

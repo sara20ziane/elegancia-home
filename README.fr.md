@@ -1,5 +1,7 @@
 # OpenStore DZ
 
+> **Sécurité Elegancia :** suivre [MIGRATIONS.md](supabase/MIGRATIONS.md) et [PRODUCTION_HARDENING.md](docs/PRODUCTION_HARDENING.md). Les anciens prompts d’installation ci-dessous sont historiques. Ne jamais rejouer `schema.sql` sur un projet existant ; utiliser les migrations ordonnées. Finance Production reste OFF.
+
 **E-commerce libre et auto-hébergé pour les petites entreprises et les indépendants algériens.**
 
 [English](README.md) · [العربية](README.ar.md)

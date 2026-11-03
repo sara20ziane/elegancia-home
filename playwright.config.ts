@@ -17,6 +17,9 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./e2e",
+  // Remote suites may write orders: explicit disposable-project opt-in is mandatory.
+  globalSetup: "./e2e/require-test-project.ts",
+  testIgnore: "**/isolated/**",
   // The dev and preview servers are single Node processes. Against a built
   // preview, `networkidle` on a Supabase-backed route can take tens of seconds,
   // so both the timeout and the worker count are relaxed for that case rather

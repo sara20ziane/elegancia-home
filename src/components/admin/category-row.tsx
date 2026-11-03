@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { ArrowDown, ArrowUp, Check, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
-import { useI18n } from "@/lib/i18n-context";
 import type { AdminCategory } from "@/lib/admin-categories";
+import { useI18n } from "@/lib/i18n-context";
+import { ArrowDown, ArrowUp, Check, Eye, EyeOff, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 const COPY = {
   fr: {
@@ -129,18 +129,10 @@ export function CategoryRow({
           )}
 
           <span className="flex items-center gap-1">
-            <IconButton
-              label={c.moveUp}
-              disabled={busy || first}
-              onClick={() => onMove(-1)}
-            >
+            <IconButton label={c.moveUp} disabled={busy || first} onClick={() => onMove(-1)}>
               <ArrowUp size={15} />
             </IconButton>
-            <IconButton
-              label={c.moveDown}
-              disabled={busy || last}
-              onClick={() => onMove(1)}
-            >
+            <IconButton label={c.moveDown} disabled={busy || last} onClick={() => onMove(1)}>
               <ArrowDown size={15} />
             </IconButton>
             <IconButton

@@ -1,5 +1,6 @@
+import type { CheckoutForm } from "@/lib/checkout-form";
 import { useRef, useState, type FormEvent } from "react";
-import type { CheckoutForm } from "@/components/storefront/checkout-panels";
+import { trackEcommerce } from "./analytics-events";
 import type { CartItem } from "./cart";
 import { useI18n } from "./i18n-context";
 import { isTokenShaped, placeOrder } from "./order";
@@ -47,6 +48,9 @@ export function useCheckoutOrder(
         );
         return;
       }
+      trackEcommerce("order_completed", {
+        quantity: cart.items.reduce((sum, line) => sum + line.quantity, 0),
+      });
       setPlaced({ token: result.token, createdAt: new Date().toISOString() });
       cart.clear();
       // This separate request owns the awaited server work. Never await it in checkout.

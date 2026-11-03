@@ -1,15 +1,15 @@
-import { ImageUploadPreview } from "./image-upload-preview";
-import { ColourPhotos } from "./colour-photos";
-import type { ImageFrame } from "@/lib/image-frame";
-import { useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Camera, Loader2, X } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import type { AdminVariant } from "@/lib/admin-products";
+import { attachToVariants, detachFromVariants } from "@/lib/colour-photos";
 import { useI18n } from "@/lib/i18n-context";
 import { uploadProductImage } from "@/lib/image";
-import { attachToVariants, detachFromVariants } from "@/lib/colour-photos";
-import type { AdminVariant } from "@/lib/admin-products";
+import type { ImageFrame } from "@/lib/image-frame";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Camera, Loader2, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import { ColourPhotos } from "./colour-photos";
+import { ImageUploadPreview } from "./image-upload-preview";
 
 function productUrls(variants: AdminVariant[]): string[] {
   const urls: string[] = [];
@@ -34,7 +34,9 @@ export function ProductPhotos({
   variants: AdminVariant[];
 }) {
   const colours = new Set(
-    variants.map((variant) => variant.color_name?.trim()).filter((colour): colour is string => Boolean(colour)),
+    variants
+      .map((variant) => variant.color_name?.trim())
+      .filter((colour): colour is string => Boolean(colour)),
   );
 
   if (colours.size > 0) {

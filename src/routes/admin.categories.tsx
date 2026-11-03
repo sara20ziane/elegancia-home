@@ -1,14 +1,9 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { COPY, ELEGANCIA_PRESETS } from "@/components/admin/category-copy";
 import { CategoryRow } from "@/components/admin/category-row";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
 import { Field, Input } from "@/components/ui/form";
-import { useI18n } from "@/lib/i18n-context";
 import {
   ADMIN_CATEGORIES_KEY,
   createCategory,
@@ -17,66 +12,16 @@ import {
   useAdminCategories,
   type AdminCategory,
 } from "@/lib/admin-categories";
+import { useI18n } from "@/lib/i18n-context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { Plus, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/categories")({
   component: CategoriesPage,
 });
-
-const ELEGANCIA_PRESETS = [
-  { fr: "Parure de drap", ar: "أطقم الشراشف" },
-  { fr: "Parure housse de couette", ar: "أطقم أغطية اللحاف" },
-  { fr: "Plaid", ar: "بطانيات خفيفة" },
-  { fr: "Taies d’oreillers", ar: "أغطية الوسائد" },
-  { fr: "Jetées", ar: "مفارش السرير" },
-] as const;
-
-const COPY = {
-  fr: {
-    title: "Catégories de la boutique",
-    intro:
-      "Organise les modèles Elegancia comme les clientes les cherchent. Un même modèle peut appartenir à plusieurs catégories.",
-    createTitle: "Ajouter une catégorie",
-    arabic: "Nom arabe",
-    french: "Nom français",
-    frenchHint: "Utilisé dans la version française de la boutique.",
-    add: "Ajouter",
-    suggestions: "Suggestions Elegancia",
-    suggestionsBody:
-      "Clique sur une suggestion pour préremplir les deux noms. Rien n’est créé tant que tu n’appuies pas sur Ajouter.",
-    alreadyAdded: "Déjà ajoutée",
-    empty: "Aucune catégorie pour le moment.",
-  },
-  en: {
-    title: "Store categories",
-    intro:
-      "Organise Elegancia models the way customers browse them. One model can belong to several categories.",
-    createTitle: "Add a category",
-    arabic: "Arabic name",
-    french: "French name",
-    frenchHint: "Used in the French version of the store.",
-    add: "Add",
-    suggestions: "Elegancia suggestions",
-    suggestionsBody:
-      "Choose a suggestion to prefill both names. Nothing is created until you press Add.",
-    alreadyAdded: "Already added",
-    empty: "No categories yet.",
-  },
-  ar: {
-    title: "فئات المتجر",
-    intro:
-      "رتّبي موديلات Elegancia حسب طريقة بحث الزبونات. يمكن أن ينتمي نفس الموديل إلى أكثر من فئة.",
-    createTitle: "إضافة فئة",
-    arabic: "الاسم بالعربية",
-    french: "الاسم بالفرنسية",
-    frenchHint: "يظهر في النسخة الفرنسية من المتجر.",
-    add: "إضافة",
-    suggestions: "اقتراحات Elegancia",
-    suggestionsBody:
-      "اختاري اقتراحاً لملء الاسمين تلقائياً. لن يتم إنشاء شيء حتى تضغطي على إضافة.",
-    alreadyAdded: "مضافة بالفعل",
-    empty: "لا توجد فئات بعد.",
-  },
-} as const;
 
 function normalise(value: string | null | undefined) {
   return (value ?? "").trim().toLocaleLowerCase();
@@ -155,77 +100,22 @@ function CategoriesPage() {
         <p className="mt-1 max-w-2xl text-sm text-on-surface-muted">{c.intro}</p>
       </div>
 
-      <Card>
-        <CardBody className="flex flex-col gap-5">
-          <div>
-            <h2 className="font-display text-lg font-semibold">{c.createTitle}</h2>
-          </div>
-          <form
-            className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
-            onSubmit={(event) => {
-              event.preventDefault();
-              create.mutate({
-                name: name.trim(),
-                name_fr: nameFr.trim() || null,
-                sort_order: list.length,
-              });
-            }}
-          >
-            <Field label={c.arabic} required>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                dir="rtl"
-                required
-                minLength={2}
-                placeholder="مثال: أطقم الشراشف"
-              />
-            </Field>
-            <Field label={c.french} hint={c.frenchHint}>
-              <Input
-                value={nameFr}
-                onChange={(e) => setNameFr(e.target.value)}
-                dir="ltr"
-                placeholder="Ex. Parure de drap"
-              />
-            </Field>
-            <Button type="submit" disabled={busy || name.trim().length < 2}>
-              <Plus size={16} aria-hidden="true" />
-              {c.add}
-            </Button>
-          </form>
-
-          <div className="border-t border-outline pt-4">
-            <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-primary" aria-hidden="true" />
-              <h3 className="font-semibold">{c.suggestions}</h3>
-            </div>
-            <p className="mt-1 text-xs text-on-surface-muted">{c.suggestionsBody}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {ELEGANCIA_PRESETS.map((preset) => {
-                const added = exists(preset);
-                return (
-                  <button
-                    key={preset.fr}
-                    type="button"
-                    disabled={added || busy}
-                    onClick={() => {
-                      setName(preset.ar);
-                      setNameFr(preset.fr);
-                    }}
-                    className="rounded-full border border-outline bg-surface px-3 py-2 text-start text-xs transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-default disabled:opacity-45"
-                  >
-                    <span className="font-medium">{preset.fr}</span>
-                    <span className="mx-1.5 text-outline-strong">·</span>
-                    <span dir="rtl">{preset.ar}</span>
-                    {added && <span className="ms-2 text-positive">✓ {c.alreadyAdded}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </CardBody>
-      </Card>
+      <CategoryCreation
+        c={c}
+        name={name}
+        nameFr={nameFr}
+        setName={setName}
+        setNameFr={setNameFr}
+        busy={busy}
+        exists={exists}
+        onCreate={() =>
+          create.mutate({
+            name: name.trim(),
+            name_fr: nameFr.trim() || null,
+            sort_order: list.length,
+          })
+        }
+      />
 
       {list.length === 0 ? (
         <EmptyState title={c.empty} />
@@ -252,5 +142,95 @@ function CategoriesPage() {
         </ul>
       )}
     </div>
+  );
+}
+
+function CategoryCreation({
+  c,
+  name,
+  nameFr,
+  setName,
+  setNameFr,
+  busy,
+  exists,
+  onCreate,
+}: {
+  c: (typeof COPY)[keyof typeof COPY];
+  name: string;
+  nameFr: string;
+  setName: (value: string) => void;
+  setNameFr: (value: string) => void;
+  busy: boolean;
+  exists: (preset: (typeof ELEGANCIA_PRESETS)[number]) => boolean;
+  onCreate: () => void;
+}) {
+  return (
+    <Card>
+      <CardBody className="flex flex-col gap-5">
+        <div>
+          <h2 className="font-display text-lg font-semibold">{c.createTitle}</h2>
+        </div>
+        <form
+          className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onCreate();
+          }}
+        >
+          <Field label={c.arabic} required>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              dir="rtl"
+              required
+              minLength={2}
+              placeholder="مثال: أطقم الشراشف"
+            />
+          </Field>
+          <Field label={c.french} hint={c.frenchHint}>
+            <Input
+              value={nameFr}
+              onChange={(e) => setNameFr(e.target.value)}
+              dir="ltr"
+              placeholder="Ex. Parure de drap"
+            />
+          </Field>
+          <Button type="submit" disabled={busy || name.trim().length < 2}>
+            <Plus size={16} aria-hidden="true" />
+            {c.add}
+          </Button>
+        </form>
+
+        <div className="border-t border-outline pt-4">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-primary" aria-hidden="true" />
+            <h3 className="font-semibold">{c.suggestions}</h3>
+          </div>
+          <p className="mt-1 text-xs text-on-surface-muted">{c.suggestionsBody}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {ELEGANCIA_PRESETS.map((preset) => {
+              const added = exists(preset);
+              return (
+                <button
+                  key={preset.fr}
+                  type="button"
+                  disabled={added || busy}
+                  onClick={() => {
+                    setName(preset.ar);
+                    setNameFr(preset.fr);
+                  }}
+                  className="rounded-full border border-outline bg-surface px-3 py-2 text-start text-xs transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-default disabled:opacity-45"
+                >
+                  <span className="font-medium">{preset.fr}</span>
+                  <span className="mx-1.5 text-outline-strong">·</span>
+                  <span dir="rtl">{preset.ar}</span>
+                  {added && <span className="ms-2 text-positive">✓ {c.alreadyAdded}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </CardBody>
+    </Card>
   );
 }

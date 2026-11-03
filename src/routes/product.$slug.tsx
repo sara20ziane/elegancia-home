@@ -1,9 +1,11 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
-import { StoreLayout } from "@/components/storefront/store-layout";
 import { ProductDetail } from "@/components/storefront/product-detail";
-import { SizeGuide } from "@/components/storefront/size-guide";
+import { RelatedProducts } from "@/components/storefront/related-products";
 import { ReviewForm, ReviewList } from "@/components/storefront/reviews";
+import { SizeGuide } from "@/components/storefront/size-guide";
+import { StoreLayout } from "@/components/storefront/store-layout";
 import { ErrorState } from "@/components/ui/feedback";
+import { localized } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-context";
 import {
   priceRange,
   productImage,
@@ -12,11 +14,9 @@ import {
   sortVariants,
   useProduct,
 } from "@/lib/queries";
-import { sizeGuidesQuery } from "@/lib/size-guides";
-import { RelatedProducts } from "@/components/storefront/related-products";
-import { localized } from "@/lib/i18n";
-import { useT } from "@/lib/i18n-context";
 import { absoluteUrl, canonicalUrl } from "@/lib/seo";
+import { sizeGuidesQuery } from "@/lib/size-guides";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ context, params }) => {
@@ -63,6 +63,18 @@ export const Route = createFileRoute("/product/$slug")({
               highPrice: range.max,
               offerCount: activeVariants.length,
               url,
+              availability: activeVariants.some((v) => v.stock > 0)
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+              offers: activeVariants.map((v) => ({
+                "@type": "Offer",
+                sku: v.sku ?? v.id,
+                price: v.price,
+                priceCurrency: "DZD",
+                url,
+                availability:
+                  v.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              })),
             },
           }
         : {}),
@@ -93,7 +105,7 @@ export const Route = createFileRoute("/product/$slug")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify(structuredData),
+          children: JSON.stringify(structuredData).replaceAll("<", "\\u003c"),
         },
       ],
     };

@@ -1,5 +1,7 @@
 # DATABASE
 
+> **Historical upstream reference.** The versioned migration chain is authoritative for Elegancia. Do not apply this historical schema snapshot to an existing database. See [MIGRATIONS.md](../supabase/MIGRATIONS.md) and [PRODUCTION_HARDENING.md](PRODUCTION_HARDENING.md).
+
 Postgres on Supabase. **The schema is one file: `supabase/schema.sql`.** There are no
 migration files by design, so a shop owner can install this by pasting one document.
 This is a deliberate, documented departure from the owner's general rule that every

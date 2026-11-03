@@ -1,33 +1,35 @@
-import { useState } from "react";
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Gift } from "lucide-react";
+import { OrderPlaced } from "@/components/orders/order-placed";
+import { AddressFields, CheckoutSummary, CodNotice } from "@/components/storefront/checkout-panels";
+import { DeliveryChoice } from "@/components/storefront/delivery-choice";
+import { isDemoShop } from "@/components/storefront/demo-banner";
 import { StoreLayout } from "@/components/storefront/store-layout";
-import {
-  AddressFields,
-  CheckoutSummary,
-  CodNotice,
-  EMPTY_CHECKOUT_FORM,
-  type CheckoutForm,
-} from "@/components/storefront/checkout-panels";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/feedback";
 import { useCart } from "@/lib/cart";
+import { EMPTY_CHECKOUT_FORM, type CheckoutForm } from "@/lib/checkout-form";
 import { translate } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
-import { useCheckoutQuote } from "@/lib/use-checkout-quote";
-import { DeliveryChoice } from "@/components/storefront/delivery-choice";
-import { isDemoShop } from "@/components/storefront/demo-banner";
-import { OrderPlaced } from "@/components/orders/order-placed";
+import { useCheckoutAnalytics } from "@/lib/use-checkout-analytics";
 import { useCheckoutOrder } from "@/lib/use-checkout-order";
+import { useCheckoutQuote } from "@/lib/use-checkout-quote";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { ArrowLeft, Gift } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/checkout")({
-  head: ({ match }) => ({ meta: [{ title: translate(match.context.locale, "checkout.title") }] }),
+  head: ({ match }) => ({
+    meta: [
+      { title: translate(match.context.locale, "checkout.title") },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: CheckoutPage,
 });
 
 function CheckoutPage() {
   const { t } = useI18n();
   const cart = useCart();
+  useCheckoutAnalytics(cart.items, cart.ready);
 
   const [form, setForm] = useState<CheckoutForm>(EMPTY_CHECKOUT_FORM);
   const { settings, delivery, homeDelivery, pickup, parureQuantity } = useCheckoutQuote(

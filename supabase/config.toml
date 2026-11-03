@@ -62,8 +62,8 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-# There are no migrations (docs/DECISIONS.md entry 4), so the schema itself is
-# the seed: `supabase db reset --local` builds the whole database from it.
+# The ordered migrations build the schema. No customer data is seeded.
+# Never use the historical schema.sql snapshot to overwrite an existing project.
 sql_paths = []
 
 [db.network_restrictions]

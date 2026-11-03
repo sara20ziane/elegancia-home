@@ -1,9 +1,9 @@
-import { Link } from "@tanstack/react-router";
-import { AlertTriangle } from "lucide-react";
 import { useDeliveryZones } from "@/lib/delivery";
 import { useI18n } from "@/lib/i18n-context";
 import { useStoreSettings } from "@/lib/queries";
 import { setupGaps } from "@/lib/setup-status";
+import { Link } from "@tanstack/react-router";
+import { AlertTriangle } from "lucide-react";
 
 /**
  * The dashboard's nag. Shown while anything buyers see is missing or a demo
@@ -26,7 +26,7 @@ export function SetupChecklist() {
       <div className="min-w-0 flex-1">
         <h2 className="font-semibold">{t("admin.setup.checklist")}</h2>
         <p className="mt-0.5 text-sm text-on-surface-muted">
-          {t("admin.setup.checklistBody")} {" "}
+          {t("admin.setup.checklistBody")}{" "}
           {gaps.map((gap) => t(`admin.setup.gap.${gap}`)).join(" · ")}
         </p>
       </div>

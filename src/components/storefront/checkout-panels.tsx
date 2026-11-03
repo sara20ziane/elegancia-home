@@ -1,37 +1,13 @@
-import { Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { useCart, type CartItem } from "@/lib/cart";
-import { useI18n } from "@/lib/i18n-context";
-import { formatDzd } from "@/lib/format";
-import { WILAYAS } from "@/lib/wilayas";
-import { useStoreSettings } from "@/lib/queries";
+import type { CheckoutForm } from "@/lib/checkout-form";
 import { useCommunes } from "@/lib/communes";
-import type { DeliveryMethod } from "@/lib/delivery";
-
-export type CheckoutForm = {
-  customer_name: string;
-  phone: string;
-  wilaya: string;
-  commune: string;
-  address: string;
-  note: string;
-  delivery_method: DeliveryMethod;
-  stopdesk_id: string;
-  stopdesk_name: string;
-};
-
-export const EMPTY_CHECKOUT_FORM: CheckoutForm = {
-  customer_name: "",
-  phone: "",
-  wilaya: "",
-  commune: "",
-  address: "",
-  note: "",
-  delivery_method: "home",
-  stopdesk_id: "",
-  stopdesk_name: "",
-};
+import { formatDzd } from "@/lib/format";
+import { useI18n } from "@/lib/i18n-context";
+import { useStoreSettings } from "@/lib/queries";
+import { WILAYAS } from "@/lib/wilayas";
+import { Banknote } from "lucide-react";
 
 export function AddressFields({
   form,

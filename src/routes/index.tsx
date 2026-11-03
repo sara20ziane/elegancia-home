@@ -1,7 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
-import { StoreLayout } from "@/components/storefront/store-layout";
-import { ProductGrid } from "@/components/storefront/product-card";
+import { SetupCheck } from "@/components/setup-check";
 import { HomeHero, TrustBar } from "@/components/storefront/home-hero";
 import {
   BrandStory,
@@ -10,14 +7,17 @@ import {
   ReviewWall,
   StyleDiscovery,
 } from "@/components/storefront/home-sections";
+import { ProductGrid } from "@/components/storefront/product-card";
+import { StoreLayout } from "@/components/storefront/store-layout";
 import { EmptyState, ErrorState, ProductSkeleton } from "@/components/ui/feedback";
-import { SetupCheck } from "@/components/setup-check";
-import { isEmptyDatabaseError } from "@/lib/supabase/health";
-import { supabaseConfigProblem } from "@/lib/supabase/client";
-import { reviewsQuery, storeSettingsQuery } from "@/lib/queries";
 import { EMPTY_FILTERS, cataloguePageQuery, useCataloguePage } from "@/lib/catalogue";
 import { useI18n } from "@/lib/i18n-context";
+import { reviewsQuery, storeSettingsQuery } from "@/lib/queries";
 import { canonicalUrl } from "@/lib/seo";
+import { supabaseConfigProblem } from "@/lib/supabase/client";
+import { isEmptyDatabaseError } from "@/lib/supabase/health";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { Sparkles } from "lucide-react";
 
 const emptyCopy = {
   fr: {
@@ -36,10 +36,8 @@ const emptyCopy = {
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    const settings = await context.queryClient
-      .ensureQueryData(storeSettingsQuery())
-      .catch(() => null);
-    await Promise.all([
+    const [settings] = await Promise.all([
+      context.queryClient.ensureQueryData(storeSettingsQuery()).catch(() => null),
       context.queryClient.ensureQueryData(reviewsQuery()).catch(() => null),
       context.queryClient.ensureQueryData(cataloguePageQuery(EMPTY_FILTERS, 1)).catch(() => null),
     ]);
@@ -85,7 +83,9 @@ function Home() {
   if (configProblem || (catalogue.isError && isEmptyDatabaseError(catalogue.error))) {
     return (
       <main className="container-page flex min-h-dvh flex-col items-center justify-center gap-6 py-20 text-center">
-        <h1 className="font-display text-3xl font-semibold">{settings?.name ?? "Elegancia Home"}</h1>
+        <h1 className="font-display text-3xl font-semibold">
+          {settings?.name ?? "Elegancia Home"}
+        </h1>
         <SetupCheck />
       </main>
     );

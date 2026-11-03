@@ -45,6 +45,7 @@ test.describe("buyer journey", () => {
     await page.getByLabel(/الاسم الكامل/).fill(CUSTOMER);
     await page.getByLabel(/رقم الهاتف/).fill(PHONE);
     await page.getByLabel(/^الولاية/).selectOption({ index: 1 });
+    await page.getByLabel(/البلدية/).fill("Alger Centre");
     await page.getByLabel(/العنوان الكامل/).fill("10 rue des tests, Alger");
 
     await page.getByRole("button", { name: /تأكيد الطلب/ }).click();
@@ -76,6 +77,7 @@ test.describe("buyer journey", () => {
     await page.getByLabel(/رقم الهاتف/).evaluate((el) => el.removeAttribute("pattern"));
     await page.getByLabel(/رقم الهاتف/).fill("nope");
     await page.getByLabel(/^الولاية/).selectOption({ index: 1 });
+    await page.getByLabel(/البلدية/).fill("Alger Centre");
     await page.getByLabel(/العنوان الكامل/).fill("10 rue des tests, Alger");
 
     await page.getByRole("button", { name: /تأكيد الطلب/ }).click();

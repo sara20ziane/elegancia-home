@@ -2,13 +2,11 @@
 -- OpenStore DZ — complete database schema
 -- =============================================================================
 --
--- THIS IS THE ONLY DATABASE FILE. There are no migrations.
---
--- A shop owner installs OpenStore by pasting this file once, or by running:
---     docker exec -i supabase_db_openstore-dz psql -U postgres -v ON_ERROR_STOP=1 < supabase/schema.sql
---
--- Every object below is created idempotently, so re-running this file against an
--- existing database is safe. Seed data uses ON CONFLICT so it never duplicates.
+-- HISTORICAL SNAPSHOT ONLY. supabase/migrations/ is authoritative.
+-- This file predates launch safety, Packers fixes and native Finance.
+-- Do not apply or re-run it against an existing database: old function bodies
+-- would overwrite later security fixes. See supabase/MIGRATIONS.md.
+-- Fresh disposable local databases use the complete ordered migration chain.
 --
 -- Design rules this file must not break:
 --

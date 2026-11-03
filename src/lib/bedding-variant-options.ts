@@ -103,8 +103,7 @@ export function setTypeOptions(
   colour: string | null = null,
 ): BeddingOption<string>[] {
   const filtered = variants.filter(
-    (variant) =>
-      matchesColour(variant, colour) && (fabric === null || variant.fabric === fabric),
+    (variant) => matchesColour(variant, colour) && (fabric === null || variant.fabric === fabric),
   );
   return uniqueOptions(filtered, (variant) => variant.set_type);
 }

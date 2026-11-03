@@ -1,11 +1,11 @@
+import type { CheckoutForm } from "@/lib/checkout-form";
+import { I18nProvider } from "@/lib/i18n-context";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, type ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderTest } from "../../../scripts/testing/react-render";
 import { testProduct, testVariant } from "../../../scripts/testing/v020-fixtures";
-import { I18nProvider } from "@/lib/i18n-context";
 import { QuickOrder } from "./quick-order";
-import type { CheckoutForm } from "./checkout-panels";
 const { placeOrder, clear, notify } = vi.hoisted(() => ({
   placeOrder: vi.fn(),
   clear: vi.fn(),

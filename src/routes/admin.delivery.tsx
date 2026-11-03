@@ -1,17 +1,17 @@
-import { useEffect, useRef } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Link2Off, RefreshCw, Truck } from "lucide-react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
-import { useI18n } from "@/lib/i18n-context";
-import { formatDzd } from "@/lib/format";
-import { WILAYAS } from "@/lib/wilayas";
 import { useDeliveryZones, type DeliveryZone } from "@/lib/delivery";
-import { getSupabase } from "@/lib/supabase/client";
+import { formatDzd } from "@/lib/format";
+import { useI18n } from "@/lib/i18n-context";
 import { syncPackersRates, testPackersConnection } from "@/lib/server/packers-actions";
+import { getSupabase } from "@/lib/supabase/client";
+import { WILAYAS } from "@/lib/wilayas";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { CheckCircle2, Link2Off, RefreshCw, Truck } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/delivery")({
   component: DeliveryPage,
@@ -58,12 +58,13 @@ function CarrierCard() {
   const connected = connection.data?.connected === true;
   const configured = connection.data?.configured === true;
 
+  const runSync = sync.mutate;
   useEffect(() => {
     if (connected && !autoSynced.current) {
       autoSynced.current = true;
-      sync.mutate();
+      runSync();
     }
-  }, [connected]);
+  }, [connected, runSync]);
 
   return (
     <Card>
@@ -80,7 +81,11 @@ function CarrierCard() {
         ) : (
           <Badge tone="neutral">
             <Link2Off size={12} aria-hidden="true" />
-            {connection.isPending ? "Vérification…" : configured ? "Token invalide" : "Non connecté"}
+            {connection.isPending
+              ? "Vérification…"
+              : configured
+                ? "Token invalide"
+                : "Non connecté"}
           </Badge>
         )}
       </CardHeader>
@@ -88,7 +93,8 @@ function CarrierCard() {
         <div className="rounded-[12px] border border-outline bg-surface-mid px-4 py-3 text-sm">
           <p className="font-medium">Départ fixe : Alger (16)</p>
           <p className="mt-1 text-xs text-on-surface-muted">
-            Les tarifs domicile et Stop Desk affichés par Elegancia proviennent exclusivement de Packers.
+            Les tarifs domicile et Stop Desk affichés par Elegancia proviennent exclusivement de
+            Packers.
           </p>
         </div>
 
@@ -109,11 +115,16 @@ function CarrierCard() {
           disabled={!connected || sync.isPending}
           onClick={() => sync.mutate()}
         >
-          <RefreshCw size={15} className={sync.isPending ? "animate-spin" : ""} aria-hidden="true" />
+          <RefreshCw
+            size={15}
+            className={sync.isPending ? "animate-spin" : ""}
+            aria-hidden="true"
+          />
           {sync.isPending ? "Synchronisation…" : "Actualiser les tarifs Packers"}
         </Button>
         <p className="text-xs text-on-surface-muted">
-          Une synchronisation est lancée automatiquement à l’ouverture de cette page quand Packers est connecté.
+          Une synchronisation est lancée automatiquement à l’ouverture de cette page quand Packers
+          est connecté.
         </p>
       </CardBody>
     </Card>
@@ -135,7 +146,8 @@ function ZonesCard() {
           <p className="text-sm text-on-surface-muted">Chargement…</p>
         ) : configured.length === 0 ? (
           <p className="text-sm text-on-surface-muted">
-            Aucun tarif n’est encore synchronisé. Les commandes resteront bloquées jusqu’à la connexion Packers.
+            Aucun tarif n’est encore synchronisé. Les commandes resteront bloquées jusqu’à la
+            connexion Packers.
           </p>
         ) : (
           <ul className="divide-y divide-outline rounded-[16px] border border-outline">
@@ -158,7 +170,8 @@ function ZoneRow({ zone, locale }: { zone: DeliveryZone; locale: "ar" | "fr" | "
       <span className="text-sm font-medium">{label}</span>
       <span className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-on-surface-muted">
         <span>
-          Domicile <strong className="font-mono text-on-surface">{formatDzd(zone.fee, locale)}</strong>
+          Domicile{" "}
+          <strong className="font-mono text-on-surface">{formatDzd(zone.fee, locale)}</strong>
         </span>
         <span>
           Stop Desk{" "}

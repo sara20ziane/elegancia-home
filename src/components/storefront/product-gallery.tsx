@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
-import { ImageLightbox } from "./image-lightbox";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ImageLightbox } from "./image-lightbox";
 
 /** Native swipe/scroll-snap, retaining Elegancia's frame, thumbnails and zoom. */
 export function ProductGallery({
   images,
+  imageAlts,
   alt,
   active,
   onSelect,
 }: {
   images: string[];
+  imageAlts?: string[];
   alt: string;
   active: number;
   onSelect: (index: number) => void;
@@ -79,7 +81,7 @@ export function ProductGallery({
             >
               <img
                 src={url}
-                alt={`${alt} ${position + 1}`}
+                alt={imageAlts?.[position] ?? alt}
                 decoding="async"
                 loading={position ? "lazy" : "eager"}
                 draggable={false}
@@ -107,6 +109,7 @@ export function ProductGallery({
       )}
       <ImageLightbox
         images={images}
+        imageAlts={imageAlts}
         index={open}
         alt={alt}
         onIndex={(next) => {

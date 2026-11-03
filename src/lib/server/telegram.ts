@@ -19,7 +19,10 @@ export function logTelegramFailure(kind: Notice, reason = "unknown") {
 
 function telegramApiReason(status: number, body: unknown): string {
   const description =
-    body && typeof body === "object" && "description" in body && typeof body.description === "string"
+    body &&
+    typeof body === "object" &&
+    "description" in body &&
+    typeof body.description === "string"
       ? body.description.toLowerCase()
       : "";
 

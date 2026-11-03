@@ -1,9 +1,9 @@
+import { EMPTY_CHECKOUT_FORM } from "@/lib/checkout-form";
 import { act, type FormEvent } from "react";
-import { beforeEach, afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { renderTest } from "../../scripts/testing/react-render";
-import { EMPTY_CHECKOUT_FORM } from "@/components/storefront/checkout-panels";
-import { useCheckoutOrder } from "./use-checkout-order";
 import { readSavedOrders } from "./saved-orders";
+import { useCheckoutOrder } from "./use-checkout-order";
 const { placeOrder, notifyTelegramNewOrder } = vi.hoisted(() => ({
   placeOrder: vi.fn(),
   notifyTelegramNewOrder: vi.fn(),

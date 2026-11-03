@@ -1,27 +1,28 @@
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, createRootRouteWithContext, Scripts, HeadContent } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
-import { Toaster } from "sonner";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
+import { Toaster } from "sonner";
 
 import "@fontsource-variable/cairo";
-import "@fontsource-variable/outfit";
+import cairoArabic from "@fontsource-variable/cairo/files/cairo-arabic-wght-normal.woff2?url";
+import frauncesLatin from "@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2?url";
 import "@fontsource-variable/fraunces/opsz.css";
+import "@fontsource-variable/outfit";
+import outfitLatin from "@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2?url";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "../styles.css";
-import cairoArabic from "@fontsource-variable/cairo/files/cairo-arabic-wght-normal.woff2?url";
-import outfitLatin from "@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2?url";
-import frauncesLatin from "@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2?url";
 
-import { themeBootstrapScript } from "@/lib/theme";
-import { localeBootstrapScript } from "@/lib/i18n";
-import { readLocale } from "@/lib/locale-cookie";
-import { I18nProvider, useI18n } from "@/lib/i18n-context";
+import { ServiceWorkerRegistrar } from "@/components/service-worker";
+import { WebAnalytics } from "@/components/storefront/web-analytics";
+import { Button } from "@/components/ui/button";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
-import { ServiceWorkerRegistrar } from "@/components/service-worker";
-import { Button } from "@/components/ui/button";
+import { localeBootstrapScript } from "@/lib/i18n";
+import { I18nProvider, useI18n } from "@/lib/i18n-context";
+import { readLocale } from "@/lib/locale-cookie";
+import { themeBootstrapScript } from "@/lib/theme";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   // Runs on the server for the first request and in the browser after, reading
@@ -101,6 +102,7 @@ function RootComponent() {
             <Outlet />
             <Toaster position="top-center" richColors closeButton />
             <ServiceWorkerRegistrar />
+            <WebAnalytics />
           </CartProvider>
         </AuthProvider>
       </I18nProvider>

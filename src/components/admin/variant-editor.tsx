@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Plus, X } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { type AdminVariant } from "@/lib/admin-products";
 import { useI18n } from "@/lib/i18n-context";
-import { deleteVariant, upsertVariant, type AdminVariant } from "@/lib/admin-products";
+import { Check, Plus, X } from "lucide-react";
+import { useState } from "react";
+import { useVariantMutations } from "./use-variant-mutations";
+import { EMPTY_DRAFT, type VariantDraft } from "./variant-draft";
+import { DraftFields } from "./variant-fields";
 import { VariantRow } from "./variant-row";
-import { DraftFields, EMPTY_DRAFT, type VariantDraft } from "./variant-fields";
 
 /**
  * Variant editor.
@@ -22,54 +22,7 @@ export function VariantEditor({
   variants: AdminVariant[];
 }) {
   const { t } = useI18n();
-  const queryClient = useQueryClient();
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["admin_product", productId] });
-    void queryClient.invalidateQueries({ queryKey: ["admin_products"] });
-  };
-
-  const save = useMutation({
-    mutationFn: async (input: {
-      id?: string;
-      draft: VariantDraft;
-      is_active: boolean;
-      sort_order: number;
-    }) =>
-      upsertVariant({
-        id: input.id,
-        product_id: productId,
-        size: input.draft.size.trim() || null,
-        color_name: input.draft.color_name.trim() || null,
-        color_hex: input.draft.color_hex.trim() || null,
-        sku: input.draft.sku.trim() || null,
-        price: Number(input.draft.price) || 0,
-        compare_at_price: Number(input.draft.compare_at_price) || null,
-        stock: Number(input.draft.stock) || 0,
-        weight_grams: input.draft.weight_grams ? Number(input.draft.weight_grams) : null,
-        fabric: input.draft.fabric.trim() || null,
-        fabric_origin: input.draft.fabric_origin.trim() || null,
-        set_type: input.draft.set_type.trim() || null,
-        piece_count: input.draft.piece_count ? Number(input.draft.piece_count) : null,
-        composition: input.draft.composition.trim() || null,
-        flat_sheet_size: input.draft.flat_sheet_size.trim() || null,
-        fitted_sheet_size: input.draft.fitted_sheet_size.trim() || null,
-        duvet_cover_size: input.draft.duvet_cover_size.trim() || null,
-        sort_order: input.sort_order,
-        is_active: input.is_active,
-      }),
-    onSuccess: () => {
-      invalidate();
-      toast.success(t("common.save"));
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: string) => deleteVariant(id),
-    onSuccess: invalidate,
-    onError: (error: Error) => toast.error(error.message),
-  });
-
+  const { save, remove } = useVariantMutations(productId);
   const [adding, setAdding] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [newDraft, setNewDraft] = useState<VariantDraft>(EMPTY_DRAFT);
@@ -120,7 +73,8 @@ export function VariantEditor({
             </p>
             {duplicating && (
               <p className="mt-1 text-xs text-on-surface-muted">
-                Modifie seulement les champs qui changent, puis enregistre. Le SKU a été vidé pour éviter un doublon.
+                Modifie seulement les champs qui changent, puis enregistre. Le SKU a été vidé pour
+                éviter un doublon.
               </p>
             )}
           </div>

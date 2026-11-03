@@ -1,6 +1,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { getSupabase } from "./supabase/client";
 import type { StoreSettings } from "./queries";
+import { getSupabase } from "./supabase/client";
 
 /**
  * Delivery pricing cache.
@@ -36,7 +36,7 @@ export function useDeliveryZones() {
   return useQuery(deliveryZonesQuery());
 }
 
-export function qualifiesForFreeDelivery(method: DeliveryMethod, parureQuantity: number): boolean {
+function qualifiesForFreeDelivery(method: DeliveryMethod, parureQuantity: number): boolean {
   return method === "stopdesk" ? parureQuantity >= 2 : parureQuantity >= 3;
 }
 
@@ -51,7 +51,12 @@ export function resolveDelivery(
   _subtotal: number,
   method: DeliveryMethod = "home",
   parureQuantity = 0,
-): { fee: number; etaDays: number; source: "packers" | "promotion" | "unavailable"; available: boolean } {
+): {
+  fee: number;
+  etaDays: number;
+  source: "packers" | "promotion" | "unavailable";
+  available: boolean;
+} {
   const zone = wilaya ? zones.find((z) => z.wilaya === wilaya) : undefined;
   const etaDays = zone?.eta_days ?? settings?.delivery_eta_days ?? 3;
   if (!zone) return { fee: 0, etaDays, source: "unavailable", available: false };
@@ -75,21 +80,4 @@ export function pickupFee(
   const fee = zones.find((z) => z.wilaya === wilaya)?.stopdesk_fee ?? null;
   if (fee == null) return null;
   return parureQuantity >= 2 ? 0 : fee;
-}
-
-export async function upsertZone(zone: {
-  wilaya: string;
-  fee: number;
-  stopdesk_fee: number | null;
-  eta_days: number;
-}): Promise<void> {
-  const { error } = await getSupabase()
-    .from("delivery_zones")
-    .upsert({ ...zone, is_active: true }, { onConflict: "wilaya" });
-  if (error) throw new Error(error.message);
-}
-
-export async function deleteZone(wilaya: string): Promise<void> {
-  const { error } = await getSupabase().from("delivery_zones").delete().eq("wilaya", wilaya);
-  if (error) throw new Error(error.message);
 }

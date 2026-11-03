@@ -1,25 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AuthContext, type AdminRole, type AuthValue } from "./auth-context";
 import { getSupabase, supabaseConfigProblem } from "./supabase/client";
-import type { Database } from "./supabase/types";
-
-type AdminRole = Database["public"]["Enums"]["admin_role"];
-
-type AuthValue = {
-  user: User | null;
-  role: AdminRole | null;
-  /** True only for a signed-in user with a row in `admin_users`. */
-  isAdmin: boolean;
-  /** True while the initial session and role lookup are still resolving. */
-  loading: boolean;
-  configMissing: string | null;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
-  refreshRole: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthValue | null>(null);
-
 /**
  * Session and admin role.
  *
@@ -112,10 +94,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
-  return ctx;
 }
