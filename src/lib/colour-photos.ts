@@ -63,7 +63,7 @@ export async function cloneVariantsForColour(
   const { data: sourceRows, error: readError } = await supabase
     .from("product_variants")
     .select(
-      "size, price, compare_at_price, stock, weight_grams, length_cm, width_cm, height_cm, fabric, fabric_origin, set_type, piece_count, composition, flat_sheet_size, fitted_sheet_size, duvet_cover_size, sort_order, is_active",
+      "size, price, compare_at_price, stock, weight_grams, length_cm, width_cm, height_cm, fabric, fabric_origin, set_type, piece_count, composition, flat_sheet_size, fitted_sheet_size, duvet_cover_size, bedding_provenance, sort_order, is_active",
     )
     .in("id", sourceVariantIds)
     .order("sort_order", { ascending: true });

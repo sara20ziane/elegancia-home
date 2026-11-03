@@ -1,7 +1,10 @@
 import { Field, Input, Select } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
 import { useId, useState } from "react";
+import { BED_SIZE_OPTIONS, updateBeddingSelection } from "@/lib/bedding-presets";
+import { useBeddingPresets } from "@/lib/catalog-automation";
 import type { VariantDraft } from "./variant-draft";
+import { PresetRecalculation } from "./preset-recalculation";
 import { VariantSecondaryFields } from "./variant-secondary-fields";
 
 /**
@@ -10,31 +13,6 @@ import { VariantSecondaryFields } from "./variant-secondary-fields";
  * Piece count and bed size remain intentionally independent.
  * Legacy colour fields are kept so older OpenStore data remains compatible.
  */
-const BED_SIZE_OPTIONS = [
-  {
-    value: "90 × 190 cm",
-    label: "90 × 190 cm",
-    fittedSheet: "90 × 190 cm",
-    duvetCover: "",
-  },
-  {
-    value: "Queen size",
-    label: "Queen size",
-    fittedSheet: "160 × 190 cm",
-    duvetCover: "220 × 240 cm",
-  },
-  {
-    value: "King size",
-    label: "King size",
-    fittedSheet: "180 × 200 cm",
-    duvetCover: "260 × 240 cm",
-  },
-] as const;
-
-function bedSizeOption(value: string) {
-  return BED_SIZE_OPTIONS.find((option) => option.value === value);
-}
-
 function isStandardBedSize(value: string): boolean {
   return BED_SIZE_OPTIONS.some((option) => option.value === value);
 }
@@ -42,11 +20,12 @@ function isStandardBedSize(value: string): boolean {
 export function DraftFields({
   draft,
   onChange,
+  common = false,
 }: {
+  common?: boolean;
   draft: VariantDraft;
   onChange: (next: VariantDraft) => void;
 }) {
-  const { t } = useI18n();
   const { fabricListId, setTypeListId, customBedSize, set, setSetType, setBedSize } =
     useBeddingFields(draft, onChange);
   return (
@@ -98,22 +77,24 @@ export function DraftFields({
             />
           </Field>
 
-          <Field label="Taille du lit" hint="Queen : 160 × 190 cm · King : 180 × 200 cm">
-            <Select
-              value={customBedSize ? "__other__" : draft.size}
-              onChange={(e) => setBedSize(e.target.value)}
-            >
-              <option value="">Choisir une taille</option>
-              {BED_SIZE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-              <option value="__other__">Autre taille / dimension</option>
-            </Select>
-          </Field>
+          {!common && (
+            <Field label="Taille du lit" hint="Queen : 160 × 190 cm · King : 180 × 200 cm">
+              <Select
+                value={customBedSize ? "__other__" : draft.size}
+                onChange={(e) => setBedSize(e.target.value)}
+              >
+                <option value="">Choisir une taille</option>
+                {BED_SIZE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+                <option value="__other__">Autre taille / dimension</option>
+              </Select>
+            </Field>
+          )}
 
-          {customBedSize && (
+          {!common && customBedSize && (
             <Field label="Autre taille / dimension" hint="Saisis le libellé ou la dimension exacte">
               <Input
                 value={draft.size}
@@ -124,96 +105,56 @@ export function DraftFields({
             </Field>
           )}
 
-          <Field label="Couleur / finition">
-            <Input
-              value={draft.color_name}
-              onChange={(e) => set("color_name", e.target.value)}
-              placeholder="Écru, vert sauge…"
-              maxLength={60}
-            />
-          </Field>
+          {!common && (
+            <Field label="Couleur / finition">
+              <Input
+                value={draft.color_name}
+                onChange={(e) => set("color_name", e.target.value)}
+                placeholder="Écru, vert sauge…"
+                maxLength={60}
+              />
+            </Field>
+          )}
 
-          <Field
-            label={t("common.price")}
-            required
-            hint="Même prix pour Queen et King à parure équivalente"
-          >
-            <Input
-              type="number"
-              min={0}
-              value={draft.price}
-              onChange={(e) => set("price", e.target.value)}
-              dir="ltr"
-              className="font-mono"
-              placeholder="9500"
-            />
-          </Field>
-
-          <Field label={t("common.quantity")}>
-            <Input
-              type="number"
-              min={0}
-              value={draft.stock}
-              onChange={(e) => set("stock", e.target.value)}
-              dir="ltr"
-              className="font-mono"
-            />
-          </Field>
+          <PricingFields draft={draft} onChange={onChange} common={common} />
         </div>
       </section>
 
-      <VariantSecondaryFields draft={draft} onChange={onChange} />
+      {!common && <PresetRecalculation draft={draft} onChange={onChange} />}
+      <details>
+        <summary className="cursor-pointer text-sm font-medium">
+          Composition, dimensions et gestion (facultatif)
+        </summary>
+        <VariantSecondaryFields draft={draft} onChange={onChange} />
+      </details>
     </div>
   );
 }
 
 function useBeddingFields(draft: VariantDraft, onChange: (next: VariantDraft) => void) {
+  const { data: presets } = useBeddingPresets();
   const listId = useId();
   const fabricListId = `${listId}-fabrics`;
   const setTypeListId = `${listId}-set-types`;
-  const [customBedSize, setCustomBedSize] = useState(
+  const [customSelected, setCustomBedSize] = useState(
     () => Boolean(draft.size) && !isStandardBedSize(draft.size),
   );
-  const set = <K extends keyof VariantDraft>(key: K, value: VariantDraft[K]) =>
-    onChange({ ...draft, [key]: value });
+  const customBedSize = customSelected || (Boolean(draft.size) && !isStandardBedSize(draft.size));
+  const set = <K extends Exclude<keyof VariantDraft, "provenance">>(
+    key: K,
+    value: VariantDraft[K],
+  ) =>
+    onChange(
+      key === "size" || key === "piece_count"
+        ? updateBeddingSelection(draft, { [key]: value }, presets)
+        : { ...draft, [key]: value },
+    );
 
-  const setSetType = (value: string) => {
-    const mapped = bedSizeOption(draft.size);
-    onChange({
-      ...draft,
-      set_type: value,
-      fitted_sheet_size: mapped?.fittedSheet ?? draft.fitted_sheet_size,
-      duvet_cover_size:
-        value === "Parure housse de couette" ? (mapped?.duvetCover ?? draft.duvet_cover_size) : "",
-    });
-  };
-
+  const setSetType = (value: string) =>
+    onChange(updateBeddingSelection(draft, { set_type: value }, presets));
   const setBedSize = (value: string) => {
-    if (value === "__other__") {
-      setCustomBedSize(true);
-      if (isStandardBedSize(draft.size)) {
-        onChange({
-          ...draft,
-          size: "",
-          fitted_sheet_size: "",
-          duvet_cover_size:
-            draft.set_type === "Parure housse de couette" ? "" : draft.duvet_cover_size,
-        });
-      }
-      return;
-    }
-
-    setCustomBedSize(false);
-    const mapped = bedSizeOption(value);
-    onChange({
-      ...draft,
-      size: value,
-      fitted_sheet_size: mapped?.fittedSheet ?? draft.fitted_sheet_size,
-      duvet_cover_size:
-        draft.set_type === "Parure housse de couette"
-          ? (mapped?.duvetCover ?? draft.duvet_cover_size)
-          : "",
-    });
+    setCustomBedSize(value === "__other__");
+    onChange(updateBeddingSelection(draft, { size: value === "__other__" ? "" : value }, presets));
   };
 
   return { fabricListId, setTypeListId, customBedSize, set, setSetType, setBedSize };
@@ -229,5 +170,48 @@ function FabricOrigin({ value, onChange }: { value: string; onChange: (value: st
         maxLength={60}
       />
     </Field>
+  );
+}
+
+function PricingFields({
+  draft,
+  onChange,
+  common,
+}: {
+  draft: VariantDraft;
+  onChange: (draft: VariantDraft) => void;
+  common: boolean;
+}) {
+  const { t } = useI18n();
+  const set = (key: "price" | "stock", value: string) => onChange({ ...draft, [key]: value });
+  return (
+    <>
+      <Field
+        label={common ? "Prix de vente (DA)" : t("common.price")}
+        required
+        hint="Même prix pour Queen et King à parure équivalente"
+      >
+        <Input
+          type="number"
+          min={0}
+          value={draft.price}
+          onChange={(e) => set("price", e.target.value)}
+          dir="ltr"
+          className="font-mono"
+          placeholder="9500"
+        />
+      </Field>
+
+      <Field label={common ? "Stock initial" : t("common.quantity")}>
+        <Input
+          type="number"
+          min={0}
+          value={draft.stock}
+          onChange={(e) => set("stock", e.target.value)}
+          dir="ltr"
+          className="font-mono"
+        />
+      </Field>
+    </>
   );
 }

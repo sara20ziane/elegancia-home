@@ -74,7 +74,8 @@ export function VariantEditor({
             {duplicating && (
               <p className="mt-1 text-xs text-on-surface-muted">
                 Modifie seulement les champs qui changent, puis enregistre. Le SKU a été vidé pour
-                éviter un doublon.
+                éviter un doublon et sera généré à l’enregistrement. Après un changement de taille,
+                utilise « Recalculer depuis le preset » pour vérifier les dimensions.
               </p>
             )}
           </div>
@@ -84,10 +85,16 @@ export function VariantEditor({
               size="sm"
               disabled={!newDraft.price || save.isPending}
               onClick={() => {
-                save.mutate({ draft: newDraft, is_active: true, sort_order: variants.length });
-                setNewDraft(EMPTY_DRAFT);
-                setDuplicating(false);
-                setAdding(false);
+                save.mutate(
+                  { draft: newDraft, is_active: true, sort_order: variants.length },
+                  {
+                    onSuccess: () => {
+                      setNewDraft(EMPTY_DRAFT);
+                      setDuplicating(false);
+                      setAdding(false);
+                    },
+                  },
+                );
               }}
             >
               <Check size={15} aria-hidden="true" />

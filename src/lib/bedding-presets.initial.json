@@ -1,0 +1,174 @@
+[
+  {
+    "id": "e1e9a000-0000-4000-8000-000000000001",
+    "name": "Elegancia — Parure de drap — 3 pièces — Queen size",
+    "size": "Queen size",
+    "set_type": "Parure de drap",
+    "piece_count": "3",
+    "composition": {
+      "state": "known",
+      "value": "1 drap plat + 2 taies d’oreiller"
+    },
+    "flat_sheet_size": {
+      "state": "known",
+      "value": "250 × 240 cm"
+    },
+    "fitted_sheet_size": {
+      "state": "not_applicable"
+    },
+    "duvet_cover_size": {
+      "state": "not_applicable"
+    }
+  },
+  {
+    "id": "e1e9a000-0000-4000-8000-000000000002",
+    "name": "Elegancia — Parure de drap — 6 pièces — Queen size",
+    "size": "Queen size",
+    "set_type": "Parure de drap",
+    "piece_count": "6",
+    "composition": {
+      "state": "known",
+      "value": "1 drap plat + 1 drap-housse + 4 taies d’oreiller"
+    },
+    "flat_sheet_size": {
+      "state": "known",
+      "value": "250 × 240 cm"
+    },
+    "fitted_sheet_size": {
+      "state": "known",
+      "value": "160 × 190 cm"
+    },
+    "duvet_cover_size": {
+      "state": "not_applicable"
+    }
+  },
+  {
+    "id": "e1e9a000-0000-4000-8000-000000000003",
+    "name": "Elegancia — Parure housse de couette — 3 pièces — Queen size",
+    "size": "Queen size",
+    "set_type": "Parure housse de couette",
+    "piece_count": "3",
+    "composition": {
+      "state": "known",
+      "value": "1 housse de couette + 2 taies d’oreiller"
+    },
+    "flat_sheet_size": {
+      "state": "not_applicable"
+    },
+    "fitted_sheet_size": {
+      "state": "not_applicable"
+    },
+    "duvet_cover_size": {
+      "state": "known",
+      "value": "220 × 240 cm"
+    }
+  },
+  {
+    "id": "e1e9a000-0000-4000-8000-000000000004",
+    "name": "Elegancia — Parure housse de couette — 6 pièces — Queen size",
+    "size": "Queen size",
+    "set_type": "Parure housse de couette",
+    "piece_count": "6",
+    "composition": {
+      "state": "known",
+      "value": "1 housse de couette + 1 drap-housse + 4 taies d’oreiller"
+    },
+    "flat_sheet_size": {
+      "state": "not_applicable"
+    },
+    "fitted_sheet_size": {
+      "state": "known",
+      "value": "160 × 190 cm"
+    },
+    "duvet_cover_size": {
+      "state": "known",
+      "value": "220 × 240 cm"
+    }
+  },
+  {
+    "id": "e1e9a000-0000-4000-8000-000000000005",
+    "name": "Elegancia — Parure de drap — 3 pièces — King size",
+    "size": "King size",
+    "set_type": "Parure de drap",
+    "piece_count": "3",
+    "composition": {
+      "state": "known",
+      "value": "1 drap plat + 2 taies d’oreiller"
+    },
+    "flat_sheet_size": {
+      "state": "known",
+      "value": "250 × 240 cm"
+    },
+    "fitted_sheet_size": {
+      "state": "not_applicable"
+    },
+    "duvet_cover_size": {
+      "state": "not_applicable"
+    }
+  },
+  {
+    "id": "e1e9a000-0000-4000-8000-000000000006",
+    "name": "Elegancia — Parure de drap — 6 pièces — King size",
+    "size": "King size",
+    "set_type": "Parure de drap",
+    "piece_count": "6",
+    "composition": {
+      "state": "known",
+      "value": "1 drap plat + 1 drap-housse + 4 taies d’oreiller"
+    },
+    "flat_sheet_size": {
+      "state": "known",
+      "value": "250 × 240 cm"
+    },
+    "fitted_sheet_size": {
+      "state": "known",
+      "value": "180 × 200 cm"
+    },
+    "duvet_cover_size": {
+      "state": "not_applicable"
+    }
+  },
+  {
+    "id": "e1e9a000-0000-4000-8000-000000000007",
+    "name": "Elegancia — Parure housse de couette — 3 pièces — King size",
+    "size": "King size",
+    "set_type": "Parure housse de couette",
+    "piece_count": "3",
+    "composition": {
+      "state": "known",
+      "value": "1 housse de couette + 2 taies d’oreiller"
+    },
+    "flat_sheet_size": {
+      "state": "not_applicable"
+    },
+    "fitted_sheet_size": {
+      "state": "not_applicable"
+    },
+    "duvet_cover_size": {
+      "state": "known",
+      "value": "260 × 240 cm"
+    }
+  },
+  {
+    "id": "e1e9a000-0000-4000-8000-000000000008",
+    "name": "Elegancia — Parure housse de couette — 6 pièces — King size",
+    "size": "King size",
+    "set_type": "Parure housse de couette",
+    "piece_count": "6",
+    "composition": {
+      "state": "known",
+      "value": "1 housse de couette + 1 drap-housse + 4 taies d’oreiller"
+    },
+    "flat_sheet_size": {
+      "state": "not_applicable"
+    },
+    "fitted_sheet_size": {
+      "state": "known",
+      "value": "180 × 200 cm"
+    },
+    "duvet_cover_size": {
+      "state": "known",
+      "value": "260 × 240 cm"
+    }
+  }
+]

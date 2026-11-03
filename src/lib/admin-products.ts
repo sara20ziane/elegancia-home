@@ -1,3 +1,4 @@
+import type { BeddingProvenance } from "./bedding-provenance";
 import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
 import { slugify } from "./format";
 import { getSupabase } from "./supabase/client";
@@ -12,6 +13,7 @@ import { getSupabase } from "./supabase/client";
  * on who runs it.
  */
 export type AdminVariant = {
+  bedding_provenance?: BeddingProvenance | null;
   id: string;
   product_id: string;
   size: string | null;
@@ -62,7 +64,7 @@ const ADMIN_SELECT = `
   product_variants (
     id, product_id, size, color_name, color_hex, sku, price, compare_at_price, stock,
     weight_grams, fabric, fabric_origin, set_type, piece_count, composition,
-    flat_sheet_size, fitted_sheet_size, duvet_cover_size, sort_order, is_active,
+    flat_sheet_size, fitted_sheet_size, duvet_cover_size, bedding_provenance, sort_order, is_active,
     variant_images ( id, url, alt, sort_order )
   )
 `;
@@ -124,27 +126,6 @@ export function useAdminProduct(id: string) {
 
 export function suggestSlug(name: string): string {
   return slugify(name) || `product-${Date.now()}`;
-}
-
-export async function createProduct(input: {
-  name: string;
-  slug: string;
-  kind: "single" | "pack";
-  category_id?: string | null;
-}): Promise<string> {
-  const { data, error } = await getSupabase()
-    .from("products")
-    .insert({
-      name: input.name.trim(),
-      slug: input.slug.trim(),
-      kind: input.kind,
-      category_id: input.category_id ?? null,
-      status: "draft",
-    })
-    .select("id")
-    .single();
-  if (error) throw new Error(error.message);
-  return data.id as string;
 }
 
 export async function updateProduct(

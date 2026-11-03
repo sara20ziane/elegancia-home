@@ -126,7 +126,7 @@ export function ProductFieldsCard({
   );
 }
 
-function ProductCategoryFields({
+export function ProductCategoryFields({
   draft,
   set,
 }: {

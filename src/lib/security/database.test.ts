@@ -14,7 +14,7 @@ afterAll(async () => {
 describe("frontière publique Supabase après toutes les migrations", () => {
   it("préserve les limites checkout, permissions, anti-abus et restitution de stock", async () => {
     await db.exec(
-      "insert into products(id,slug,name,status) values('eeeeeeee-1111-4111-8111-111111111111','security-fixture','Synthetic','published'); insert into product_variants(product_id,price,stock) select 'eeeeeeee-1111-4111-8111-111111111111',1000,100 from generate_series(1,3)",
+      "insert into products(id,slug,name,status) values('eeeeeeee-1111-4111-8111-111111111111','security-fixture','Synthetic','published'); insert into product_variants(product_id,price,stock,size) select 'eeeeeeee-1111-4111-8111-111111111111',1000,100,n::text from generate_series(1,3) n",
     );
     await db.exec(await readFile("supabase/tests/selected_openstore_safety.sql", "utf8"));
   });

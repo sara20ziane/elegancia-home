@@ -1,5 +1,12 @@
+import {
+  PRESET_FIELDS,
+  newProvenance,
+  readProvenance,
+  type BeddingProvenance,
+} from "@/lib/bedding-provenance";
 import type { AdminVariant } from "@/lib/admin-products";
 export type VariantDraft = {
+  provenance: BeddingProvenance;
   size: string;
   color_name: string;
   color_hex: string;
@@ -19,6 +26,7 @@ export type VariantDraft = {
 };
 
 export const EMPTY_DRAFT: VariantDraft = {
+  provenance: newProvenance(),
   size: "",
   color_name: "",
   color_hex: "",
@@ -39,6 +47,7 @@ export const EMPTY_DRAFT: VariantDraft = {
 
 export function toDraft(variant: AdminVariant): VariantDraft {
   return {
+    provenance: readProvenance(variant.bedding_provenance),
     size: variant.size ?? "",
     color_name: variant.color_name ?? "",
     color_hex: variant.color_hex ?? "",
@@ -59,4 +68,27 @@ export function toDraft(variant: AdminVariant): VariantDraft {
     fitted_sheet_size: variant.fitted_sheet_size ?? "",
     duvet_cover_size: variant.duvet_cover_size ?? "",
   };
+}
+
+/** Merge refreshed values field by field, preserving unsaved manual edits and their origin. */
+export function mergeRefetchedDraft(
+  current: VariantDraft,
+  before: VariantDraft,
+  after: VariantDraft,
+): VariantDraft {
+  const next = { ...current, provenance: { ...current.provenance } };
+  for (const key of Object.keys(current).filter((key) => key !== "provenance") as Exclude<
+    keyof VariantDraft,
+    "provenance"
+  >[]) {
+    const tracked = PRESET_FIELDS.includes(key as (typeof PRESET_FIELDS)[number]);
+    const field = key as (typeof PRESET_FIELDS)[number];
+    const cleanOrigin =
+      !tracked ||
+      JSON.stringify(current.provenance[field]) === JSON.stringify(before.provenance[field]);
+    if (current[key] !== before[key] || !cleanOrigin) continue;
+    next[key] = after[key];
+    if (tracked) next.provenance[field] = after.provenance[field];
+  }
+  return next;
 }

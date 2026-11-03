@@ -33,7 +33,7 @@
     "check": "npm run typecheck && npm run lint && npm run test && npm run knip && npm run build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:db": "vitest run src/lib/finance/database.test.ts src/lib/security/database.test.ts --maxWorkers=1",
+    "test:db": "vitest run src/lib/finance/database.test.ts src/lib/security/database.test.ts src/lib/catalog/database.test.ts src/lib/catalog/configuration/database.test.ts --maxWorkers=1",
     "test:e2e:ci": "playwright test --config playwright.ci.config.ts",
     "check:client-secrets": "node scripts/check-client-secrets.mjs"
   },

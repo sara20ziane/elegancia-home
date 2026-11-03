@@ -3,7 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
 /** Real PostgreSQL WASM; external Supabase services are explicit local stubs. */
-export async function nativeTestDatabase() {
+export async function nativeTestDatabase(beforeCatalog?: (db: PGlite) => Promise<void>) {
   const db = new PGlite();
   await db.exec(await readFile("supabase/tests/native-bootstrap.sql", "utf8"));
   const directory = resolve("supabase/migrations");
@@ -12,6 +12,7 @@ export async function nativeTestDatabase() {
       /^create extension[^;]+;/gim,
       "",
     );
+    if (name.endsWith("_catalog_automation.sql")) await beforeCatalog?.(db);
     await db.exec(sql);
   }
   return db;
