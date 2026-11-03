@@ -105,12 +105,12 @@ Un SKU manuel reste prioritaire ; sa régénération est une action explicite.
 
 ## Migrations, Finance et vérification
 
-Les migrations catalogue non déployées `20261103130000` et `20261103130001` sont
-additives : RPC admin, presets sous RLS, registre privé de SKU/requêtes,
-provenance catalogue et gardes SKU/ALT/publication/identité commerciale. Les
-fonctions sensibles exigent owner/staff, fixent `search_path`, et ne sont pas
-exécutables par PUBLIC/anon. Aucun backfill de variantes. Aucune migration
-Production n’est exécutée par cette tâche.
+Les migrations catalogue `20261103133330` et `20261103133444` sont additives :
+RPC admin, presets sous RLS, registre privé de SKU/requêtes, provenance catalogue
+et gardes SKU/ALT/publication/identité commerciale. Les fonctions sensibles
+exigent owner/staff, fixent `search_path`, et ne sont pas exécutables par
+PUBLIC/anon. Aucun backfill de variantes. Elles ont été appliquées à Production
+avant la fusion du frontend correspondant, après validation complète de la CI.
 
 Aucun schéma ou comportement Finance n’est modifié. Les variantes existantes
 sont mises à jour par ID, les nouveaux coûts ne sont jamais créés automatiquement.
