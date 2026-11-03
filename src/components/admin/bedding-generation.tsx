@@ -84,8 +84,8 @@ export function BeddingGeneration({
     <div className="flex flex-col gap-4">
       <h3 className="font-semibold">2 — Valeurs communes et tailles</h3>
       <p className="text-sm text-on-surface-muted">
-        Saisis les informations communes une seule fois. Composition, dimensions et SKU sont
-        générés automatiquement pour chaque taille dans l’aperçu.
+        Saisis les informations communes une seule fois. Composition, dimensions et SKU sont générés
+        automatiquement pour chaque taille dans l’aperçu.
       </p>
       <fieldset disabled={save.isPending} className="flex min-w-0 flex-col gap-4">
         <DraftFields draft={base} onChange={setBase} common />
