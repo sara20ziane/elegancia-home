@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   applyLocaleToDocument,
   DEFAULT_LOCALE,
@@ -8,18 +8,9 @@ import {
   readStoredLocale,
   translate,
   type Locale,
-  type TranslationKey,
 } from "./i18n";
 
-type I18nValue = {
-  locale: Locale;
-  dir: "rtl" | "ltr";
-  setLocale: (locale: Locale) => void;
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
-};
-
-const I18nContext = createContext<I18nValue | null>(null);
-
+import { I18nContext, type I18nValue } from "./locale-context";
 /**
  * Locale provider.
  *
@@ -62,22 +53,4 @@ export function I18nProvider({
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
-}
-
-export function useI18n(): I18nValue {
-  const ctx = useContext(I18nContext);
-  if (ctx) return ctx;
-  // Outside the provider (a stray component in a test) fall back to Arabic
-  // rather than throwing, so a single missing wrapper cannot blank a page.
-  return {
-    locale: DEFAULT_LOCALE,
-    dir: "rtl",
-    setLocale: () => {},
-    t: (key, vars) => translate(DEFAULT_LOCALE, key, vars),
-  };
-}
-
-/** Shorthand for the common case of only needing the translator. */
-export function useT() {
-  return useI18n().t;
 }

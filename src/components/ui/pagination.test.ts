@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pageWindow } from "./pagination";
+import { pageWindow } from "./page-window";
 
 /**
  * The window arithmetic is pure and easy to get subtly wrong: a pager that skips

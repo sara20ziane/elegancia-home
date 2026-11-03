@@ -5,7 +5,7 @@
   "type": "module",
   "license": "AGPL-3.0-only",
   "author": "Sifeddine Mebarki",
-  "description": "Boutique e-commerce Elegancia Home pour la literie et le linge de maison en Algérie.",
+  "description": "Boutique e-commerce Elegancia Home pour la literie et le linge de maison en Alg\u00e9rie.",
   "homepage": "https://github.com/sara20ziane/elegancia-home#readme",
   "bugs": {
     "url": "https://github.com/sara20ziane/elegancia-home/issues"
@@ -32,7 +32,10 @@
     "knip": "knip",
     "check": "npm run typecheck && npm run lint && npm run test && npm run knip && npm run build",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:db": "vitest run src/lib/finance/database.test.ts src/lib/security/database.test.ts --maxWorkers=1",
+    "test:e2e:ci": "playwright test --config playwright.ci.config.ts",
+    "check:client-secrets": "node scripts/check-client-secrets.mjs"
   },
   "dependencies": {
     "@fontsource-variable/cairo": "^5.3.0",
@@ -47,6 +50,7 @@
     "@tanstack/react-router": "^1.168.25",
     "@tanstack/react-router-ssr-query": "1.167.3",
     "@tanstack/react-start": "^1.167.50",
+    "@vercel/analytics": "2.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.575.0",

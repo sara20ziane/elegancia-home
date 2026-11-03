@@ -1,6 +1,6 @@
 import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
-import { getSupabase } from "./supabase/client";
 import { slugify } from "./format";
+import { getSupabase } from "./supabase/client";
 
 /**
  * Product administration.
@@ -177,7 +177,10 @@ export async function updateProduct(
  * The first selected category is mirrored to products.category_id only so legacy
  * components can keep a primary category while the real classification remains many-to-many.
  */
-export async function setProductCategories(productId: string, categoryIds: string[]): Promise<void> {
+export async function setProductCategories(
+  productId: string,
+  categoryIds: string[],
+): Promise<void> {
   const ids = [...new Set(categoryIds.filter(Boolean))];
   const supabase = getSupabase();
 
@@ -226,60 +229,4 @@ export async function deleteProduct(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export type VariantInput = {
-  id?: string;
-  product_id: string;
-  size: string | null;
-  color_name: string | null;
-  color_hex: string | null;
-  sku: string | null;
-  price: number;
-  compare_at_price?: number | null;
-  stock: number;
-  weight_grams: number | null;
-  fabric?: string | null;
-  fabric_origin?: string | null;
-  set_type?: string | null;
-  piece_count?: number | null;
-  composition?: string | null;
-  flat_sheet_size?: string | null;
-  fitted_sheet_size?: string | null;
-  duvet_cover_size?: string | null;
-  sort_order: number;
-  is_active: boolean;
-};
-
-export async function upsertVariant(input: VariantInput): Promise<void> {
-  const { error } = await getSupabase()
-    .from("product_variants")
-    .upsert(input, input.id ? { onConflict: "id" } : undefined);
-  if (error) throw new Error(error.message);
-}
-
-export async function insertVariants(
-  productId: string,
-  rows: Omit<VariantInput, "product_id" | "weight_grams">[],
-): Promise<void> {
-  if (rows.length === 0) return;
-  const { error } = await getSupabase()
-    .from("product_variants")
-    .insert(rows.map((row) => ({ ...row, product_id: productId })));
-  if (error) throw new Error(error.message);
-}
-
-export async function deleteVariant(id: string): Promise<void> {
-  const { error } = await getSupabase().from("product_variants").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-}
-
-export async function addVariantImage(variantId: string, url: string): Promise<void> {
-  const { error } = await getSupabase()
-    .from("variant_images")
-    .insert({ variant_id: variantId, url: url.trim() });
-  if (error) throw new Error(error.message);
-}
-
-export async function deleteVariantImage(id: string): Promise<void> {
-  const { error } = await getSupabase().from("variant_images").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-}
+export { deleteVariant, upsertVariant } from "./admin-variants";

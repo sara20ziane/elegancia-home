@@ -1,8 +1,5 @@
 export const SITE_URL = "https://elegancia-home.vercel.app";
 
-export const DEFAULT_SEO_DESCRIPTION =
-  "Elegancia Home — literie et linge de maison en Algérie : parures de drap, housses de couette et modèles sélectionnés avec paiement à la livraison.";
-
 export function absoluteUrl(pathOrUrl: string | null | undefined): string | null {
   if (!pathOrUrl) return null;
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;

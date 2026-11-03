@@ -11,8 +11,6 @@ import { parseGuideTable } from "./admin-content";
 
 export type SizeGuideGridValue = { headers: string[]; rows: string[][] };
 
-export const EMPTY_GUIDE_GRID: SizeGuideGridValue = { headers: [], rows: [] };
-
 export function setHeaderCell(
   grid: SizeGuideGridValue,
   column: number,
@@ -86,27 +84,5 @@ export function gridFromPaste(text: string): SizeGuideGridValue | null {
       const cells = row.slice(0, width);
       return [...cells, ...Array<string>(width - cells.length).fill("")];
     }),
-  };
-}
-
-/**
- * A worked men's-top example, so the owner edits numbers instead of facing an
- * empty grid. Centimetres, garment laid flat, which is the common case for a
- * first shop and closer to right than nothing.
- */
-export function clothingTemplateGrid(labels: {
-  size: string;
-  chest: string;
-  waist: string;
-  length: string;
-}): SizeGuideGridValue {
-  return {
-    headers: [labels.size, labels.chest, labels.waist, labels.length],
-    rows: [
-      ["S", "96", "80", "68"],
-      ["M", "100", "84", "70"],
-      ["L", "104", "88", "72"],
-      ["XL", "108", "92", "74"],
-    ],
   };
 }

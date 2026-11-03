@@ -1,5 +1,7 @@
 # DECISIONS
 
+> **Elegancia update:** decision 4 below is historical and superseded by [versioned migrations](../supabase/MIGRATIONS.md). Never reapply the historical schema snapshot to Production.
+
 Every significant decision, with its context and consequences. Newest last.
 Do not relitigate a recorded decision silently — supersede it with a new entry
 that explains what changed.

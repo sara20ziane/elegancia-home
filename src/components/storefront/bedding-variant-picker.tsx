@@ -1,4 +1,3 @@
-import type { CatalogueVariant } from "@/lib/queries";
 import {
   beddingColourOptions,
   fabricOptions,
@@ -8,6 +7,7 @@ import {
   type BeddingChoice,
   type BeddingOption,
 } from "@/lib/bedding-variant-options";
+import type { CatalogueVariant } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 type ChoiceValue = string | number;
@@ -89,7 +89,9 @@ function ColourChoiceRow({
               aria-label={`Couleur ${option.value}`}
               className={cn(
                 "overflow-hidden rounded-[14px] border bg-surface text-left transition",
-                active ? "border-primary ring-2 ring-primary/20" : "border-outline hover:border-primary/50",
+                active
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-outline hover:border-primary/50",
                 !option.inStock && "opacity-45",
               )}
             >
@@ -202,7 +204,9 @@ export function BeddingVariantDetails({ variant }: { variant: CatalogueVariant |
 
   return (
     <section className="rounded-[16px] bg-surface-mid/55 p-4 sm:p-5">
-      <h2 className="font-display text-base font-semibold text-on-surface">Détails de votre parure</h2>
+      <h2 className="font-display text-base font-semibold text-on-surface">
+        Détails de votre parure
+      </h2>
 
       {(variant.fabric || variant.fabric_origin) && (
         <p className="mt-2 text-sm text-on-surface-muted">
@@ -224,7 +228,10 @@ export function BeddingVariantDetails({ variant }: { variant: CatalogueVariant |
       {dimensions.length > 0 && (
         <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
           {dimensions.map(([label, value]) => (
-            <div key={label} className="flex items-baseline justify-between gap-3 border-b border-outline/70 py-1.5">
+            <div
+              key={label}
+              className="flex items-baseline justify-between gap-3 border-b border-outline/70 py-1.5"
+            >
               <dt className="text-on-surface-muted">{label}</dt>
               <dd className="font-medium text-on-surface" dir="ltr">
                 {value}

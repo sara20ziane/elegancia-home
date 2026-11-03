@@ -1,10 +1,11 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowRight, Banknote, ShieldCheck, Truck } from "lucide-react";
+import { localized } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
+import { productImageAlt } from "@/lib/product-image-alt";
 import type { CatalogueProduct, StoreSettings } from "@/lib/queries";
 import { productImage } from "@/lib/queries";
-import { localized } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, Banknote, ShieldCheck, Truck } from "lucide-react";
 
 const fallbackVisuals = {
   fr: ["Neutres & élégants", "Fleurs & motifs", "Tons doux"],
@@ -62,14 +63,7 @@ export function HomeHero({
   products: CatalogueProduct[];
 }) {
   const { t, locale } = useI18n();
-  const shots = products
-    .map((product) => ({ product, image: productImage(product) }))
-    .filter((shot): shot is { product: CatalogueProduct; image: string } => shot.image !== null)
-    .slice(0, 3);
-
   const copy = editorialCopy[locale];
-  const placeholders = fallbackVisuals[locale];
-
   return (
     <section className="relative overflow-hidden border-b border-outline bg-[#F7F1EA] text-[#38281E]">
       <div
@@ -128,83 +122,7 @@ export function HomeHero({
           </ul>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[620px]">
-          <div
-            className="pointer-events-none absolute inset-x-[10%] bottom-[-22px] h-20 rounded-[50%] bg-[#8D6D55]/12 blur-2xl"
-            aria-hidden="true"
-          />
-
-          {shots.length > 0 ? (
-            <div
-              className={cn(
-                "grid items-start gap-3 sm:gap-4",
-                shots.length === 1 && "mx-auto max-w-[260px] grid-cols-1",
-                shots.length === 2 && "mx-auto max-w-[460px] grid-cols-2",
-                shots.length >= 3 && "grid-cols-3",
-              )}
-            >
-              {shots.map(({ product, image }, index) => {
-                const name = localized(locale, product.name, product.name_fr);
-                return (
-                  <Link
-                    key={product.id}
-                    to="/product/$slug"
-                    params={{ slug: product.slug }}
-                    className={cn(
-                      "group relative block overflow-hidden rounded-[22px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(76,55,40,0.14)]",
-                      shots.length > 1 && index === 1 && "mt-10 sm:mt-14",
-                    )}
-                  >
-                    <img
-                      src={image}
-                      alt={name}
-                      loading={index === 0 ? "eager" : "lazy"}
-                      fetchPriority={index === 0 ? "high" : "auto"}
-                      decoding="async"
-                      className="aspect-[4/5] w-full object-cover transition-transform duration-500 ease-out-soft group-hover:scale-[1.04]"
-                    />
-                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2E2018]/75 to-transparent px-3 pt-10 pb-3 text-xs font-medium text-white">
-                      <span className="line-clamp-1">{name}</span>
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 items-start gap-3 sm:gap-4" aria-hidden="true">
-              {placeholders.map((label, index) => {
-                const backgrounds = [
-                  "linear-gradient(155deg, #DED7CE 0%, #F8F3ED 62%, #C8B7A6 100%)",
-                  "linear-gradient(155deg, #D7C0C2 0%, #F4E9E7 58%, #B88C91 100%)",
-                  "linear-gradient(155deg, #BCC4B7 0%, #F5F0E8 58%, #8E9D8A 100%)",
-                ];
-                const patterns = [
-                  "radial-gradient(circle at 20% 20%, rgba(255,255,255,.78) 0 13%, transparent 14%), radial-gradient(circle at 78% 72%, rgba(255,255,255,.42) 0 18%, transparent 19%)",
-                  "radial-gradient(ellipse at 25% 30%, rgba(255,255,255,.58) 0 11%, transparent 12%), radial-gradient(ellipse at 70% 58%, rgba(255,255,255,.5) 0 14%, transparent 15%)",
-                  "linear-gradient(35deg, rgba(255,255,255,.36) 25%, transparent 25% 55%, rgba(255,255,255,.22) 55% 72%, transparent 72%)",
-                ];
-                return (
-                  <div
-                    key={label}
-                    className={cn(
-                      "relative aspect-[4/5] overflow-hidden rounded-[22px] border border-white/70 shadow-[0_18px_45px_rgba(76,55,40,0.14)]",
-                      index === 1 && "mt-10 sm:mt-14",
-                    )}
-                    style={{ background: backgrounds[index] }}
-                  >
-                    <span
-                      className="absolute inset-0 opacity-70"
-                      style={{ backgroundImage: patterns[index] }}
-                    />
-                    <span className="absolute inset-x-3 bottom-3 rounded-full border border-white/45 bg-white/60 px-3 py-2 text-center text-[0.66rem] font-semibold tracking-wide text-[#4C3A30] backdrop-blur-sm sm:text-xs">
-                      {label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <HeroImages products={products} />
       </div>
     </section>
   );
@@ -235,5 +153,95 @@ export function TrustBar() {
         })}
       </div>
     </section>
+  );
+}
+
+function HeroImages({ products }: { products: CatalogueProduct[] }) {
+  const { locale } = useI18n();
+  const shots = products
+    .map((product) => ({ product, image: productImage(product) }))
+    .filter((shot): shot is { product: CatalogueProduct; image: string } => shot.image !== null)
+    .slice(0, 3);
+
+  const placeholders = fallbackVisuals[locale];
+
+  return (
+    <div className="relative mx-auto w-full max-w-[620px]">
+      <div
+        className="pointer-events-none absolute inset-x-[10%] bottom-[-22px] h-20 rounded-[50%] bg-[#8D6D55]/12 blur-2xl"
+        aria-hidden="true"
+      />
+
+      {shots.length > 0 ? (
+        <div
+          className={cn(
+            "grid items-start gap-3 sm:gap-4",
+            shots.length === 1 && "mx-auto max-w-[260px] grid-cols-1",
+            shots.length === 2 && "mx-auto max-w-[460px] grid-cols-2",
+            shots.length >= 3 && "grid-cols-3",
+          )}
+        >
+          {shots.map(({ product, image }, index) => {
+            const name = localized(locale, product.name, product.name_fr);
+            return (
+              <Link
+                key={product.id}
+                to="/product/$slug"
+                params={{ slug: product.slug }}
+                className={cn(
+                  "group relative block overflow-hidden rounded-[22px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(76,55,40,0.14)]",
+                  shots.length > 1 && index === 1 && "mt-10 sm:mt-14",
+                )}
+              >
+                <img
+                  src={image}
+                  alt={productImageAlt(product, image, locale)}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  decoding="async"
+                  className="aspect-[4/5] w-full object-cover transition-transform duration-500 ease-out-soft group-hover:scale-[1.04]"
+                />
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2E2018]/75 to-transparent px-3 pt-10 pb-3 text-xs font-medium text-white">
+                  <span className="line-clamp-1">{name}</span>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 items-start gap-3 sm:gap-4" aria-hidden="true">
+          {placeholders.map((label, index) => {
+            const backgrounds = [
+              "linear-gradient(155deg, #DED7CE 0%, #F8F3ED 62%, #C8B7A6 100%)",
+              "linear-gradient(155deg, #D7C0C2 0%, #F4E9E7 58%, #B88C91 100%)",
+              "linear-gradient(155deg, #BCC4B7 0%, #F5F0E8 58%, #8E9D8A 100%)",
+            ];
+            const patterns = [
+              "radial-gradient(circle at 20% 20%, rgba(255,255,255,.78) 0 13%, transparent 14%), radial-gradient(circle at 78% 72%, rgba(255,255,255,.42) 0 18%, transparent 19%)",
+              "radial-gradient(ellipse at 25% 30%, rgba(255,255,255,.58) 0 11%, transparent 12%), radial-gradient(ellipse at 70% 58%, rgba(255,255,255,.5) 0 14%, transparent 15%)",
+              "linear-gradient(35deg, rgba(255,255,255,.36) 25%, transparent 25% 55%, rgba(255,255,255,.22) 55% 72%, transparent 72%)",
+            ];
+            return (
+              <div
+                key={label}
+                className={cn(
+                  "relative aspect-[4/5] overflow-hidden rounded-[22px] border border-white/70 shadow-[0_18px_45px_rgba(76,55,40,0.14)]",
+                  index === 1 && "mt-10 sm:mt-14",
+                )}
+                style={{ background: backgrounds[index] }}
+              >
+                <span
+                  className="absolute inset-0 opacity-70"
+                  style={{ backgroundImage: patterns[index] }}
+                />
+                <span className="absolute inset-x-3 bottom-3 rounded-full border border-white/45 bg-white/60 px-3 py-2 text-center text-[0.66rem] font-semibold tracking-wide text-[#4C3A30] backdrop-blur-sm sm:text-xs">
+                  {label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

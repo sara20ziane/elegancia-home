@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Full-screen photos with zoom.
@@ -13,12 +13,14 @@ import { cn } from "@/lib/utils";
  */
 export function ImageLightbox({
   images,
+  imageAlts,
   index,
   alt,
   onIndex,
   onClose,
 }: {
   images: string[];
+  imageAlts?: string[];
   index: number | null;
   alt: string;
   onIndex: (index: number) => void;
@@ -57,7 +59,7 @@ export function ImageLightbox({
         <div className="relative flex h-full items-center justify-center overflow-hidden">
           <img
             src={images[index]}
-            alt={alt}
+            alt={imageAlts?.[index] ?? alt}
             onClick={(event) => {
               const box = event.currentTarget.getBoundingClientRect();
               setZoom(

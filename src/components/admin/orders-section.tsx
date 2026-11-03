@@ -1,17 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
+import type { AdminOrder } from "@/lib/admin";
+import { useI18n } from "@/lib/i18n-context";
+import { downloadText, fetchOrders, ordersToCsv } from "@/lib/orders-file";
+import { syncPackersOrderStatuses } from "@/lib/server/packers-actions";
+import { getSupabase } from "@/lib/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Download, PhoneCall, Plus, Printer, RefreshCw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { AdminOrderList } from "./order-list";
 import { ManualOrderDialog } from "./manual-order-dialog";
-import { Button } from "@/components/ui/button";
-import { Pagination } from "@/components/ui/pagination";
-import { useI18n } from "@/lib/i18n-context";
-import type { AdminOrder } from "@/lib/admin";
-import { downloadText, fetchOrders, ordersToCsv } from "@/lib/orders-file";
-import { getSupabase } from "@/lib/supabase/client";
-import { syncPackersOrderStatuses } from "@/lib/server/packers-actions";
+import { AdminOrderList } from "./order-list";
 
 async function accessToken() {
   const { data } = await getSupabase().auth.getSession();
@@ -46,49 +46,8 @@ export function OrdersSection({
   onPageChange: (page: number) => void;
 }) {
   const { t } = useI18n();
-  const queryClient = useQueryClient();
-  const autoSyncStarted = useRef(false);
+  const sync = useOrderSync();
   const [manualOrderOpen, setManualOrderOpen] = useState(false);
-
-  const sync = useMutation({
-    mutationFn: async (showToast: boolean) => {
-      const token = await accessToken();
-      const result = await syncPackersOrderStatuses({ data: { accessToken: token } });
-      if (!result.ok) throw new Error(result.error);
-      return { ...result, showToast };
-    },
-    onSuccess: (result) => {
-      void queryClient.invalidateQueries({ queryKey: ["admin_orders"] });
-      void queryClient.invalidateQueries({ queryKey: ["admin_orders_count"] });
-      if (!result.showToast) return;
-      if (result.checked === 0) {
-        toast.success("Aucune commande Packers à synchroniser.");
-        return;
-      }
-      const notify = result.failed > 0 || result.unrecognized > 0 ? toast.warning : toast.success;
-      notify(
-        `Packers synchronisé · ${result.checked} vérifiée${result.checked > 1 ? "s" : ""}` +
-          ` · ${result.changed} statut${result.changed > 1 ? "s" : ""} modifié${result.changed > 1 ? "s" : ""}` +
-          (result.failed > 0
-            ? ` · ${result.failed} échec(s), Packers temporairement inaccessible ou réponse inexploitable`
-            : "") +
-          (result.unrecognized > 0
-            ? ` · ${result.unrecognized} statut(s) non validé(s), commandes conservées`
-            : ""),
-      );
-    },
-    onError: (error: Error, showToast) => {
-      if (showToast) toast.error(error.message);
-    },
-  });
-
-  const runSync = sync.mutate;
-  useEffect(() => {
-    if (autoSyncStarted.current) return;
-    autoSyncStarted.current = true;
-    runSync(false);
-  }, [runSync]);
-
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -180,4 +139,50 @@ function ExportButton() {
       {t("admin.orders.exportCsv")}
     </Button>
   );
+}
+
+function useOrderSync() {
+  const queryClient = useQueryClient();
+  const autoSyncStarted = useRef(false);
+
+  const sync = useMutation({
+    mutationFn: async (showToast: boolean) => {
+      const token = await accessToken();
+      const result = await syncPackersOrderStatuses({ data: { accessToken: token } });
+      if (!result.ok) throw new Error(result.error);
+      return { ...result, showToast };
+    },
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin_orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin_orders_count"] });
+      if (!result.showToast) return;
+      if (result.checked === 0) {
+        toast.success("Aucune commande Packers à synchroniser.");
+        return;
+      }
+      const notify = result.failed > 0 || result.unrecognized > 0 ? toast.warning : toast.success;
+      notify(
+        `Packers synchronisé · ${result.checked} vérifiée${result.checked > 1 ? "s" : ""}` +
+          ` · ${result.changed} statut${result.changed > 1 ? "s" : ""} modifié${result.changed > 1 ? "s" : ""}` +
+          (result.failed > 0
+            ? ` · ${result.failed} échec(s), Packers temporairement inaccessible ou réponse inexploitable`
+            : "") +
+          (result.unrecognized > 0
+            ? ` · ${result.unrecognized} statut(s) non validé(s), commandes conservées`
+            : ""),
+      );
+    },
+    onError: (error: Error, showToast) => {
+      if (showToast) toast.error(error.message);
+    },
+  });
+
+  const runSync = sync.mutate;
+  useEffect(() => {
+    if (autoSyncStarted.current) return;
+    autoSyncStarted.current = true;
+    runSync(false);
+  }, [runSync]);
+
+  return sync;
 }

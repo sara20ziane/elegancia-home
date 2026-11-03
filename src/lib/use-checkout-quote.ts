@@ -1,7 +1,7 @@
+import type { CheckoutForm } from "@/lib/checkout-form";
 import type { CartItem } from "./cart";
-import type { CheckoutForm } from "@/components/storefront/checkout-panels";
-import { useStoreSettings } from "./queries";
 import { pickupFee, resolveDelivery, useDeliveryZones } from "./delivery";
+import { useStoreSettings } from "./queries";
 
 /** Shared preview only. Packers tariffs and server-side promotion calculation stay authoritative. */
 export function useCheckoutQuote(form: CheckoutForm, items: CartItem[]) {

@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { PackageCheck, Send, Store } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { AdminOrder } from "@/lib/admin";
 import { formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n-context";
-import { getSupabase } from "@/lib/supabase/client";
 import { createPackersParcel, validatePackersParcel } from "@/lib/server/packers-actions";
+import { getSupabase } from "@/lib/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { PackageCheck, Send, Store } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 async function accessToken() {
   const { data } = await getSupabase().auth.getSession();
@@ -57,7 +57,9 @@ export function CarrierAction({ order }: { order: AdminOrder }) {
   if (order.status === "confirmed" && !order.tracking_number) {
     return (
       <div className="flex flex-col gap-2 rounded-[12px] border border-outline bg-surface-mid/40 p-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-muted">Packers</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-muted">
+          Packers
+        </p>
         <Button
           variant="berry"
           size="sm"
@@ -117,7 +119,8 @@ export function CarrierAction({ order }: { order: AdminOrder }) {
             {validate.isPending ? "Validation…" : "Valider l’expédition"}
           </Button>
           <p className="text-xs text-tertiary">
-            Après validation chez Packers, le colis ne pourra plus être modifié ou supprimé via EcoTrack.
+            Après validation chez Packers, le colis ne pourra plus être modifié ou supprimé via
+            EcoTrack.
           </p>
         </>
       )}

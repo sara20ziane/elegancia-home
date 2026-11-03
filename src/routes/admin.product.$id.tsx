@@ -1,20 +1,18 @@
-import { useEffect, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save } from "lucide-react";
-import { toast } from "sonner";
-import { ColourPhotos } from "@/components/admin/colour-photos";
-import { VariantEditor } from "@/components/admin/variant-editor";
-import { ProductPhotos } from "@/components/admin/product-photos";
-import { ProductFieldsCard, type ProductDraft } from "@/components/admin/product-fields";
 import { PackBuilder } from "@/components/admin/pack-builder";
+import { ProductConfigurations } from "@/components/admin/product-configurations";
+import { ProductFieldsCard, type ProductDraft } from "@/components/admin/product-fields";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, LoadingState } from "@/components/ui/feedback";
-import { useI18n } from "@/lib/i18n-context";
 import { setProductCategories, updateProduct, useAdminProduct } from "@/lib/admin-products";
+import { useI18n } from "@/lib/i18n-context";
 import { useProductPicker } from "@/lib/product-picker";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/product/$id")({
   component: ProductEditPage,
@@ -74,13 +72,7 @@ function ProductEditPage() {
 
   const saveDetails = useMutation({
     mutationFn: async (values: ProductDraft) => {
-      const normalized: ProductDraft = {
-        name: values.name.trim(),
-        name_fr: values.name_fr.trim(),
-        description: values.description.trim(),
-        description_fr: values.description_fr.trim(),
-        category_ids: [...values.category_ids],
-      };
+      const normalized = normalizeProductDraft(values);
 
       await updateProduct(id, {
         name: normalized.name,
@@ -109,7 +101,9 @@ function ProductEditPage() {
   const publishable = product.product_variants.length > 0;
   const published = product.status === "published";
   const busy = save.isPending || saveDetails.isPending;
-  const hasColours = product.product_variants.some((variant) => Boolean(variant.color_name?.trim()));
+  const hasColours = product.product_variants.some((variant) =>
+    Boolean(variant.color_name?.trim()),
+  );
 
   const togglePublish = () =>
     save.mutate({
@@ -131,12 +125,7 @@ function ProductEditPage() {
         onSaveFields={saveFields}
       />
 
-      {!publishable && (
-        <p className="rounded-[10px] border border-tertiary/40 bg-tertiary/5 px-4 py-3 text-sm">
-          Ajoute au moins une configuration de vente avant de publier ce modèle.
-        </p>
-      )}
-
+      <PublishHint publishable={publishable} />
       <ProductFieldsCard
         draft={draft}
         set={set}
@@ -146,36 +135,7 @@ function ProductEditPage() {
         saving={saveDetails.isPending}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Configurations de vente</CardTitle>
-        </CardHeader>
-        <CardBody className="flex flex-col gap-4">
-          <p className="text-sm text-on-surface-muted">
-            Une configuration correspond à une combinaison vendable : tissu, type de parure,
-            nombre de pièces, dimension du matelas, prix et stock.
-          </p>
-          <VariantEditor productId={id} variants={product.product_variants} />
-        </CardBody>
-      </Card>
-
-      {product.product_variants.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Photos et couleurs</CardTitle>
-          </CardHeader>
-          <CardBody className="flex flex-col gap-5">
-            <ColourPhotos productId={id} variants={product.product_variants} />
-
-            {!hasColours && (
-              <div className="border-t border-outline pt-5">
-                <ProductPhotos productId={id} variants={product.product_variants} />
-              </div>
-            )}
-          </CardBody>
-        </Card>
-      )}
-
+      <ProductConfigurations id={id} product={product} hasColours={hasColours} />
       {product.kind === "pack" && (
         <Card>
           <CardHeader>
@@ -245,4 +205,26 @@ function ProductHeader({
       </div>
     </div>
   );
+}
+
+function PublishHint({ publishable }: { publishable: boolean }) {
+  return (
+    <>
+      {!publishable && (
+        <p className="rounded-[10px] border border-tertiary/40 bg-tertiary/5 px-4 py-3 text-sm">
+          Ajoute au moins une configuration de vente avant de publier ce modèle.
+        </p>
+      )}
+    </>
+  );
+}
+
+function normalizeProductDraft(values: ProductDraft): ProductDraft {
+  return {
+    name: values.name.trim(),
+    name_fr: values.name_fr.trim(),
+    description: values.description.trim(),
+    description_fr: values.description_fr.trim(),
+    category_ids: [...values.category_ids],
+  };
 }

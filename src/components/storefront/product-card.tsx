@@ -1,16 +1,17 @@
-import { Link } from "@tanstack/react-router";
-import { ImageOff } from "lucide-react";
-import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
+import { localized } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
+import { productImageAlt } from "@/lib/product-image-alt";
 import {
   priceRange,
-  sortVariants,
   productImage,
+  sortVariants,
   totalStock,
   type CatalogueProduct,
 } from "@/lib/queries";
-import { localized } from "@/lib/i18n";
 import { saleOf } from "@/lib/sale";
+import { Link } from "@tanstack/react-router";
+import { ImageOff } from "lucide-react";
 import { StarRating } from "./star-rating";
 
 function colourLabel(locale: "fr" | "en" | "ar", count: number) {
@@ -49,7 +50,12 @@ function ProductCard({ product }: { product: CatalogueProduct }) {
     <Link to="/product/$slug" params={{ slug: product.slug }} className="product-card">
       <div className="pc-media">
         {image ? (
-          <img src={image} alt="" loading="lazy" decoding="async" />
+          <img
+            src={image}
+            alt={productImageAlt(product, image, locale)}
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <ImageOff size={44} aria-hidden="true" />
         )}

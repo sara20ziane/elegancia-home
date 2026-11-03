@@ -1,5 +1,7 @@
 # OpenStore DZ
 
+> **تنبيه Elegancia:** اتبعي [دليل migrations](supabase/MIGRATIONS.md) و[دليل الأمان](docs/PRODUCTION_HARDENING.md). تعليمات التثبيت القديمة أدناه تاريخية. لا تعيدي تشغيل `schema.sql` على قاعدة موجودة. تبقى Finance معطلة في Production.
+
 **متجر إلكتروني مجاني ومفتوح المصدر، للشركات الصغيرة والأفراد في الجزائر.**
 
 [الإنجليزية](README.md) · [Français](README.fr.md)

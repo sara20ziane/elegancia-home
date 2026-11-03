@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import type { DeliveryMethod } from "@/lib/delivery";
+import { formatDzd } from "@/lib/format";
+import { useI18n } from "@/lib/i18n-context";
+import { listPackersStopDeskCommunes } from "@/lib/server/packers-actions";
+import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Home, MapPin, Store } from "lucide-react";
-import { useI18n } from "@/lib/i18n-context";
-import { formatDzd } from "@/lib/format";
-import { listPackersStopDeskCommunes } from "@/lib/server/packers-actions";
-import type { DeliveryMethod } from "@/lib/delivery";
-import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 function normalize(value: string | null | undefined) {
   return String(value ?? "")
@@ -88,7 +88,7 @@ export function DeliveryChoice({
         onChange={() =>
           onChange({
             method: value,
-            stopdeskName: value === "stopdesk" ? selectedStopDesk?.commune ?? "" : "",
+            stopdeskName: value === "stopdesk" ? (selectedStopDesk?.commune ?? "") : "",
           })
         }
         className="accent-[var(--primary-solid)]"
@@ -101,28 +101,17 @@ export function DeliveryChoice({
     </label>
   );
 
-  let availabilityMessage: string | null = null;
-  if (!commune) {
-    availabilityMessage = "Sélectionne ta commune pour vérifier la disponibilité du Stop Desk Packers.";
-  } else if (stopdesk.isPending) {
-    availabilityMessage = "Vérification du Stop Desk Packers…";
-  } else if (stopdesk.data?.configured === false) {
-    availabilityMessage = "Packers n’est pas encore connecté.";
-  } else if (!selectedStopDesk) {
-    availabilityMessage = "Aucun Stop Desk Packers dans cette commune. Livraison à domicile uniquement.";
-  }
-
+  const availabilityMessage = stopDeskMessage(
+    commune,
+    stopdesk.isPending,
+    stopdesk.data?.configured,
+    Boolean(selectedStopDesk),
+  );
   return (
     <fieldset className="flex flex-col gap-2.5">
       <legend className="mb-1 text-sm font-medium">{t("checkout.method.title")}</legend>
       {option("home", t("checkout.method.home"), homeFee, Home)}
-      {option(
-        "stopdesk",
-        t("checkout.method.stopdesk"),
-        pickupFee,
-        Store,
-        !stopdeskAvailable,
-      )}
+      {option("stopdesk", t("checkout.method.stopdesk"), pickupFee, Store, !stopdeskAvailable)}
 
       {availabilityMessage && (
         <p className="rounded-[10px] bg-surface-mid px-3 py-2 text-xs text-on-surface-muted">
@@ -137,15 +126,18 @@ export function DeliveryChoice({
             <div className="min-w-0">
               <p className="font-semibold text-on-surface">{selectedStopDesk.label}</p>
               <p className="mt-1 text-sm text-on-surface-muted">
-                Commune : <span className="font-medium text-on-surface">{selectedStopDesk.commune}</span>
+                Commune :{" "}
+                <span className="font-medium text-on-surface">{selectedStopDesk.commune}</span>
               </p>
               {selectedStopDesk.zipCode && (
                 <p className="text-sm text-on-surface-muted">
-                  Code postal : <span className="font-mono text-on-surface">{selectedStopDesk.zipCode}</span>
+                  Code postal :{" "}
+                  <span className="font-mono text-on-surface">{selectedStopDesk.zipCode}</span>
                 </p>
               )}
               <p className="mt-1.5 text-xs text-on-surface-muted">
-                Point de retrait disponible dans cette commune. Packers/EcoTrack ne publie pas d’adresse de bureau distincte dans son API.
+                Point de retrait disponible dans cette commune. Packers/EcoTrack ne publie pas
+                d’adresse de bureau distincte dans son API.
               </p>
             </div>
           </div>
@@ -153,4 +145,26 @@ export function DeliveryChoice({
       )}
     </fieldset>
   );
+}
+
+function stopDeskMessage(
+  commune: string,
+  pending: boolean,
+  configured: boolean | undefined,
+  found: boolean,
+) {
+  let availabilityMessage: string | null = null;
+  if (!commune) {
+    availabilityMessage =
+      "Sélectionne ta commune pour vérifier la disponibilité du Stop Desk Packers.";
+  } else if (pending) {
+    availabilityMessage = "Vérification du Stop Desk Packers…";
+  } else if (configured === false) {
+    availabilityMessage = "Packers n’est pas encore connecté.";
+  } else if (!found) {
+    availabilityMessage =
+      "Aucun Stop Desk Packers dans cette commune. Livraison à domicile uniquement.";
+  }
+
+  return availabilityMessage;
 }

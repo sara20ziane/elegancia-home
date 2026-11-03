@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { AddressFields, CheckoutSummary, EMPTY_CHECKOUT_FORM } from "./checkout-panels";
-import { DeliveryChoice } from "./delivery-choice";
+import { OrderPlaced } from "@/components/orders/order-placed";
+import { EMPTY_CHECKOUT_FORM } from "@/lib/checkout-form";
+import { useI18n } from "@/lib/i18n-context";
+import { productOrderLine } from "@/lib/product-order";
+import type { CatalogueProduct, CatalogueVariant } from "@/lib/queries";
+import { useCheckoutAnalytics } from "@/lib/use-checkout-analytics";
 import { useCheckoutOrder } from "@/lib/use-checkout-order";
 import { useCheckoutQuote } from "@/lib/use-checkout-quote";
-import { productOrderLine } from "@/lib/product-order";
-import { useI18n } from "@/lib/i18n-context";
-import type { CatalogueProduct, CatalogueVariant } from "@/lib/queries";
-import { OrderPlaced } from "@/components/orders/order-placed";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { AddressFields, CheckoutSummary } from "./checkout-panels";
+import { DeliveryChoice } from "./delivery-choice";
 
 const quickCopy = {
   fr: {
@@ -46,6 +48,7 @@ export function QuickOrder({
   const [open, setOpen] = useState(false);
   const items = [productOrderLine(product, name, selected, images, quantity)];
   const quote = useCheckoutQuote(form, items);
+  useCheckoutAnalytics(items, open);
   const checkout = useCheckoutOrder(form, { items, clear: () => {} }, quote.delivery.available);
   const copy = quickCopy[locale];
 

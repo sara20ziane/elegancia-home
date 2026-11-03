@@ -89,7 +89,7 @@ export async function cloneVariantsForColour(
 }
 
 /** Delete the stored file only when no variant still shows it. */
-export async function removeIfUnused(url: string): Promise<void> {
+async function removeIfUnused(url: string): Promise<void> {
   const { count, error } = await getSupabase()
     .from("variant_images")
     .select("id", { count: "exact", head: true })

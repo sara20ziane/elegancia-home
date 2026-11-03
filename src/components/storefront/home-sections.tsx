@@ -1,50 +1,12 @@
+export { StyleDiscovery } from "./style-discovery";
+import { formatRelative } from "@/lib/format";
+import { localized } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
+import { useCategories, useReviews } from "@/lib/queries";
+import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Quote } from "lucide-react";
-import { useI18n } from "@/lib/i18n-context";
-import { formatRelative } from "@/lib/format";
-import { useCategories, useReviews } from "@/lib/queries";
 import { StarRating } from "./star-rating";
-import { localized } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
-
-const styleCopy = {
-  fr: {
-    eyebrow: "VOTRE UNIVERS",
-    title: "Choisissez selon votre style",
-    body: "Des ambiances douces et faciles à assortir pour créer une chambre qui vous ressemble.",
-    items: [
-      ["Nature & sauge", "Des tons calmes inspirés de la nature."],
-      ["Romantique floral", "Fleurs délicates et détails féminins."],
-      ["Neutres & beige", "Une élégance lumineuse et intemporelle."],
-      ["Chic contemporain", "Motifs graphiques et nuances raffinées."],
-      ["Tons poudrés", "Rose, mauve et couleurs douces."],
-    ],
-  },
-  en: {
-    eyebrow: "YOUR STYLE",
-    title: "Shop by mood",
-    body: "Soft, easy-to-coordinate palettes to create a bedroom that feels like you.",
-    items: [
-      ["Nature & sage", "Calm tones inspired by nature."],
-      ["Romantic florals", "Delicate flowers and feminine details."],
-      ["Neutrals & beige", "Bright, timeless elegance."],
-      ["Contemporary chic", "Graphic patterns and refined shades."],
-      ["Powder tones", "Rose, mauve and gentle colours."],
-    ],
-  },
-  ar: {
-    eyebrow: "ذوقك الخاص",
-    title: "اختاري حسب ستايلك",
-    body: "ألوان هادئة وسهلة التنسيق لتصنعي غرفة تشبه ذوقك.",
-    items: [
-      ["طبيعي وأخضر هادئ", "درجات مريحة مستوحاة من الطبيعة."],
-      ["ورود رومانسية", "نقوش زهرية ناعمة ولمسات أنثوية."],
-      ["بيج ومحايد", "أناقة مضيئة لا تخرج من الموضة."],
-      ["شيك عصري", "نقوش راقية ودرجات متوازنة."],
-      ["ألوان بودر", "وردي وموف ودرجات ناعمة."],
-    ],
-  },
-} as const;
 
 const storyCopy = {
   fr: {
@@ -66,51 +28,6 @@ const storyCopy = {
     cta: "اكتشفي المتجر",
   },
 } as const;
-
-/** Always-visible editorial entry points, even before the first product is added. */
-export function StyleDiscovery() {
-  const { locale } = useI18n();
-  const copy = styleCopy[locale];
-  const palettes = [
-    "linear-gradient(145deg,#89947F,#D7DDD0)",
-    "linear-gradient(145deg,#A67278,#ECD8D8)",
-    "linear-gradient(145deg,#B9A38D,#F2E9DE)",
-    "linear-gradient(145deg,#6F716E,#D8D6D1)",
-    "linear-gradient(145deg,#B68B95,#EEDFE2)",
-  ];
-
-  return (
-    <section className="container-page py-14 sm:py-16">
-      <div className="mb-8 max-w-2xl">
-        <span className="text-[0.68rem] font-semibold tracking-[0.16em] text-primary">{copy.eyebrow}</span>
-        <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.02em] text-[#38281E] sm:text-3xl">
-          {copy.title}
-        </h2>
-        <p className="mt-3 max-w-xl text-sm leading-7 text-[#76685E] sm:text-base">{copy.body}</p>
-      </div>
-
-      <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-5">
-        {copy.items.map(([title, body], index) => (
-          <Link
-            key={title}
-            to="/catalogue"
-            className="group relative min-h-[230px] min-w-[72%] snap-start overflow-hidden rounded-[22px] border border-white/70 p-5 shadow-[0_12px_32px_rgba(74,53,38,0.09)] transition-transform duration-300 hover:-translate-y-1 sm:min-w-0"
-            style={{ background: palettes[index] }}
-          >
-            <span className="absolute inset-0 bg-gradient-to-t from-[#2C2018]/65 via-[#2C2018]/8 to-white/10" />
-            <span className="relative flex h-full flex-col justify-end text-white">
-              <span className="font-display text-xl font-semibold">{title}</span>
-              <span className="mt-1.5 max-w-[220px] text-xs leading-5 text-white/85">{body}</span>
-              <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold">
-                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
-              </span>
-            </span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 /** Real category links once products have been published. */
 export function CategoryStrip() {
@@ -136,7 +53,12 @@ export function CategoryStrip() {
           >
             {category.image_url && (
               <span className="size-16 shrink-0 overflow-hidden rounded-s-[18px] bg-[#F3ECE5]">
-                <img src={category.image_url} alt="" loading="lazy" className="size-full object-cover" />
+                <img
+                  src={category.image_url}
+                  alt=""
+                  loading="lazy"
+                  className="size-full object-cover"
+                />
               </span>
             )}
             <span className="min-w-0 flex-1 px-4 py-3.5">
@@ -180,7 +102,9 @@ export function BrandStory() {
         </div>
 
         <div className="max-w-xl">
-          <span className="text-[0.68rem] font-semibold tracking-[0.16em] text-primary">{copy.eyebrow}</span>
+          <span className="text-[0.68rem] font-semibold tracking-[0.16em] text-primary">
+            {copy.eyebrow}
+          </span>
           <h2 className="mt-3 font-display text-[clamp(30px,4.5vw,50px)] font-semibold leading-[1.05] tracking-[-0.03em] text-[#38281E]">
             {copy.title}
           </h2>
@@ -190,32 +114,6 @@ export function BrandStory() {
             <ArrowRight size={17} className="rtl:rotate-180" aria-hidden="true" />
           </Link>
         </div>
-      </div>
-    </section>
-  );
-}
-
-/** Promo band backed by the shop's real free-shipping threshold. */
-export function PromoBand({ threshold }: { threshold: number }) {
-  const { t, locale } = useI18n();
-  if (threshold <= 0) return null;
-
-  const formatted = new Intl.NumberFormat("en-US").format(threshold);
-
-  return (
-    <section className="container-page py-6">
-      <div className="promo-bar">
-        <span className="p-text">
-          {t("home.promo.title")} -{" "}
-          <span dir="ltr" className="font-mono">
-            {formatted}
-          </span>{" "}
-          {locale === "ar" ? "دج" : "DA"}
-        </span>
-        <span className="p-text opacity-90">{t("home.promo.body")}</span>
-        <a href="#catalogue" className="promo-cta">
-          {t("home.promo.cta")}
-        </a>
       </div>
     </section>
   );
@@ -279,7 +177,9 @@ export function ClosingCta({ storeName }: { storeName: string }) {
           <h2 className="max-w-xl font-display text-2xl font-semibold tracking-[-0.02em] text-[#38281E] sm:text-3xl">
             {t("home.cta.title")}
           </h2>
-          <p className="max-w-lg text-sm leading-7 text-[#76685E] sm:text-base">{t("home.cta.body")}</p>
+          <p className="max-w-lg text-sm leading-7 text-[#76685E] sm:text-base">
+            {t("home.cta.body")}
+          </p>
           <div className="mt-2 flex flex-wrap justify-center gap-3">
             <a href="#catalogue" className="btn btn-primary btn-lg">
               {t("home.browseAll")}
@@ -288,7 +188,9 @@ export function ClosingCta({ storeName }: { storeName: string }) {
               {t("nav.trackOrder")}
             </Link>
           </div>
-          <p className="mt-2 text-xs font-semibold tracking-[0.12em] text-primary uppercase">{storeName}</p>
+          <p className="mt-2 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+            {storeName}
+          </p>
         </div>
       </div>
     </section>

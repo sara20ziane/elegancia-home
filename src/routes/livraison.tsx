@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Gift, Home, MapPin, Store, Truck } from "lucide-react";
 import { StoreLayout } from "@/components/storefront/store-layout";
 import { useDeliveryZones } from "@/lib/delivery";
 import { formatDzd } from "@/lib/format";
 import { useI18n } from "@/lib/i18n-context";
 import { WILAYAS } from "@/lib/wilayas";
+import { createFileRoute } from "@tanstack/react-router";
+import { Gift, Home, MapPin, Store, Truck } from "lucide-react";
 
 const copy = {
   fr: {
@@ -156,7 +156,9 @@ function DeliveryInfoPage() {
                     <tbody className="divide-y divide-outline">
                       {sorted.map((zone) => (
                         <tr key={zone.wilaya}>
-                          <td className="px-4 py-3 font-medium">{wilayaLabel(zone.wilaya, locale)}</td>
+                          <td className="px-4 py-3 font-medium">
+                            {wilayaLabel(zone.wilaya, locale)}
+                          </td>
                           <td className="px-4 py-3 text-end font-mono" dir="ltr">
                             {formatDzd(zone.fee, locale)}
                           </td>
@@ -190,15 +192,7 @@ function DeliveryInfoPage() {
   );
 }
 
-function InfoCard({
-  icon: Icon,
-  title,
-  body,
-}: {
-  icon: typeof Home;
-  title: string;
-  body: string;
-}) {
+function InfoCard({ icon: Icon, title, body }: { icon: typeof Home; title: string; body: string }) {
   return (
     <article className="rounded-[16px] border border-outline bg-surface p-5">
       <span className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary">

@@ -1,6 +1,15 @@
-import { useState } from "react";
-import { Banknote, ShieldCheck, Truck } from "lucide-react";
+import { trackEcommerce } from "@/lib/analytics-events";
+import {
+  beddingChoiceForVariant,
+  chooseBeddingVariant,
+  findBeddingVariant,
+  initialBeddingChoice,
+  isBeddingProduct,
+  type BeddingChoice,
+} from "@/lib/bedding-variant-options";
+import { localized } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
+import { productImageAlt } from "@/lib/product-image-alt";
 import { averageRating, sortVariants, useReviews, type CatalogueProduct } from "@/lib/queries";
 import {
   colourOptions,
@@ -10,21 +19,14 @@ import {
   sizeAfterColourChange,
   sizeOptions,
 } from "@/lib/variant-options";
-import {
-  beddingChoiceForVariant,
-  chooseBeddingVariant,
-  findBeddingVariant,
-  initialBeddingChoice,
-  isBeddingProduct,
-  type BeddingChoice,
-} from "@/lib/bedding-variant-options";
-import { QuickOrder } from "./quick-order";
-import { StarRating } from "./star-rating";
+import { Banknote, ShieldCheck, Truck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { BeddingVariantDetails, BeddingVariantPicker } from "./bedding-variant-picker";
 import { ProductGallery } from "./product-gallery";
 import { AddToCart, StockLine } from "./product-purchase";
-import { localized } from "@/lib/i18n";
+import { QuickOrder } from "./quick-order";
+import { StarRating } from "./star-rating";
 import { ColourPicker, SizePicker } from "./variant-picker";
-import { BeddingVariantDetails, BeddingVariantPicker } from "./bedding-variant-picker";
 
 const reassuranceCopy = {
   fr: ["Paiement à la livraison", "Livraison en Algérie", "Commande suivie"],
@@ -42,54 +44,24 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
   const { t, locale } = useI18n();
   const { data: reviews } = useReviews(product.id);
 
-  const variants = sortVariants(product.product_variants);
-  const stockable = variants.filter((variant) => variant.stock > 0);
-  const bedding = isBeddingProduct(variants);
-
-  const [legacyChoice, setLegacyChoice] = useState(() => initialChoice(variants));
-  const [beddingChoice, setBeddingChoice] = useState(() => initialBeddingChoice(variants));
-  const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState(0);
-
-  const colours = colourOptions(variants);
-  const sizes = sizeOptions(variants, colours.length > 0 ? legacyChoice.colour : null);
-
-  const selected = bedding
-    ? findBeddingVariant(variants, beddingChoice)
-    : findVariant(variants, legacyChoice.colour, legacyChoice.size);
-
-  const selectedColourImages = imagesForColour(variants, legacyChoice.colour);
-  const beddingColourImages = imagesForColour(variants, beddingChoice.colour);
-  const images = bedding
-    ? beddingColourImages.length > 0
-      ? beddingColourImages
-      : imagesForColour(variants, null)
-    : selectedColourImages.length > 0
-      ? selectedColourImages
-      : imagesForColour(variants, null);
-
-  const pickColour = (colour: string) => {
-    setLegacyChoice({
-      colour,
-      size: sizeAfterColourChange(variants, colour, legacyChoice.size),
-    });
-    setActiveImage(0);
-    setQuantity(1);
-  };
-
-  const pickSize = (size: string) => {
-    setLegacyChoice((current) => ({ ...current, size }));
-    setQuantity(1);
-  };
-
-  const pickBedding = (filter: Partial<BeddingChoice>) => {
-    const next = chooseBeddingVariant(variants, filter);
-    if (!next) return;
-    setBeddingChoice(beddingChoiceForVariant(next));
-    setActiveImage(0);
-    setQuantity(1);
-  };
-
+  const {
+    variants,
+    stockable,
+    bedding,
+    quantity,
+    setQuantity,
+    activeImage,
+    setActiveImage,
+    colours,
+    sizes,
+    selected,
+    images,
+    pickColour,
+    pickSize,
+    pickBedding,
+    beddingChoice,
+    legacyChoice,
+  } = useProductChoices(product);
   const rating = reviews ? averageRating(reviews) : null;
   const description = product.description
     ? localized(locale, product.description, product.description_fr)
@@ -110,6 +82,7 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
       <ProductGallery
         images={images}
         alt={galleryAlt}
+        imageAlts={images.map((url) => productImageAlt(product, url, locale))}
         active={activeImage}
         onSelect={setActiveImage}
       />
@@ -192,4 +165,87 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
       </div>
     </div>
   );
+}
+
+function useProductChoices(product: CatalogueProduct) {
+  const variants = sortVariants(product.product_variants);
+  const stockable = variants.filter((variant) => variant.stock > 0);
+  const bedding = isBeddingProduct(variants);
+
+  const [legacyChoice, setLegacyChoice] = useState(() => initialChoice(variants));
+  const [beddingChoice, setBeddingChoice] = useState(() => initialBeddingChoice(variants));
+  const [quantity, setQuantity] = useState(1);
+  const [activeImage, setActiveImage] = useState(0);
+
+  const colours = colourOptions(variants);
+  const sizes = sizeOptions(variants, colours.length > 0 ? legacyChoice.colour : null);
+
+  const selected = bedding
+    ? findBeddingVariant(variants, beddingChoice)
+    : findVariant(variants, legacyChoice.colour, legacyChoice.size);
+
+  const selectedColourImages = imagesForColour(variants, legacyChoice.colour);
+  const beddingColourImages = imagesForColour(variants, beddingChoice.colour);
+  const images = bedding
+    ? beddingColourImages.length > 0
+      ? beddingColourImages
+      : imagesForColour(variants, null)
+    : selectedColourImages.length > 0
+      ? selectedColourImages
+      : imagesForColour(variants, null);
+
+  const pickColour = (colour: string) => {
+    setLegacyChoice({
+      colour,
+      size: sizeAfterColourChange(variants, colour, legacyChoice.size),
+    });
+    setActiveImage(0);
+    setQuantity(1);
+  };
+
+  const pickSize = (size: string) => {
+    setLegacyChoice((current) => ({ ...current, size }));
+    setQuantity(1);
+  };
+
+  const pickBedding = (filter: Partial<BeddingChoice>) => {
+    const next = chooseBeddingVariant(variants, filter);
+    if (!next) return;
+    setBeddingChoice(beddingChoiceForVariant(next));
+    setActiveImage(0);
+    setQuantity(1);
+  };
+
+  const previous = useRef(selected?.id);
+  useEffect(() => {
+    trackEcommerce("view_product", { product_id: product.id, product_slug: product.slug });
+  }, [product.id, product.slug]);
+  useEffect(() => {
+    if (previous.current !== selected?.id && selected)
+      trackEcommerce("select_variant", {
+        product_id: product.id,
+        product_slug: product.slug,
+        variant_id: selected.id,
+        amount: selected.price,
+      });
+    previous.current = selected?.id;
+  }, [selected, product.id, product.slug]);
+  return {
+    variants,
+    stockable,
+    bedding,
+    quantity,
+    setQuantity,
+    activeImage,
+    setActiveImage,
+    colours,
+    sizes,
+    selected,
+    images,
+    pickColour,
+    pickSize,
+    pickBedding,
+    beddingChoice,
+    legacyChoice,
+  };
 }
