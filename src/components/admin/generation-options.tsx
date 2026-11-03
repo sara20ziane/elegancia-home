@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/form";
 
 export function GenerationOptions({
@@ -6,12 +7,16 @@ export function GenerationOptions({
   differentStock,
   setDifferentStock,
   unavailable,
+  retrying,
+  onRetry,
 }: {
   differentPrices: boolean;
   setDifferentPrices: (value: boolean) => void;
   differentStock: boolean;
   setDifferentStock: (value: boolean) => void;
   unavailable: boolean;
+  retrying: boolean;
+  onRetry: () => void;
 }) {
   return (
     <>
@@ -26,9 +31,14 @@ export function GenerationOptions({
         onChange={(e) => setDifferentStock(e.target.checked)}
       />
       {unavailable && (
-        <p role="alert" className="text-sm">
-          Presets indisponibles. Recharge les standards avant de générer un aperçu.
-        </p>
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <p>
+            Standards en ligne indisponibles. Les standards Elegancia intégrés sont utilisés.
+          </p>
+          <Button variant="ghost" size="sm" disabled={retrying} onClick={onRetry}>
+            {retrying ? "Rechargement…" : "Recharger les standards"}
+          </Button>
+        </div>
       )}
     </>
   );
