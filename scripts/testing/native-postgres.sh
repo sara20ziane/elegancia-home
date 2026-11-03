@@ -25,6 +25,7 @@ parts = [pathlib.Path('supabase/tests/native-bootstrap.sql').read_text()]
 for path in sorted(pathlib.Path('supabase/migrations').glob('*.sql')):
     parts.append(re.sub(r'^create extension[^;]+;', '', path.read_text(), flags=re.M | re.I))
 parts.append(pathlib.Path('supabase/tests/native-finance.sql').read_text())
+parts.append(pathlib.Path('supabase/tests/finance-cost-timestamp-regression.sql').read_text())
 pathlib.Path(sys.argv[1]).write_text('\n'.join(parts))
 PY
 finance_docker exec -i "$finance_container" psql -U postgres -v ON_ERROR_STOP=1 \
