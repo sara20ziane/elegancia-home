@@ -12,7 +12,7 @@ export async function nativeTestDatabase(beforeCatalog?: (db: PGlite) => Promise
       /^create extension[^;]+;/gim,
       "",
     );
-    if (name === "20261103130000_catalog_automation.sql") await beforeCatalog?.(db);
+    if (name.endsWith("_catalog_automation.sql")) await beforeCatalog?.(db);
     await db.exec(sql);
   }
   return db;
