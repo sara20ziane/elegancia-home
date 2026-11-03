@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ImageOff, Plus, Trash2 } from "lucide-react";
+import { Copy, ImageOff, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
 import { priceRange, productImage } from "@/lib/queries";
+import { duplicateProduct } from "@/lib/duplicate-product";
 import {
   createProduct,
   deleteProduct,
@@ -97,6 +98,7 @@ function ProductsPage() {
 
 function ProductRow({ product }: { product: AdminProduct }) {
   const { t, locale } = useI18n();
+  const navigate = useNavigate();
   const invalidate = useProductInvalidation();
 
   const image = productImage(product as never);
@@ -112,6 +114,16 @@ function ProductRow({ product }: { product: AdminProduct }) {
         Boolean(product.published_at),
       ),
     onSuccess: invalidate,
+    onError: (mutationError: Error) => toast.error(mutationError.message),
+  });
+
+  const duplicate = useMutation({
+    mutationFn: () => duplicateProduct(product.id),
+    onSuccess: (id) => {
+      invalidate();
+      toast.success("Copie créée en brouillon — stock remis à 0");
+      void navigate({ to: "/admin/product/$id", params: { id } });
+    },
     onError: (mutationError: Error) => toast.error(mutationError.message),
   });
 
@@ -159,7 +171,7 @@ function ProductRow({ product }: { product: AdminProduct }) {
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="secondary"
           size="sm"
@@ -172,6 +184,16 @@ function ProductRow({ product }: { product: AdminProduct }) {
           <Link to="/admin/product/$id" params={{ id: product.id }}>
             {t("common.edit")}
           </Link>
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={duplicate.isPending}
+          onClick={() => duplicate.mutate()}
+        >
+          <Copy size={15} aria-hidden="true" />
+          {duplicate.isPending ? "Duplication…" : "Dupliquer"}
         </Button>
         <button
           type="button"
