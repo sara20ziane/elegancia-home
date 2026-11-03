@@ -32,9 +32,7 @@ export function GenerationOptions({
       />
       {unavailable && (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-sm">
-          <p>
-            Standards en ligne indisponibles. Les standards Elegancia intégrés sont utilisés.
-          </p>
+          <p>Standards en ligne indisponibles. Les standards Elegancia intégrés sont utilisés.</p>
           <Button variant="ghost" size="sm" disabled={retrying} onClick={onRetry}>
             {retrying ? "Rechargement…" : "Recharger les standards"}
           </Button>
