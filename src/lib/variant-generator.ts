@@ -1,5 +1,5 @@
 import type { VariantDraft } from "@/components/admin/variant-draft";
-import { fillBeddingBlanks, type BeddingPreset } from "./bedding-presets";
+import { updateBeddingSelection, type BeddingPreset } from "./bedding-presets";
 import { generateSku } from "./sku";
 
 export type GeneratedVariant = { draft: VariantDraft; automaticSku: boolean };
@@ -13,7 +13,7 @@ export function generateBeddingVariants(
 ): GeneratedVariant[] {
   const taken = [...used];
   return [...new Set(sizes.map((size) => size.trim()).filter(Boolean))].map((size) => {
-    const draft = fillBeddingBlanks({ ...base, size }, presets);
+    const draft = updateBeddingSelection(base, { size }, presets);
     const sku =
       draft.sku.trim() || generateSku(model, draft.set_type, size, draft.color_name, taken);
     taken.push(sku);

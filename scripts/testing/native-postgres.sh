@@ -26,6 +26,7 @@ for path in sorted(pathlib.Path('supabase/migrations').glob('*.sql')):
     parts.append(re.sub(r'^create extension[^;]+;', '', path.read_text(), flags=re.M | re.I))
 parts.append(pathlib.Path('supabase/tests/native-finance.sql').read_text())
 parts.append(pathlib.Path('supabase/tests/finance-cost-timestamp-regression.sql').read_text())
+parts.append(pathlib.Path('supabase/tests/catalog-finance-preservation.sql').read_text())
 pathlib.Path(sys.argv[1]).write_text('\n'.join(parts))
 PY
 finance_docker exec -i "$finance_container" psql -U postgres -v ON_ERROR_STOP=1 \
@@ -80,15 +81,41 @@ finance_docker exec "$finance_container" psql -U postgres -v ON_ERROR_STOP=1 -c 
   "do \$\$ begin if (select count(*) from invoices where number is not null)<>1 or (select count(*) from cod_settlements)<>1 or (select count(*) from financial_movements where domain='cash')<>1 or (select status from invoices)<>'paid' then raise exception 'Concurrent actions duplicated or incomplete'; end if; end \$\$;"
 echo 'PASS: all migrations + SQL regression; 40 concurrent numbers; 16 concurrent issues; 16 concurrent COD receipts.'
 
-# The SKU reservation primary key also arbitrates independent PostgreSQL sessions.
-catalog_pids=()
-for catalog_n in $(seq 1 16); do
-  finance_docker exec "$finance_container" psql -U postgres -Atv ON_ERROR_STOP=1 \
-    -c "insert into product_variants(product_id,price,stock,size,set_type,color_name) values('ffffffff-4000-4000-8000-000000000001',9500,1,'Queen size','Parure housse de couette','Écru')" \
-    > "$finance_tmp/catalog-$catalog_n" &
-  catalog_pids+=("$!")
+# Separate PostgreSQL sessions race on the same commercial identity, not just a SKU.
+finance_docker exec -i "$finance_container" psql -U postgres -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
+create function public.native_catalog_attempt(p jsonb) returns text language plpgsql as $$
+declare violation text;
+begin
+ perform set_config('request.jwt.claim.sub','ffffffff-0000-4000-8000-000000000001',true);
+ perform catalog_generate(p);
+ return 'created';
+exception when unique_violation then
+ get stacked diagnostics violation=CONSTRAINT_NAME;
+ if violation<>'catalog_configuration_key' then raise; end if;
+ return 'commercial_conflict';
+end $$;
+SQL
+for catalog_mode in identical distinct; do
+  catalog_pids=()
+  for catalog_n in $(seq 1 16); do
+    catalog_colour="Concurrent"
+    if [ "$catalog_mode" = distinct ]; then catalog_colour="Concurrent-$catalog_n"; fi
+    finance_docker exec "$finance_container" psql -U postgres -Atqv ON_ERROR_STOP=1 \
+      -c "select native_catalog_attempt(jsonb_build_object('request_id',gen_random_uuid(),'product_id','ffffffff-4000-4000-8000-000000000001','variants',jsonb_build_array(jsonb_build_object('size','Queen size','set_type','Parure housse de couette','piece_count',6,'fabric','Coton','color_name','$catalog_colour','price',9500,'stock',1,'sku','ELG-CONCURRENT','automatic_sku',true))))" \
+      > "$finance_tmp/catalog-$catalog_mode-$catalog_n" &
+    catalog_pids+=("$!")
+  done
+  for catalog_pid in "${catalog_pids[@]}"; do wait "$catalog_pid"; done
 done
-for catalog_pid in "${catalog_pids[@]}"; do wait "$catalog_pid"; done
+python3 - "$finance_tmp" <<'PYCOUNT'
+import pathlib, sys
+root=pathlib.Path(sys.argv[1])
+identical=[(root/f'catalog-identical-{n}').read_text().strip() for n in range(1,17)]
+distinct=[(root/f'catalog-distinct-{n}').read_text().strip() for n in range(1,17)]
+assert identical.count('created') == 1, identical
+assert identical.count('commercial_conflict') == 15, identical
+assert distinct == ['created']*16, distinct
+PYCOUNT
 finance_docker exec "$finance_container" psql -U postgres -v ON_ERROR_STOP=1 -c \
-  "do \$\$ begin if (select count(distinct sku) from product_variants where color_name='Écru')<>16 then raise exception 'Duplicate concurrent SKUs'; end if; end \$\$;"
-echo 'PASS: 16 concurrent catalogue inserts have unique SKUs.'
+  "do \$\$ begin if (select count(*) from product_variants where color_name='Concurrent')<>1 or (select count(distinct sku) from product_variants where color_name like 'Concurrent%')<>17 then raise exception 'Concurrent commercial guard or SKU allocation failed'; end if; end \$\$;"
+echo 'PASS: 16 identical concurrent requests: 1 created, 15 explicit commercial conflicts; 16 distinct colours: all created with unique SKUs.'

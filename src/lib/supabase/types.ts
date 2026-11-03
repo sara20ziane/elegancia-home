@@ -447,6 +447,7 @@ export type Database = {
           color_name: string | null;
           compare_at_price: number | null;
           composition: string | null;
+          bedding_provenance: Json | null;
           created_at: string;
           duvet_cover_size: string | null;
           fabric: string | null;
@@ -474,6 +475,7 @@ export type Database = {
           color_name?: string | null;
           compare_at_price?: number | null;
           composition?: string | null;
+          bedding_provenance?: Json | null;
           created_at?: string;
           duvet_cover_size?: string | null;
           fabric?: string | null;
@@ -501,6 +503,7 @@ export type Database = {
           color_name?: string | null;
           compare_at_price?: number | null;
           composition?: string | null;
+          bedding_provenance?: Json | null;
           created_at?: string;
           duvet_cover_size?: string | null;
           fabric?: string | null;

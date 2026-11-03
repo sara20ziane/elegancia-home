@@ -1,7 +1,9 @@
+import { readFile } from "node:fs/promises";
 // @vitest-environment node
 import { beforeAll, afterAll, expect, it } from "vitest";
 import { nativeTestDatabase } from "../../../scripts/testing/native-database";
 import { generateSku } from "../sku";
+import { INITIAL_BEDDING_PRESETS } from "../bedding-presets";
 
 let db: Awaited<ReturnType<typeof nativeTestDatabase>>;
 const owner = "aaaaaaaa-1111-4111-8111-111111111111";
@@ -10,6 +12,9 @@ const variant = {
   set_type: "Parure housse de couette",
   price: 9500,
   stock: 3,
+  piece_count: 6,
+  color_name: "",
+  fabric: "Coton",
   sku: null as string | null,
   fitted_sheet_size: "160 × 190 cm",
   duvet_cover_size: "220 × 240 cm",
@@ -43,8 +48,8 @@ async function generate(payload: ReturnType<typeof input>) {
     ])
   ).rows[0].id;
 }
-it("crée en brouillon, résout les collisions et rejoue une requête sans doublon", async () => {
-  const payload = input([variant, variant]);
+it("crée Queen/King en brouillon et rejoue une requête sans doublon", async () => {
+  const payload = input([variant, { ...variant, size: "King size" }]);
   const id = await generate(payload);
   expect(await generate(payload)).toBe(id);
   const { rows } = await db.query<{ sku: string; status: string }>(
@@ -54,7 +59,7 @@ it("crée en brouillon, résout les collisions et rejoue une requête sans doubl
   expect(rows).toEqual([
     { sku: generateSku("Aveline Écru", variant.set_type, variant.size, ""), status: "draft" },
     {
-      sku: `${generateSku("Aveline Écru", variant.set_type, variant.size, "")}-02`,
+      sku: generateSku("Aveline Écru", variant.set_type, "King size", ""),
       status: "draft",
     },
   ]);
@@ -120,11 +125,13 @@ it("bloque la publication sans configuration et valide les presets persistants",
   const preset = {
     id: crypto.randomUUID(),
     name: "Standard confirmé",
-    size: "Queen size",
+    size: "Fixture size",
     set_type: "Parure de drap",
     piece_count: "3",
-    composition: "Texte propriétaire",
-    weight_grams: "",
+    composition: { state: "known", value: "Texte propriétaire" },
+    flat_sheet_size: { state: "unknown" },
+    fitted_sheet_size: { state: "not_applicable" },
+    duvet_cover_size: { state: "not_applicable" },
   };
   expect(
     (
@@ -132,23 +139,27 @@ it("bloque la publication sans configuration et valide les presets persistants",
         JSON.stringify(preset),
       ])
     ).rows[0].data,
-  ).toEqual([preset]);
+  ).toEqual([...INITIAL_BEDDING_PRESETS, preset].sort((a, b) => a.name.localeCompare(b.name)));
   await expect(
     db.query("select catalog_presets($1::jsonb)", [
-      JSON.stringify({ ...preset, weight_grams: "-1" }),
+      JSON.stringify({ ...preset, piece_count: "0" }),
     ]),
-  ).rejects.toThrow(/Poids/);
+  ).rejects.toThrow(/pièces/);
 });
 it("ne réutilise pas un ancien SKU dupliqué après suppression de son premier détenteur", async () => {
   await db.exec("reset role");
   const id = await generate(input());
   // Simulate legacy duplicates that existed before this migration; never applied to production.
-  await db.exec("alter table product_variants disable trigger catalog_variant_sku");
+  await db.exec(
+    "alter table product_variants disable trigger catalog_variant_sku; alter table product_variants disable trigger catalog_variant_configuration",
+  );
   await db.query(
     "insert into product_variants(product_id,sku,price,stock) values($1,'LEGACY-DOUBLON',9500,2),($1,'LEGACY-DOUBLON',9500,2)",
     [id],
   );
-  await db.exec("alter table product_variants enable trigger catalog_variant_sku");
+  await db.exec(
+    "alter table product_variants enable trigger catalog_variant_sku; alter table product_variants enable trigger catalog_variant_configuration",
+  );
   await db.query(
     "insert into catalog_private.sku_claims select sku,id from product_variants where sku='LEGACY-DOUBLON' limit 1",
   );
@@ -158,6 +169,11 @@ it("ne réutilise pas un ancien SKU dupliqué après suppression de son premier 
   await expect(generate(input([{ ...variant, sku: "LEGACY-DOUBLON" }]))).rejects.toThrow(
     /SKU existe/,
   );
+  await db.exec("set role authenticated");
+});
+it("conserve intégralement les données Finance non vides", async () => {
+  await db.exec("reset role");
+  await db.exec(await readFile("supabase/tests/catalog-finance-preservation.sql", "utf8"));
   await db.exec("set role authenticated");
 });
 it("refuse les RPC catalogue aux non administrateurs et protège les presets", async () => {

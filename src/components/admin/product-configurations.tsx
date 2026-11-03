@@ -30,7 +30,11 @@ export function ProductConfigurations({
             <summary className="cursor-pointer font-medium">
               Mode rapide — ajouter plusieurs tailles
             </summary>
-            <BeddingGeneration modelName={product.name_fr || product.slug} productId={id} />
+            <BeddingGeneration
+              modelName={product.name_fr || product.slug}
+              productId={id}
+              existingVariants={product.product_variants}
+            />
           </details>
           <CatalogPresets />
           <CommonVariantFields productId={id} variants={product.product_variants} />

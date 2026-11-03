@@ -1,10 +1,13 @@
+import { GenerationOptions } from "./generation-options";
+import { useGeneratedSave } from "./use-generated-save";
+import type { AdminVariant } from "@/lib/admin-products";
+import { configurationConflicts } from "@/lib/catalog-configuration-key";
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Switch } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
 import { BED_SIZE_OPTIONS } from "@/lib/bedding-presets";
-import { saveGenerated, useBeddingPresets } from "@/lib/catalog-automation";
+import { useBeddingPresets } from "@/lib/catalog-automation";
 import {
   generateBeddingVariants,
   validateVariant,
@@ -17,10 +20,12 @@ import { GeneratedPreview } from "./generated-preview";
 
 export function BeddingGeneration({
   modelName,
+  existingVariants = [],
   model,
   productId,
   onComplete,
 }: {
+  existingVariants?: AdminVariant[];
   modelName: string;
   model?: ProductDraft;
   productId?: string;
@@ -35,18 +40,20 @@ export function BeddingGeneration({
   const [differentPrices, setDifferentPrices] = useState(false);
   const [differentStock, setDifferentStock] = useState(false);
   const presets = useBeddingPresets();
-  const queryClient = useQueryClient();
-  const save = useMutation({
-    mutationFn: () => saveGenerated(requestId, rows, model, productId),
-    onSuccess: (id) => {
-      for (const key of [["admin_product", id], ["admin_products"], ["products"]])
-        void queryClient.invalidateQueries({ queryKey: key });
+  const conflicts = configurationConflicts(
+    rows.map((row) => row.draft),
+    existingVariants,
+  );
+  const save = useGeneratedSave({
+    requestId,
+    rows,
+    model,
+    productId,
+    onSaved: (id) => {
       setRows([]);
       setRequestId(crypto.randomUUID());
-      toast.success("Configurations créées. Le statut du modèle est conservé.");
       onComplete?.(id);
     },
-    onError: (error: Error) => toast.error(error.message),
   });
   const changeRows = (next: GeneratedVariant[]) => {
     setRows(next);
@@ -88,35 +95,35 @@ export function BeddingGeneration({
           custom={custom}
           setCustom={setCustom}
         />
-        <Switch
-          label="Prix différents selon la taille"
-          checked={differentPrices}
-          onChange={(e) => setDifferentPrices(e.target.checked)}
+        <GenerationOptions
+          differentPrices={differentPrices}
+          setDifferentPrices={setDifferentPrices}
+          differentStock={differentStock}
+          setDifferentStock={setDifferentStock}
+          unavailable={presets.isError}
         />
-        <Switch
-          label="Stock par configuration"
-          checked={differentStock}
-          onChange={(e) => setDifferentStock(e.target.checked)}
-        />
-        {presets.isError && (
-          <p role="alert" className="text-sm">
-            Presets personnels indisponibles. Seules les dimensions confirmées seront proposées.
-          </p>
-        )}
-        <Button variant="secondary" disabled={presets.isPending} onClick={generate}>
+        <Button
+          variant="secondary"
+          disabled={presets.isPending || presets.isError}
+          onClick={generate}
+        >
           {rows.length ? "Générer un nouvel aperçu" : "Afficher l’aperçu"}
         </Button>
         {rows.length > 0 && (
           <>
             <h3 className="font-semibold">3 — Aperçu avant enregistrement</h3>
             <GeneratedPreview
+              conflicts={conflicts}
               model={modelName}
               rows={rows}
               onChange={changeRows}
               differentPrices={differentPrices}
               differentStock={differentStock}
             />
-            <Button onClick={() => save.mutate()} disabled={save.isPending}>
+            <Button
+              onClick={() => save.mutate()}
+              disabled={save.isPending || conflicts.some(Boolean)}
+            >
               {save.isPending ? "Création…" : "Créer les configurations"}
             </Button>
           </>

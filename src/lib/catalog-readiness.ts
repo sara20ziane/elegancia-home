@@ -1,4 +1,23 @@
-import type { AdminProduct } from "./admin-products";
+import type { AdminProduct, AdminVariant } from "./admin-products";
+
+export function hasPrincipalDimensions(
+  variant: Pick<
+    AdminVariant,
+    "bedding_provenance" | "set_type" | "flat_sheet_size" | "fitted_sheet_size" | "duvet_cover_size"
+  >,
+): boolean {
+  if (!variant.bedding_provenance)
+    return (
+      !!variant.fitted_sheet_size &&
+      (variant.set_type !== "Parure housse de couette" || !!variant.duvet_cover_size)
+    );
+  return (["flat_sheet_size", "fitted_sheet_size", "duvet_cover_size"] as const).every((key) => {
+    const origin = variant.bedding_provenance?.[key];
+    return (
+      !!variant[key]?.trim() || (origin?.source === "preset" && origin.state === "not_applicable")
+    );
+  });
+}
 
 export function catalogReadiness(product: AdminProduct) {
   const variants = product.product_variants.filter((variant) => variant.is_active);
@@ -20,11 +39,7 @@ export function catalogReadiness(product: AdminProduct) {
     },
     {
       label: "Dimensions principales",
-      ok: variants.every(
-        (v) =>
-          !!v.fitted_sheet_size &&
-          (v.set_type !== "Parure housse de couette" || !!v.duvet_cover_size),
-      ),
+      ok: variants.every(hasPrincipalDimensions),
       blocking: false,
     },
     {

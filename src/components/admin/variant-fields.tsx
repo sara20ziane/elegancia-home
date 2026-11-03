@@ -1,7 +1,8 @@
 import { Field, Input, Select } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
 import { useId, useState } from "react";
-import { BED_SIZE_OPTIONS, fillBeddingBlanks } from "@/lib/bedding-presets";
+import { BED_SIZE_OPTIONS, updateBeddingSelection } from "@/lib/bedding-presets";
+import { useBeddingPresets } from "@/lib/catalog-automation";
 import type { VariantDraft } from "./variant-draft";
 import { PresetRecalculation } from "./preset-recalculation";
 import { VariantSecondaryFields } from "./variant-secondary-fields";
@@ -131,6 +132,7 @@ export function DraftFields({
 }
 
 function useBeddingFields(draft: VariantDraft, onChange: (next: VariantDraft) => void) {
+  const { data: presets } = useBeddingPresets();
   const listId = useId();
   const fabricListId = `${listId}-fabrics`;
   const setTypeListId = `${listId}-set-types`;
@@ -138,13 +140,21 @@ function useBeddingFields(draft: VariantDraft, onChange: (next: VariantDraft) =>
     () => Boolean(draft.size) && !isStandardBedSize(draft.size),
   );
   const customBedSize = customSelected || (Boolean(draft.size) && !isStandardBedSize(draft.size));
-  const set = <K extends keyof VariantDraft>(key: K, value: VariantDraft[K]) =>
-    onChange({ ...draft, [key]: value });
+  const set = <K extends Exclude<keyof VariantDraft, "provenance">>(
+    key: K,
+    value: VariantDraft[K],
+  ) =>
+    onChange(
+      key === "size" || key === "piece_count"
+        ? updateBeddingSelection(draft, { [key]: value }, presets)
+        : { ...draft, [key]: value },
+    );
 
-  const setSetType = (value: string) => onChange(fillBeddingBlanks({ ...draft, set_type: value }));
+  const setSetType = (value: string) =>
+    onChange(updateBeddingSelection(draft, { set_type: value }, presets));
   const setBedSize = (value: string) => {
     setCustomBedSize(value === "__other__");
-    onChange(fillBeddingBlanks({ ...draft, size: value === "__other__" ? "" : value }));
+    onChange(updateBeddingSelection(draft, { size: value === "__other__" ? "" : value }, presets));
   };
 
   return { fabricListId, setTypeListId, customBedSize, set, setSetType, setBedSize };

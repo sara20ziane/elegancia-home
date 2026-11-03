@@ -1,113 +1,129 @@
-# Catalogue Elegancia : création rapide et édition manuelle
+# Catalogue Elegancia : création rapide, provenance et intégrité
 
-## Audit et réutilisation
+## Parcours
 
-Sur le `main` audité (`8099e42`), `/admin/products` créait seulement un nom et un
-brouillon. `/admin/product/$id` sauvegardait les informations et catégories,
-puis `ProductConfigurations` affichait `VariantEditor`. `DraftFields` et
-`VariantSecondaryFields` étaient déjà les formulaires des configurations.
-Ils restent utilisés dans l’éditeur et dans l’aperçu, avec les champs facultatifs
-repliés. La duplication **d’une configuration** reste disponible ; aucune
-duplication de modèle n’est ajoutée.
+`/admin/products` propose Mode rapide et Réglages avancés. Le mode rapide demande
+les noms, catégories et descriptions facultatives, puis une saisie commune du
+tissu, de l’origine, du type, des pièces, du prix et du stock. Queen/King sont
+présélectionnés ; 90 × 190 et Autre sont disponibles. Les cartes d’aperçu restent
+éditables individuellement. Prix/prix barrés et stocks par taille sont facultatifs.
 
-Les couleurs utilisent déjà `cloneVariantsForColour` : première couleur sur les
-configurations existantes, suivantes par copie d’une matrice commerciale. Les
-photos sont déjà téléversées une fois puis reliées à toutes les tailles de la
-couleur par `variant_images`. Cette logique est conservée, y compris les uploads
-multiples d’une couleur existante. Les SKU vides de ces nouvelles variantes sont
-désormais générés par le même mécanisme SQL que les autres créations. L’ALT
-existant était déjà prioritaire dans `productImageAlt` ; un trigger remplit
-maintenant les nouveaux ALT absents sans remplacer les textes manuels.
+« Créer les configurations » enregistre le modèle, ses catégories et ses variantes
+en une transaction idempotente. Un nouveau modèle reste en brouillon. Un modèle
+existant conserve son statut et les IDs de ses variantes. L’ajout de nouvelles
+tailles ne supprime aucune variante. Réglages avancés conserve l’édition et la
+copie d’une configuration ; aucune duplication de modèle n’est ajoutée.
 
-`products.category_id` est le miroir historique de la première catégorie ;
-`product_categories` reste la classification multiple. `product_variants` porte
-le prix et le stock de chaque configuration. La colonne `sku` est du texte ;
-l’interface existante limitait la saisie à 40 caractères, limite conservée.
+Le gestionnaire de couleurs et de photos existant est conservé : upload une fois,
+association aux tailles de la même couleur, clonage commercial pour une nouvelle
+couleur. Une nouvelle taille peut récupérer les photos déjà présentes pour sa
+couleur. L’ALT est généré uniquement s’il manque. Le stockage des fichiers et les
+associations SQL conservent leur limite existante de transaction distribuée.
 
-Finance référence les variantes par ID (`variant_costs`, achats, commandes) et
-conserve des instantanés de factures/coûts. Les variantes existantes sont
-modifiées par `UPDATE ... WHERE id`, jamais supprimées puis recréées. Aucun code
-Finance, paramètre d’activation, facture, commande ou coût historique n’est
-modifié par cette fonctionnalité. Aucun coût n’est créé lors d’une génération.
+Les mises à jour communes ont un aperçu et une confirmation. La checklist avant
+publication contrôle nom, catégorie, configuration active, prix, SKU, dimensions,
+stock et photos. Les éléments facultatifs sont des avertissements ; aucune
+configuration active avec prix valide bloque la publication côté serveur aussi.
 
-## Parcours après changement
+## Presets initiaux confirmés Serena / Aveline
 
-1. **Nouveau modèle → Mode rapide** : noms arabe et français, catégories,
-   descriptions facultatives. Le slug vient du nom français, sinon du nom arabe.
-2. **Valeurs communes et tailles** : tissu, origine, type, pièces, prix et stock
-   saisis une fois. Queen et King présélectionnés ; 90 × 190 et taille personnalisée
-   disponibles. Composition, dimensions, prix barré, poids et SKU sous accordéon.
-3. **Afficher l’aperçu** : une carte par taille, prix, stock, SKU et dimensions.
-   « Prix différents selon la taille » expose les prix et prix barrés individuels ;
-   « Stock par configuration » expose les stocks individuels. L’accordéon de chaque
-   carte permet de tout modifier, notamment un SKU. Changer les valeurs communes
-   ne réécrit jamais un aperçu déjà modifié ; sa régénération demande confirmation.
-4. **Créer les configurations** enregistre le brouillon, les catégories et les
-   variantes dans une seule transaction. Une requête rejouée ne crée pas de doublon.
-   Aucune publication automatique.
-5. Dans un modèle existant : ajout de tailles via Mode rapide ; modification
-   individuelle sous Réglages avancés ; valeurs communes avec aperçu et
-   confirmation obligatoire avant remplacement. Le statut existant est conservé.
-6. **Avant publication** affiche nom, catégorie, configuration active, prix, SKU,
-   dimensions, stock, photos. Nom/configuration/prix/stock invalides bloquent les
-   boutons de publication ; catégories, dimensions, SKU anciens et photos sont
-   des avertissements. Le serveur refuse aussi la publication d’un modèle sans
-   configuration active avec prix positif.
+Les huit presets initiaux sont les combinaisons Queen/King × ces quatre règles :
 
-## Règles et valeurs volontairement manuelles
+| Type / pièces | Composition | Drap plat | Drap-housse | Housse de couette |
+| --- | --- | --- | --- | --- |
+| Parure de drap / 3 | 1 drap plat + 2 taies d’oreiller | 250 × 240 cm | Non applicable | Non applicable |
+| Parure de drap / 6 | 1 drap plat + 1 drap-housse + 4 taies d’oreiller | 250 × 240 cm | Queen 160 × 190 ; King 180 × 200 cm | Non applicable |
+| Parure housse de couette / 3 | 1 housse de couette + 2 taies d’oreiller | Non applicable | Non applicable | Queen 220 × 240 ; King 260 × 240 cm |
+| Parure housse de couette / 6 | 1 housse de couette + 1 drap-housse + 4 taies d’oreiller | Non applicable | Queen 160 × 190 ; King 180 × 200 cm | Queen 220 × 240 ; King 260 × 240 cm |
 
-- Dimensions confirmées, centralisées dans `src/lib/bedding-presets.ts` : Queen
-  drap-housse 160 × 190, housse 220 × 240 ; King 180 × 200 et 260 × 240 ;
-  90 × 190 : drap-housse seulement. Les housses ne sont proposées que pour le type
-  `Parure housse de couette`.
-- Le dépôt ne fournit pas de règle métier fiable pour les compositions, taies,
-  draps plats ou poids de Serena/Aveline. Les fixtures synthétiques ne sont pas
-  considérées comme des standards commerciaux. Aucune donnée de production n’a
-  été consultée ou normalisée. Ces champs restent manuels tant qu’un preset
-  explicite n’a pas été renseigné.
-- Les presets personnels sont persistants, éditables par les administrateurs,
-  indexés par taille et type de parure. Une composition ne s’applique que si le
-  nombre de pièces correspond exactement au preset. Les modifications de preset
-  ne mettent jamais à jour le catalogue existant. « Recalculer depuis le preset »
-  présente les différences et demande une application explicite.
-- Un changement de taille ne remplace pas une dimension déjà renseignée. Pour
-  une configuration dupliquée, utiliser le recalcul explicite afin de vérifier
-  les dimensions de la nouvelle taille. Les champs manuels sont prioritaires.
-- SKU : `ELG-MODELE-TYPE-TAILLE-COULEUR`, uppercase ASCII sans espaces ni accents,
-  au plus 40 caractères. Modèle limité à 14, type HC/DR (sinon 5), taille QN/KG
-  (sinon 8), couleur 6 (UNI si absente). Base limitée à 36 ; collisions : `-02`,
-  `-03`, etc. Aperçu TypeScript pur ; réservation unique en base pour arbitrer
-  aussi les créations simultanées. Un SKU manuel en double est refusé, pas réécrit.
-  Les anciens SKU restent inchangés, même s’ils sont anciens ou dupliqués.
+`src/lib/bedding-presets.initial.json` et la migration contiennent ces mêmes données ;
+un test PostgreSQL vérifie leur égalité exacte. Le texte « drap-housse » est
+canonique dans les nouveaux presets ; aucun texte historique n’est normalisé.
+Aucune dimension de taie n’est inventée. Pour 90 × 190, le drap-housse est connu
+uniquement si la parure en comporte un ; une housse de couette inconnue reste
+inconnue. Une taille Autre n’hérite pas des mesures Queen ou King.
 
-## Migration et déploiement
+La clé persistante d’un preset est `size + set_type + piece_count`, normalisée.
+Les standards 3 et 6 pièces coexistent. Un preset enregistré prend priorité,
+y compris lorsqu’il précise explicitement une valeur inconnue ou non applicable.
 
-`20261103130000_catalog_automation.sql` est additive : schéma privé de réservation
-SKU/requêtes, table RLS des presets, RPC admin de génération, presets et mise à
-jour commune, triggers ciblés SKU/ALT/publication. Aucune colonne supprimée et
-aucune réécriture des produits existants. Les anciennes valeurs de SKU sont
-recensées dans le registre de réservation sans modification des variantes.
+Prix, prix barré, stock, poids, tissu et origine restent des saisies manuelles.
+Ces champs ne sont pas admis comme règles dans les presets. Le recalcul depuis
+un preset ne propose que composition et dimensions.
 
-Les RPC contrôlent owner/staff, fixent `search_path`, retirent les droits PUBLIC
-et anon ; le registre privé n’est pas accessible directement. Les opérations en
-masse ont une liste fermée de champs et ne peuvent ni modifier les IDs, ni le
-stock, ni les commandes/coûts.
+## Provenance explicite et trois états
 
-Appliquer la migration sur une base de développement, puis lors d’un déploiement
-revu **avant** le frontend correspondant. Aucune migration de production n’a été
-exécutée par cette tâche. Les uploads restent ceux du projet : le stockage de
-fichiers et leur association SQL ne forment pas une transaction distribuée.
+Chaque champ de composition/dimension d’un preset porte un objet distinct :
 
-## Vérification
+- `{ "state": "known", "value": "160 × 190 cm" }` : valeur connue ;
+- `{ "state": "unknown" }` : règle inconnue, saisie possible ;
+- `{ "state": "not_applicable" }` : pièce absente, aucun fallback.
 
-- Tests purs : normalisation et collision SKU, dimensions confirmées, Queen/King,
-  valeurs manuelles conservées, composition conditionnelle et validation numérique.
-- PostgreSQL WASM : brouillon/idempotence, rollback d’une génération partielle,
-  coûts Finance/IDs conservés avec Finance ON, ALT, SKU manuel, droits des RPC,
-  presets et publication, anciens doublons de SKU.
-- Playwright isolé, desktop et 360 px RTL : création, dimensions, SKU différents,
-  modification manuelle d’un SKU/tissu, aperçu préservé, brouillon persistant et
-  mise à jour commune avec annulation/confirmation et conservation des IDs.
-- Les contrôles Finance, sécurité et boutique préexistants restent exécutés.
-  L’adaptateur E2E exécute les vrais RPC PostgreSQL mais son Auth est synthétique :
-  il ne valide pas les services Supabase Auth/Storage/Realtime en conditions réelles.
+Les champs de variante conservent leurs colonnes texte existantes. La nouvelle
+colonne catalogue nullable `bedding_provenance` conserve la source et l’état de
+chacun des quatre champs : `preset`, `manual` ou `legacy`. Les deux états sans
+texte sont donc distingués par la métadonnée, pas confondus en chaîne vide.
+
+Une saisie directe passe explicitement le champ en manuel, même si le texte
+final égale l’ancien preset ou a été vidé. Une valeur non vide n’est jamais
+utilisée pour inférer cette provenance. Les anciennes variantes sans métadonnée
+sont identifiées comme provenance inconnue (`legacy`) et préservées.
+
+Changer taille, type ou pièces actualise tous les champs encore automatiques :
+une ancienne valeur connue est remplacée, une ancienne valeur devenue inconnue
+ou non applicable est vidée. Les champs manuels restent inchangés. La règle est
+appliquée dans les fonctions pures TypeScript, dans les formulaires et dans un
+trigger catalogue pour les changements de contexte sauvegardés, y compris bulk.
+Les actualisations React fusionnent valeurs et provenance champ par champ pour
+préserver les éditions locales non enregistrées.
+
+« Recalculer depuis le preset » reste une action explicite avec différences avant
+application ; elle peut remettre un champ manuel ou historique sous contrôle du
+preset. Modifier un preset ne lance aucune mise à jour massive des variantes.
+
+## Identité commerciale et SKU
+
+L’identité commerciale normalisée est : taille, type de parure, nombre de pièces,
+couleur, tissu, origine du tissu. Le libellé de couleur est utilisé lorsqu’il
+existe, sinon le code couleur ; le code décoratif d’une couleur nommée ne crée
+pas une deuxième identité. Espaces répétés, casse, null et nombre de pièces sont
+normalisés. SKU, prix, stock, poids, composition et dimensions dérivées sont exclus.
+
+L’aperçu signale les doublons du lot ou déjà présents et désactive la création.
+PostgreSQL vérifie aussi chaque ligne dans `catalog_generate`, sous verrou du
+produit. Un doublon annule le lot entier avec un conflit commercial explicite,
+avant l’allocation du SKU. Le même garde protège l’éditeur avancé et les clones
+par couleur. Les doublons historiques ne sont ni supprimés ni recréés ; leurs
+modifications sans changement d’identité restent possibles.
+
+Le SKU conserve son format `ELG-MODELE-TYPE-TAILLE-COULEUR`, ASCII uppercase, au
+plus 40 caractères. HC/DR et QN/KG sont les abréviations connues ; UNI remplace la
+couleur absente. Les accents sont supprimés, les segments tronqués sans double
+tiret. Une collision de SKU entre configurations réellement distinctes peut être
+suffixée `-02`, `-03`, etc. Une collision commerciale ne peut jamais l’être.
+Un SKU manuel reste prioritaire ; sa régénération est une action explicite.
+
+## Migrations, Finance et vérification
+
+Les migrations catalogue non déployées `20261103130000` et `20261103130001` sont
+additives : RPC admin, presets sous RLS, registre privé de SKU/requêtes,
+provenance catalogue et gardes SKU/ALT/publication/identité commerciale. Les
+fonctions sensibles exigent owner/staff, fixent `search_path`, et ne sont pas
+exécutables par PUBLIC/anon. Aucun backfill de variantes. Aucune migration
+Production n’est exécutée par cette tâche.
+
+Aucun schéma ou comportement Finance n’est modifié. Les variantes existantes
+sont mises à jour par ID, les nouveaux coûts ne sont jamais créés automatiquement.
+Le test `catalog-finance-preservation.sql` construit des coûts, commandes,
+factures émises et mouvements réels dans une base jetable, puis compare leur
+contenu intégral avant/après génération, bulk, changement SKU et conflit commercial.
+
+Tests : les quatre règles initiales sur Queen et King, transitions auto/manuelles,
+Autre, coexistence 3/6, trois états, parité TypeScript/SQL, absence de backfill,
+priorité manuelle, préservation Finance, refus atomique des doublons et garde des
+écritures avancées. PostgreSQL natif lance 16 requêtes identiques indépendantes :
+une création et 15 conflits commerciaux attendus ; 16 couleurs distinctes sont
+aussi créées avec des SKU uniques. Les régressions Finance préexistantes restent
+exécutées. Playwright couvre desktop et 360 px RTL avec les vrais RPC PostgreSQL
+et une session Auth synthétique. Auth/Storage/Realtime Supabase réels ne sont pas
+émulés par cet adaptateur de test.

@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
+import { VariantPresetInput } from "./variant-preset-input";
+import { editVariantField } from "@/lib/bedding-presets";
 import { useI18n } from "@/lib/i18n-context";
 import type { VariantDraft } from "./variant-draft";
 export function VariantSecondaryFields({
@@ -10,49 +12,41 @@ export function VariantSecondaryFields({
   onChange: (next: VariantDraft) => void;
 }) {
   const { t } = useI18n();
-  const set = <K extends keyof VariantDraft>(key: K, value: VariantDraft[K]) =>
-    onChange({ ...draft, [key]: value });
+  const set = <K extends Exclude<keyof VariantDraft, "provenance">>(
+    key: K,
+    value: VariantDraft[K],
+  ) => onChange(editVariantField(draft, key, value));
   return (
     <>
       <section className="rounded-[14px] border border-outline p-4">
         <p className="mb-3 text-sm font-semibold text-on-surface">Composition et dimensions</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-4">
-            <Field label="Composition du pack" hint="Ex. Housse de couette + drap-housse + 4 taies">
-              <Input
-                value={draft.composition}
-                onChange={(e) => set("composition", e.target.value)}
-                maxLength={220}
-              />
-            </Field>
+            <VariantPresetInput
+              draft={draft}
+              onChange={onChange}
+              field="composition"
+              label="Composition du pack"
+            />
           </div>
-
-          <Field label="Drap plat">
-            <Input
-              value={draft.flat_sheet_size}
-              onChange={(e) => set("flat_sheet_size", e.target.value)}
-              placeholder="250 × 240 cm"
-              maxLength={40}
-            />
-          </Field>
-
-          <Field label="Drap-housse / dimension matelas">
-            <Input
-              value={draft.fitted_sheet_size}
-              onChange={(e) => set("fitted_sheet_size", e.target.value)}
-              placeholder="160 × 190 cm"
-              maxLength={40}
-            />
-          </Field>
-
-          <Field label="Housse de couette">
-            <Input
-              value={draft.duvet_cover_size}
-              onChange={(e) => set("duvet_cover_size", e.target.value)}
-              placeholder="220 × 240 cm"
-              maxLength={40}
-            />
-          </Field>
+          <VariantPresetInput
+            draft={draft}
+            onChange={onChange}
+            field="flat_sheet_size"
+            label="Drap plat"
+          />
+          <VariantPresetInput
+            draft={draft}
+            onChange={onChange}
+            field="fitted_sheet_size"
+            label="Drap-housse / dimension matelas"
+          />
+          <VariantPresetInput
+            draft={draft}
+            onChange={onChange}
+            field="duvet_cover_size"
+            label="Housse de couette"
+          />
         </div>
       </section>
 

@@ -60,8 +60,32 @@ $$;
 create trigger catalog_variant_sku before insert or update of sku on public.product_variants
  for each row execute function catalog_private.claim_sku();
 
+-- Commercial identity excludes SKU, prices, stock and derived measurements.
+create function catalog_private.norm(value text) returns text language sql immutable set search_path='' as $$
+ select lower(trim(regexp_replace(coalesce(value,''),'[[:space:]  ﻿]+',' ','g')));
+$$;
+create function catalog_private.configuration_key(v jsonb) returns jsonb language sql immutable set search_path='' as $$
+ select jsonb_build_array(catalog_private.norm(v->>'size'),catalog_private.norm(v->>'set_type'),
+  coalesce(nullif(v->>'piece_count','')::integer::text,''),
+  coalesce(nullif(catalog_private.norm(v->>'color_name'),''),catalog_private.norm(v->>'color_hex')),
+  catalog_private.norm(v->>'fabric'),catalog_private.norm(v->>'fabric_origin'));
+$$;
+create function catalog_private.assert_configuration(pid uuid, value jsonb, except_id uuid default null) returns void language plpgsql set search_path='' as $$
+begin
+ perform 1 from public.products where id=pid for no key update;
+ if not found then raise exception 'Modèle introuvable.'; end if;
+ if exists(select 1 from public.product_variants v where v.product_id=pid and (except_id is null or v.id<>except_id)
+  and catalog_private.configuration_key(to_jsonb(v))=catalog_private.configuration_key(value)) then
+  raise exception 'Cette configuration commerciale existe déjà sur ce modèle.'
+   using errcode='23505',constraint='catalog_configuration_key';
+ end if;
+end;
+$$;
+-- No backfill: absence of provenance identifies legacy values, never guesses manual/automatic.
+alter table public.product_variants add column bedding_provenance jsonb;
+
 create table public.catalog_bedding_presets(id uuid primary key, value jsonb not null check(jsonb_typeof(value)='object'));
-create unique index catalog_preset_size_type on public.catalog_bedding_presets((value->>'size'),(value->>'set_type'));
+create unique index catalog_preset_size_type_pieces on public.catalog_bedding_presets(catalog_private.norm(value->>'size'),catalog_private.norm(value->>'set_type'),((value->>'piece_count')::integer));
 alter table public.catalog_bedding_presets enable row level security;
 revoke all on public.catalog_bedding_presets from public,anon,authenticated;
 create function public.catalog_presets(p jsonb default null) returns jsonb language plpgsql security definer set search_path='' as $$
@@ -75,11 +99,26 @@ begin
    raise exception 'Indique le nom, la taille et le type du preset.';
   end if;
   for key in select jsonb_object_keys(p) loop
-   if key not in ('id','name','size','set_type','piece_count','composition','fitted_sheet_size','flat_sheet_size','duvet_cover_size','weight_grams')
-    or jsonb_typeof(p->key)<>'string' or length(p->>key)>220 then raise exception 'Champ de preset invalide.'; end if;
+   if key not in ('id','name','size','set_type','piece_count','composition','fitted_sheet_size','flat_sheet_size','duvet_cover_size') then
+    raise exception 'Champ de preset invalide.';
+   end if;
   end loop;
-  if nullif(p->>'piece_count','') is not null and (p->>'piece_count')::integer<1 then raise exception 'Nombre de pièces invalide.'; end if;
-  if nullif(p->>'weight_grams','') is not null and (p->>'weight_grams')::integer<0 then raise exception 'Poids invalide.'; end if;
+  if nullif(p->>'piece_count','') is null or (p->>'piece_count')::integer<1 then raise exception 'Nombre de pièces invalide.'; end if;
+  p:=jsonb_set(p,'{piece_count}',to_jsonb((p->>'piece_count')::integer::text));
+  for key in select unnest(array['id','name','size','set_type','piece_count']) loop
+   if p?key and (jsonb_typeof(p->key)<>'string' or length(p->>key)>220) then raise exception 'Champ de preset invalide.'; end if;
+  end loop;
+  for key in select unnest(array['composition','fitted_sheet_size','flat_sheet_size','duvet_cover_size']) loop
+   p:=jsonb_set(p,array[key],coalesce(p->key,'{"state":"unknown"}'::jsonb));
+   if jsonb_typeof(p->key)<>'object' or coalesce(p->key->>'state','') not in ('known','unknown','not_applicable') then
+    raise exception 'État de preset invalide.';
+   end if;
+   if ((p->key)-'state'-'value')<>'{}'::jsonb then raise exception 'Champ de règle invalide.'; end if;
+   if p->key->>'state'='known' then
+    if jsonb_typeof(p->key->'value') is distinct from 'string' or length(trim(p->key->>'value')) not between 1 and 220 then raise exception 'Valeur connue manquante.'; end if;
+   elsif (p->key)?'value' then raise exception 'Un état inconnu ou non applicable ne porte pas de valeur.';
+   end if;
+  end loop;
   insert into public.catalog_bedding_presets values((p->>'id')::uuid,p)
    on conflict(id) do update set value=excluded.value;
  end if;
@@ -122,11 +161,12 @@ begin
  for x in select value from jsonb_array_elements(p->'variants') loop
   v:=jsonb_populate_record(null::public.product_variants,x);
   if v.price is null or v.price<=0 or v.stock is null or v.stock<0 then raise exception 'Prix ou stock invalide.'; end if;
+  perform catalog_private.assert_configuration(pid,x);
   perform set_config('catalog.auto_sku',coalesce(x->>'automatic_sku','false'),true);
   insert into public.product_variants(product_id,size,color_name,color_hex,sku,price,compare_at_price,stock,weight_grams,
-   fabric,fabric_origin,set_type,piece_count,composition,flat_sheet_size,fitted_sheet_size,duvet_cover_size,sort_order,is_active)
+   fabric,fabric_origin,set_type,piece_count,composition,flat_sheet_size,fitted_sheet_size,duvet_cover_size,bedding_provenance,sort_order,is_active)
    values(pid,v.size,v.color_name,v.color_hex,v.sku,v.price,v.compare_at_price,v.stock,v.weight_grams,v.fabric,v.fabric_origin,
-    v.set_type,v.piece_count,v.composition,v.flat_sheet_size,v.fitted_sheet_size,v.duvet_cover_size,position,true) returning id into vid;
+    v.set_type,v.piece_count,v.composition,v.flat_sheet_size,v.fitted_sheet_size,v.duvet_cover_size,v.bedding_provenance,position,true) returning id into vid;
   insert into public.variant_images(variant_id,url,alt,sort_order)
    select vid,url,alt,sort_order from (select distinct on (i.url) i.url,i.alt,i.sort_order
     from public.variant_images i join public.product_variants src on src.id=i.variant_id
@@ -160,6 +200,7 @@ begin
   price=case when p_patch?'price' then (p_patch->>'price')::integer else price end,
   compare_at_price=case when p_patch?'compare_at_price' then (p_patch->>'compare_at_price')::integer else compare_at_price end,
   weight_grams=case when p_patch?'weight_grams' then (p_patch->>'weight_grams')::integer else weight_grams end,
+  bedding_provenance=case when p_patch?'composition' then jsonb_set(coalesce(bedding_provenance,'{}'),'{composition}','{"source":"manual"}') else bedding_provenance end,
   composition=case when p_patch?'composition' then p_patch->>'composition' else composition end
  where product_id=p_product;
  get diagnostics affected=row_count;

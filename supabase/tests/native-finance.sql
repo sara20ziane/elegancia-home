@@ -144,7 +144,7 @@ begin
  inv:=public.finance_prepare_order(oid);perform public.finance_issue_invoice(inv);
  perform pg_temp.check_ok((select status='paid' from public.invoices where id=inv),'invoice issued after receipt unpaid');
  perform pg_temp.check_ok((select stock=before_stock-2 from public.product_variants where id='ffffffff-5000-4000-8000-000000000001'),'finance purchase changed stock');
- insert into public.product_variants(id,product_id,price,stock) values('ffffffff-5000-4000-8000-000000000002','ffffffff-4000-4000-8000-000000000001',1000,5);
+ insert into public.product_variants(id,product_id,price,stock,size) values('ffffffff-5000-4000-8000-000000000002','ffffffff-4000-4000-8000-000000000001',1000,5,'Synthetic secondary size');
  t:=public.place_order('{"customer_name":"Unknown Cost","phone":"0555123456","wilaya":"Alger","commune":"Alger Centre","address":"Adresse de test"}','[{"variant_id":"ffffffff-5000-4000-8000-000000000002","quantity":1}]');
  select id into oid from public.orders where public_token=t;
  update public.orders set status='confirmed',confirmed_at=clock_timestamp() where id=oid;

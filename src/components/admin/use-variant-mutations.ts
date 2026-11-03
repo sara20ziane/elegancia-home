@@ -24,6 +24,7 @@ export function useVariantMutations(productId: string) {
       return upsertVariant({
         id: input.id,
         product_id: productId,
+        bedding_provenance: input.draft.provenance,
         size: input.draft.size.trim() || null,
         color_name: input.draft.color_name.trim() || null,
         color_hex: input.draft.color_hex.trim() || null,

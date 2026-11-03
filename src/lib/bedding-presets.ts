@@ -1,87 +1,103 @@
+import initialPresets from "./bedding-presets.initial.json";
 import type { VariantDraft } from "@/components/admin/variant-draft";
+import { PRESET_FIELDS, presetText, type PresetValue } from "./bedding-provenance";
+import { normalizeCommercial } from "./catalog-configuration-key";
 
-export const BED_SIZE_OPTIONS = [
-  { value: "90 × 190 cm", label: "90 × 190 cm", fittedSheet: "90 × 190 cm", duvetCover: "" },
-  {
-    value: "Queen size",
-    label: "Queen size",
-    fittedSheet: "160 × 190 cm",
-    duvetCover: "220 × 240 cm",
-  },
-  {
-    value: "King size",
-    label: "King size",
-    fittedSheet: "180 × 200 cm",
-    duvetCover: "260 × 240 cm",
-  },
-] as const;
-
+export const BED_SIZE_OPTIONS = ["90 × 190 cm", "Queen size", "King size"].map((value) => ({
+  value,
+  label: value,
+}));
 export type BeddingPreset = {
   id: string;
   name: string;
   size: string;
   set_type: string;
   piece_count: string;
-  composition: string;
-  fitted_sheet_size: string;
-  flat_sheet_size: string;
-  duvet_cover_size: string;
-  weight_grams: string;
+  composition: PresetValue;
+  fitted_sheet_size: PresetValue;
+  flat_sheet_size: PresetValue;
+  duvet_cover_size: PresetValue;
 };
 
-/** Only confirmed measurements. Unknown composition, flat sheet and weight stay empty. */
-export function presetValues(size: string, setType: string, presets: BeddingPreset[] = []) {
-  const known = BED_SIZE_OPTIONS.find((option) => option.value === size);
-  const configured = presets.find((preset) => preset.size === size && preset.set_type === setType);
+const UNKNOWN: PresetValue = { state: "unknown" };
+export const INITIAL_BEDDING_PRESETS = initialPresets as BeddingPreset[];
+const presetMatch = (preset: BeddingPreset, size: string, setType: string, pieces: string) =>
+  normalizeCommercial(preset.size) === normalizeCommercial(size) &&
+  normalizeCommercial(preset.set_type) === normalizeCommercial(setType) &&
+  Number(preset.piece_count) === Number(pieces);
+
+export function presetValues(
+  size: string,
+  setType: string,
+  pieces: string,
+  presets: BeddingPreset[] = [],
+) {
+  const configured = [...presets, ...INITIAL_BEDDING_PRESETS].find((preset) =>
+    presetMatch(preset, size, setType, pieces),
+  );
+  if (configured) return configured;
+  const type = normalizeCommercial(setType);
+  const bedding = type === "parure de drap" || type === "parure housse de couette";
+  const noFitted = bedding && Number(pieces) === 3;
+  const ninety = bedding && Number(pieces) === 6 && normalizeCommercial(size) === "90 × 190 cm";
   return {
-    fitted_sheet_size: configured?.fitted_sheet_size || known?.fittedSheet || "",
+    fitted_sheet_size: noFitted
+      ? ({ state: "not_applicable" } as PresetValue)
+      : ninety
+        ? ({ state: "known", value: "90 × 190 cm" } as PresetValue)
+        : UNKNOWN,
     duvet_cover_size:
-      configured?.duvet_cover_size ||
-      (setType === "Parure housse de couette" ? (known?.duvetCover ?? "") : ""),
-    flat_sheet_size: configured?.flat_sheet_size || "",
-    composition: configured?.composition || "",
-    piece_count: configured?.piece_count || "",
-    weight_grams: configured?.weight_grams || "",
+      type === "parure de drap" ? ({ state: "not_applicable" } as PresetValue) : UNKNOWN,
+    flat_sheet_size: UNKNOWN,
+    composition: UNKNOWN,
   };
 }
 
-/** Fill blanks only; changing size or type never overwrites an entered measurement. */
-export function fillBeddingBlanks(
+/** Re-evaluate automatic fields only, even when their old value was nonempty. */
+export function updateBeddingSelection(
   draft: VariantDraft,
+  selection: Partial<Pick<VariantDraft, "size" | "set_type" | "piece_count">>,
   presets: BeddingPreset[] = [],
 ): VariantDraft {
-  const values = presetValues(draft.size, draft.set_type, presets);
+  const next = { ...draft, ...selection, provenance: { ...draft.provenance } };
+  const values = presetValues(next.size, next.set_type, next.piece_count, presets);
+  for (const key of PRESET_FIELDS) {
+    if (next.provenance[key].source !== "preset") continue;
+    next[key] = presetText(values[key]);
+    next.provenance[key] = { source: "preset", state: values[key].state };
+  }
+  return next;
+}
+
+/** A direct edit is explicit, including clearing a field or typing the same value. */
+export function editVariantField<K extends Exclude<keyof VariantDraft, "provenance">>(
+  draft: VariantDraft,
+  key: K,
+  value: VariantDraft[K],
+): VariantDraft {
   return {
     ...draft,
-    fitted_sheet_size: draft.fitted_sheet_size || values.fitted_sheet_size,
-    duvet_cover_size: draft.duvet_cover_size || values.duvet_cover_size,
-    flat_sheet_size: draft.flat_sheet_size || values.flat_sheet_size,
-    piece_count: draft.piece_count || values.piece_count,
-    composition:
-      draft.composition ||
-      (!draft.piece_count || draft.piece_count === values.piece_count ? values.composition : ""),
-    weight_grams: draft.weight_grams || values.weight_grams,
+    [key]: value,
+    provenance: PRESET_FIELDS.includes(key as (typeof PRESET_FIELDS)[number])
+      ? { ...draft.provenance, [key]: { source: "manual" } }
+      : draft.provenance,
   };
 }
 
-/** Explicit recalculation proposes only preset-owned fields, never price, stock or SKU. */
+/** Applied only after the user accepts the displayed changes. */
 export function beddingPresetPatch(
   draft: VariantDraft,
   presets: BeddingPreset[] = [],
 ): Partial<VariantDraft> {
-  const values = presetValues(draft.size, draft.set_type, presets);
-  const patch: Partial<VariantDraft> = {};
-  for (const key of [
-    "fitted_sheet_size",
-    "flat_sheet_size",
-    "duvet_cover_size",
-    "weight_grams",
-    "piece_count",
-    "composition",
-  ] as const) {
-    if (key === "composition" && draft.piece_count && draft.piece_count !== values.piece_count)
-      continue;
-    if (values[key]) patch[key] = values[key];
-  }
-  return patch;
+  const automatic = {
+    ...draft,
+    provenance: Object.fromEntries(
+      PRESET_FIELDS.map((key) => [key, { source: "preset", state: "unknown" }]),
+    ) as VariantDraft["provenance"],
+  };
+  const next = updateBeddingSelection(automatic, {}, presets);
+  return {
+    ...Object.fromEntries(PRESET_FIELDS.map((key) => [key, next[key]])),
+    provenance: next.provenance,
+  };
 }

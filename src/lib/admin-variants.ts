@@ -1,6 +1,8 @@
+import type { Json } from "./supabase/types";
 import { getSupabase } from "./supabase/client";
 export type VariantInput = {
   id?: string;
+  bedding_provenance?: Json | null;
   product_id: string;
   size: string | null;
   color_name: string | null;

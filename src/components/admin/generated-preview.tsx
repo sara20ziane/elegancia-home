@@ -1,3 +1,5 @@
+import type { PresetField } from "@/lib/bedding-provenance";
+import type { VariantDraft } from "./variant-draft";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { generateSku } from "@/lib/sku";
@@ -5,12 +7,14 @@ import type { GeneratedVariant } from "@/lib/variant-generator";
 import { DraftFields } from "./variant-fields";
 
 export function GeneratedPreview({
+  conflicts,
   model,
   rows,
   onChange,
   differentPrices,
   differentStock,
 }: {
+  conflicts: boolean[];
   model: string;
   rows: GeneratedVariant[];
   onChange: (rows: GeneratedVariant[]) => void;
@@ -31,16 +35,7 @@ export function GeneratedPreview({
             className="rounded-[12px] border border-outline p-3"
             data-testid="generated-variant"
           >
-            <h3 className="font-semibold">{row.draft.size}</h3>
-            <p>
-              {row.draft.set_type} · {row.draft.piece_count || "—"} pièces · {row.draft.price} DA ·
-              Stock {row.draft.stock}
-            </p>
-            <p className="text-sm">
-              Drap-housse : {row.draft.fitted_sheet_size || "à compléter"} · Housse :{" "}
-              {row.draft.duvet_cover_size || "à compléter"}
-            </p>
-            <p className="font-mono text-xs">{row.draft.sku}</p>
+            <PreviewSummary draft={row.draft} conflict={conflicts[index]} />
             <div className="grid gap-3 sm:grid-cols-2">
               {differentPrices && (
                 <>
@@ -116,5 +111,38 @@ export function GeneratedPreview({
         Si un SKU automatique existe déjà, un suffixe sera ajouté à l’enregistrement.
       </p>
     </div>
+  );
+}
+
+function PreviewSummary({ draft, conflict }: { draft: VariantDraft; conflict: boolean }) {
+  return (
+    <>
+      {conflict && (
+        <p role="alert" className="text-sm text-error">
+          Cette configuration commerciale existe déjà. Modifie la taille, le type, les pièces, la
+          couleur ou le tissu.
+        </p>
+      )}
+      <h3 className="font-semibold">{draft.size}</h3>
+      <p>
+        {draft.set_type} · {draft.piece_count || "—"} pièces · {draft.price} DA · Stock{" "}
+        {draft.stock}
+      </p>
+      <p className="text-sm">
+        Drap-housse : {displayDimension(draft, "fitted_sheet_size")} · Housse :{" "}
+        {displayDimension(draft, "duvet_cover_size")}
+      </p>
+      <p className="font-mono text-xs">{draft.sku}</p>
+    </>
+  );
+}
+
+function displayDimension(draft: VariantDraft, key: PresetField) {
+  const origin = draft.provenance[key];
+  return (
+    draft[key] ||
+    (origin.source === "preset" && origin.state === "not_applicable"
+      ? "non applicable"
+      : "à compléter")
   );
 }

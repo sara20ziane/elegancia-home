@@ -1,3 +1,5 @@
+import { PRESET_FIELDS } from "@/lib/bedding-provenance";
+import { PresetValueField } from "./preset-value-field";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -15,7 +17,6 @@ const fields = {
   fitted_sheet_size: "Drap-housse / matelas",
   flat_sheet_size: "Drap plat",
   duvet_cover_size: "Housse de couette",
-  weight_grams: "Poids (g)",
 } as const;
 
 export function CatalogPresets() {
@@ -38,11 +39,10 @@ export function CatalogPresets() {
       size: "",
       set_type: "",
       piece_count: "",
-      composition: "",
-      fitted_sheet_size: "",
-      flat_sheet_size: "",
-      duvet_cover_size: "",
-      weight_grams: "",
+      composition: { state: "unknown" },
+      fitted_sheet_size: { state: "unknown" },
+      flat_sheet_size: { state: "unknown" },
+      duvet_cover_size: { state: "unknown" },
     });
   return (
     <details className="rounded-[12px] border border-outline p-4">
@@ -50,8 +50,8 @@ export function CatalogPresets() {
         Standards Elegancia — presets configurables
       </summary>
       <p className="my-3 text-sm text-on-surface-muted">
-        Une règle par taille et type de parure. Saisis uniquement les valeurs confirmées. Aucun
-        modèle existant ne sera modifié.
+        Une règle par taille, type de parure et nombre de pièces. Saisis uniquement les valeurs
+        confirmées. Aucun modèle existant ne sera modifié.
       </p>
       {presets.isError && (
         <p role="alert">
@@ -68,7 +68,7 @@ export function CatalogPresets() {
         <option value="">Choisir un preset</option>
         {presets.data?.map((preset) => (
           <option key={preset.id} value={preset.id}>
-            {preset.name}
+            {preset.name} · {preset.size} · {preset.piece_count} pièces
           </option>
         ))}
       </Select>
@@ -77,24 +77,41 @@ export function CatalogPresets() {
       </Button>
       {draft && (
         <fieldset disabled={save.isPending} className="grid min-w-0 gap-3 sm:grid-cols-2">
-          {Object.entries(fields).map(([field, label]) => {
-            const key = field as keyof typeof fields;
-            const numeric = key === "piece_count" || key === "weight_grams";
-            return (
-              <Field key={key} label={label}>
-                <Input
-                  value={draft[key]}
-                  type={numeric ? "number" : "text"}
-                  min={key === "piece_count" ? 1 : 0}
-                  maxLength={220}
-                  placeholder={key === "size" ? "Queen size" : undefined}
-                  onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
-                />
-              </Field>
-            );
-          })}
+          {Object.entries(fields)
+            .filter(([field]) => !PRESET_FIELDS.includes(field as (typeof PRESET_FIELDS)[number]))
+            .map(([field, label]) => {
+              const key = field as "name" | "size" | "set_type" | "piece_count";
+              const numeric = key === "piece_count";
+              return (
+                <Field key={key} label={label}>
+                  <Input
+                    value={draft[key]}
+                    type={numeric ? "number" : "text"}
+                    min={key === "piece_count" ? 1 : 0}
+                    maxLength={220}
+                    placeholder={key === "size" ? "Queen size" : undefined}
+                    onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
+                  />
+                </Field>
+              );
+            })}
+          {PRESET_FIELDS.map((key) => (
+            <PresetValueField
+              key={key}
+              label={fields[key]}
+              value={draft[key]}
+              onChange={(value) => setDraft({ ...draft, [key]: value })}
+            />
+          ))}
           <Button
-            disabled={!draft.name.trim() || !draft.size.trim() || !draft.set_type.trim()}
+            disabled={
+              !draft.name.trim() ||
+              !draft.size.trim() ||
+              !draft.set_type.trim() ||
+              !Number.isInteger(Number(draft.piece_count)) ||
+              Number(draft.piece_count) < 1 ||
+              PRESET_FIELDS.some((key) => draft[key].state === "known" && !draft[key].value.trim())
+            }
             onClick={() => save.mutate(draft)}
           >
             Enregistrer le preset

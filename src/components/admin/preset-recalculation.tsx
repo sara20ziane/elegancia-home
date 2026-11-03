@@ -1,3 +1,4 @@
+import { PRESET_FIELDS } from "@/lib/bedding-provenance";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { beddingPresetPatch } from "@/lib/bedding-presets";
@@ -17,16 +18,18 @@ export function PresetRecalculation({
     setPreview(beddingPresetPatch(draft, presets.data));
   };
   const changes = preview
-    ? (Object.keys(preview).filter(
-        (key) => preview[key as keyof VariantDraft] !== draft[key as keyof VariantDraft],
-      ) as (keyof VariantDraft)[])
+    ? ([...PRESET_FIELDS].filter(
+        (key) =>
+          preview[key] !== undefined &&
+          (preview[key] !== draft[key] ||
+            JSON.stringify(preview.provenance?.[key as (typeof PRESET_FIELDS)[number]]) !==
+              JSON.stringify(draft.provenance[key as (typeof PRESET_FIELDS)[number]])),
+      ) as Exclude<keyof VariantDraft, "provenance">[])
     : [];
   const labels: Partial<Record<keyof VariantDraft, string>> = {
     fitted_sheet_size: "Drap-housse",
     flat_sheet_size: "Drap plat",
     duvet_cover_size: "Housse de couette",
-    weight_grams: "Poids",
-    piece_count: "Pièces",
     composition: "Composition",
   };
   return (
@@ -40,7 +43,7 @@ export function PresetRecalculation({
             <ul>
               {changes.map((key) => (
                 <li key={key}>
-                  {labels[key]} : {draft[key] || "vide"} → {preview[key]}
+                  {labels[key]} : {draft[key] || "vide"} → {preview[key] || "vide"}
                 </li>
               ))}
             </ul>
@@ -53,6 +56,7 @@ export function PresetRecalculation({
             onClick={() => {
               onChange({
                 ...draft,
+                provenance: preview.provenance ?? draft.provenance,
                 ...Object.fromEntries(changes.map((key) => [key, preview[key]])),
               });
               setPreview(null);
