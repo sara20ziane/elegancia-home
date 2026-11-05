@@ -40,7 +40,7 @@ for commerce_mode in pack phone; do
  done
  for commerce_pid in "${commerce_pids[@]}"; do wait "$commerce_pid"; done
  if [ "$commerce_mode" = pack ]; then commerce_expected=1; else commerce_expected=3; fi
- test "$(cat "$commerce_tmp"/"$commerce_mode"-* | rg -c '^created$')" -eq "$commerce_expected"
+ test "$(awk '$0 == "created" { count++ } END { print count+0 }' "$commerce_tmp"/"$commerce_mode"-*)" -eq "$commerce_expected"
 done
 commerce_docker exec -i "$commerce_container" psql -U postgres -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
 -- Actual pgcrypto HMAC, with a known test vector. No external HTTP request.
