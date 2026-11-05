@@ -14,7 +14,7 @@ const DEMO_NAMES = new Set(["", "my shop", "openstore dz"]);
 
 /** Mirrors `is_valid_dz_phone()` in schema.sql: mobile or landline, local or +213. */
 export function isValidDzPhone(raw: string | null | undefined): boolean {
-  const p = (raw ?? "").replace(/[^0-9+]/g, "");
+  const p = (raw ?? "").replace(/[^0-9+]/g, "").replace(/^00213/, "+213");
   return (
     /^0[5-7][0-9]{8}$/.test(p) ||
     /^\+?213[5-7][0-9]{8}$/.test(p) ||
@@ -34,7 +34,7 @@ export function setupGaps(settings: StoreSettings | null, zoneCount: number): Se
   const gaps: SetupGap[] = [];
   if (DEMO_NAMES.has(settings.name.trim().toLowerCase())) gaps.push("name");
   if (!isValidDzPhone(settings.phone) || isPlaceholder(settings.phone)) gaps.push("phone");
-  if (isPlaceholder(settings.whatsapp)) gaps.push("whatsapp");
+  if (!isValidDzPhone(settings.whatsapp) || isPlaceholder(settings.whatsapp)) gaps.push("whatsapp");
   if (zoneCount === 0) gaps.push("delivery");
   if (
     !settings.legal_name?.trim() ||

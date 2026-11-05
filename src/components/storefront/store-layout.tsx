@@ -5,6 +5,8 @@ import { BottomNav } from "./bottom-nav";
 import { AnnouncementBar } from "./announcement-bar";
 import { DemoBanner } from "./demo-banner";
 import { BrandStyle } from "./brand-style";
+import { InstallApp } from "./install-app";
+import { useOnline } from "@/lib/online";
 
 /**
  * Shared storefront chrome.
@@ -17,15 +19,26 @@ import { BrandStyle } from "./brand-style";
  * mobile; the tab bar is hidden at 1024px and above.
  */
 export function StoreLayout({ children }: { children: React.ReactNode }) {
+  const online = useOnline();
   return (
     <div className="flex min-h-dvh flex-col">
       <BrandStyle />
       <DemoBanner />
       <AnnouncementBar />
       <SiteHeader />
-      <main className="page-bottom-pad flex-1 lg:pb-0">{children}</main>
+      <main className="page-bottom-pad flex-1 lg:pb-0">
+        {online ? (
+          children
+        ) : (
+          <p role="status" className="mx-auto max-w-xl p-6">
+            Connexion requise pour vérifier les prix et disponibilités. · يرجى الاتصال بالإنترنت
+            لعرض الأسعار والمخزون.
+          </p>
+        )}
+      </main>
+      <InstallApp />
       <SiteFooter />
-      <CartDrawer />
+      {online && <CartDrawer />}
       <BottomNav />
     </div>
   );

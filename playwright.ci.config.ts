@@ -35,7 +35,10 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: "npm run dev",
+      command:
+        process.env.E2E_BUILT === "true"
+          ? "npm run preview -- --host 127.0.0.1 --port 8080"
+          : "npm run dev",
       url: "http://127.0.0.1:8080",
       reuseExistingServer: false,
       timeout: 180000,

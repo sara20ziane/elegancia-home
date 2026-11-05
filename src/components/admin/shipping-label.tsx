@@ -87,6 +87,10 @@ export function ShippingLabel({
       </table>
 
       <footer className="sl-foot">
+        <span>
+          Étiquette interne · bordereau officiel séparé ·{" "}
+          {order.delivery_method === "stopdesk" ? "Stop Desk" : "Domicile"}
+        </span>
         <span>Le {new Date(order.created_at).toLocaleDateString("fr-DZ")}</span>
         {order.note && <span className="sl-note">{order.note}</span>}
       </footer>

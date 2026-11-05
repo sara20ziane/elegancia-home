@@ -1,14 +1,8 @@
-import { AlertTriangle, Package, TrendingDown, TrendingUp } from "lucide-react";
+import { Package, TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n-context";
 import { formatDzd } from "@/lib/format";
-import { wilayaLabel } from "@/lib/wilayas";
-import {
-  revenueTrend,
-  WORRYING_REFUSAL_RATE,
-  type Analytics,
-  type RevenueDay,
-} from "@/lib/analytics";
+import { revenueTrend, type Analytics, type RevenueDay } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /**
@@ -107,6 +101,10 @@ export function RevenueChart({ days, locale }: { days: RevenueDay[]; locale: "ar
           {trend !== null && <TrendPill change={trend} />}
         </span>
       </div>
+      <p className="mb-3 text-xs text-on-surface-muted">
+        Valeur des commandes confirmées, expédiées ou livrées, par date de création. Ce graphique ne
+        représente pas les encaissements boutique.
+      </p>
 
       <svg
         viewBox={`0 0 ${width} ${height}`}
@@ -132,72 +130,6 @@ export function RevenueChart({ days, locale }: { days: RevenueDay[]; locale: "ar
       <div className="mt-2 flex justify-between font-mono text-[10px] text-on-surface-muted">
         <span>{days[0]?.day.slice(5)}</span>
         <span>{days[days.length - 1]?.day.slice(5)}</span>
-      </div>
-    </section>
-  );
-}
-
-/**
- * Refusal rate by wilaya.
- *
- * The number that decides whether a COD shop makes money. A refused parcel
- * costs the outbound and the return, so a wilaya above the threshold is one to
- * stop serving or to require an up-front payment for.
- */
-export function WilayaTable({ analytics }: { analytics: Analytics }) {
-  const { t, locale } = useI18n();
-  const rows = analytics.byWilaya;
-
-  if (rows.length === 0) {
-    return (
-      <section className="min-w-0 rounded-[16px] border border-outline bg-surface p-5">
-        <h2 className="text-sm font-semibold">{t("admin.chart.wilaya")}</h2>
-        <p className="mt-2 text-xs text-on-surface-muted">{t("admin.chart.needMoreData")}</p>
-      </section>
-    );
-  }
-
-  return (
-    <section className="min-w-0 rounded-[16px] border border-outline bg-surface p-5">
-      <h2 className="mb-3 text-sm font-semibold">{t("admin.chart.wilaya")}</h2>
-      <div className="overflow-x-auto">
-        <table className="ds-table">
-          <caption className="sr-only">{t("admin.chart.wilaya")}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{t("checkout.wilaya")}</th>
-              <th scope="col">{t("admin.chart.orders")}</th>
-              <th scope="col">{t("admin.chart.delivered")}</th>
-              <th scope="col">{t("admin.chart.refused")}</th>
-              <th scope="col">{t("admin.chart.rate")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const worrying = row.rate >= WORRYING_REFUSAL_RATE;
-              return (
-                <tr key={row.wilaya}>
-                  <td>
-                    <span className="flex items-center gap-2">
-                      {wilayaLabel(row.wilaya, locale)}
-                      {worrying && (
-                        <AlertTriangle size={13} className="text-error" aria-hidden="true" />
-                      )}
-                    </span>
-                  </td>
-                  <td className="cell-mono">{row.total}</td>
-                  <td className="cell-mono">{row.delivered}</td>
-                  <td className="cell-mono">{row.refused}</td>
-                  <td>
-                    <Badge tone={worrying ? "danger" : row.rate > 0 ? "warning" : "positive"}>
-                      <span dir="ltr">{Math.round(row.rate * 100)}%</span>
-                    </Badge>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
       </div>
     </section>
   );

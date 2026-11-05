@@ -23,15 +23,17 @@ export type AdminReview = {
 const PAGE_SIZE = 15;
 export const ADMIN_REVIEWS_KEY = "admin_reviews";
 
-async function fetchReviewsPage(approved: boolean, page: number) {
+async function fetchReviewsPage(approved: boolean, page: number, productId: string) {
   const from = (Math.max(page, 1) - 1) * PAGE_SIZE;
-  const { data, error, count } = await getSupabase()
+  let request = getSupabase()
     .from("reviews")
     .select(
       "id, product_id, customer_name, rating, comment, image_url, is_approved, created_at, products ( name, slug )",
       { count: "exact" },
     )
-    .eq("is_approved", approved)
+    .eq("is_approved", approved);
+  if (productId) request = request.eq("product_id", productId);
+  const { data, error, count } = await request
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
@@ -44,10 +46,10 @@ async function fetchReviewsPage(approved: boolean, page: number) {
   };
 }
 
-export function useReviewsPage(approved: boolean, page: number) {
+export function useReviewsPage(approved: boolean, page: number, productId = "") {
   return useQuery({
-    queryKey: [ADMIN_REVIEWS_KEY, approved, page] as const,
-    queryFn: () => fetchReviewsPage(approved, page),
+    queryKey: [ADMIN_REVIEWS_KEY, approved, page, productId] as const,
+    queryFn: () => fetchReviewsPage(approved, page, productId),
     placeholderData: keepPreviousData,
   });
 }

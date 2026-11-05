@@ -1,284 +1,73 @@
-# Sending orders to Google Sheets
+# Google Sheets — Elegancia Home
 
-Optional. Off by default, and nothing about checkout depends on it: the export runs
-in a database trigger that queues an asynchronous request after the order commits,
-so a slow or broken endpoint can never delay or fail an order.
+Fonction facultative. Une nouvelle destination est **désactivée**. Les commandes
+fonctionnent sans Google : le checkout écrit une file PostgreSQL et le traitement
+planifié effectue les requêtes après validation de la transaction. Les six migrations ont été appliquées le 5 novembre 2026 après validation ; voir
+[MIGRATION_RECEIPT.md](MIGRATION_RECEIPT.md). Ne pas les rejouer.
 
-You can have as many destinations as you like. Each one gets its own secret and its
-own signature, so revoking one does not affect the others.
+## Configuration après validation
 
----
+1. Vérifier l’historique selon `supabase/MIGRATIONS.md` : les migrations commerce
+   sont déjà appliquées sur Elegancia Home. Ne pas les rejouer et ne jamais
+   réexécuter `schema.sql` sur la boutique.
+2. Créer une feuille privée dans votre compte Google. Ne pas la publier et ne pas
+   activer « toute personne disposant du lien ». Limiter les partages aux personnes
+   autorisées à traiter les données clientes.
+3. Dans Extensions → Apps Script, coller [le récepteur](GOOGLE_SHEETS_RECEIVER.gs).
+4. Paramètres du projet → Propriétés du script : ajouter `ELEGANCIA_SHEET_ID`
+   (l'identifiant de la feuille dans son URL) et `ELEGANCIA_EXPORT_SECRET`.
+5. Déployer comme application Web, exécuter en tant que propriétaire, accès « Tout
+   le monde ». Cela rend le récepteur joignable, **pas la feuille publique**. Sans
+   signature HMAC valide il n'écrit rien et ne retourne aucune donnée cliente.
+6. Administration → Paramètres → Export des commandes : ajouter le nom et l'URL
+   HTTPS `/exec` de ce déploiement. Copier le secret généré dans la propriété
+   `ELEGANCIA_EXPORT_SECRET`. Les signatures sont produites exclusivement en base.
+   Le secret est consultable uniquement par la propriétaire pour la configuration.
+7. Enregistrer les propriétés, redéployer une nouvelle version du script, puis
+   activer explicitement la destination. Ne jamais mettre le secret dans une URL,
+   un fichier frontend, une capture ou des logs.
+8. Sur un environnement de recette et une feuille de test, créer une commande
+   synthétique, modifier son statut, son adresse et son suivi. Vérifier qu'une seule
+   ligne est mise à jour. Ne pas envoyer des commandes réelles pendant les tests.
 
-## What you need
+La tâche `elegancia-order-exports` s'exécute chaque minute via `pg_cron`. `pg_net`
+et `pg_cron`, déjà utilisés par la boutique, doivent être disponibles. Vérifier
+leur disponibilité en recette avant application. Aucun abonnement supplémentaire.
 
-- A Google account.
-- The shop running, with you signed in as the owner.
-- About five minutes.
+## Protocole et reprise
 
----
+- Création, modifications de commande et de lignes, changements de statut, annulation,
+  retour et suivi alimentent une file par couple destination/commande. Les changements
+  rapprochés sont fusionnés. Le worker lit l'état final, y compris les articles et les
+  montants recalculés. Aucun token de suivi privé n'est exporté.
+- HMAC-SHA256 sur **les octets du JSON envoyé par pg_net**. Apps Script ne permet
+  pas de lire les headers : la signature seule passe dans `?sig=`, également dans
+  le header conventionnel `X-OpenStore-Signature`. Le secret reste hors de la requête.
+- Une révision monotone est signée. Le récepteur verrouille le script, recherche
+  `order_id`, puis écrit ou actualise la ligne. Une ancienne révision ou une livraison
+  répétée est acquittée sans écraser une révision plus récente. Français et arabe
+  restent en UTF-8 ; les numéros et révisions sont conservés en texte.
+- Les valeurs de texte pouvant être des formules sont neutralisées. Les noms et
+  commentaires enregistrés dans la boutique ne sont jamais modifiés.
+- Le journal affiche `pending`, `queued`, `succeeded` ou `failed`. `queued` n'est pas
+  une confirmation. Le worker exige un HTTP 2xx et un accusé JSON contenant `ok:true`,
+  le bon `order_id` et la bonne `revision`. Les réponses clientes et signatures ne
+  sont pas enregistrées dans les messages d'erreur.
+- Délai HTTP 10 s ; première vérification après 2 min ; reprise progressive, au plus
+  cinq tentatives par révision. Après échec, la propriétaire peut utiliser Réessayer.
+  Un nouvel état de commande crée une nouvelle révision et recommence les tentatives.
+- Désactiver une destination suspend les envois. Réactiver reprend les tâches en
+  attente ; aucune commande historique n'est exportée rétroactivement à la création
+  d'une destination. Une ancienne réponse tardive ne remplace pas un état récent.
 
-## Step 1. Create the sheet and the script
+Le récepteur crée l'onglet **Commandes Elegancia**. Il refuse un en-tête incompatible.
+Ne supprimez aucune feuille existante pour l'installer : choisissez un nouvel onglet
+ou une nouvelle feuille, ou adaptez le nom dans le script. L'ancien récepteur OpenStore
+sans révision doit être mis à jour avant d'activer cette nouvelle file.
 
-1. Create a new Google Sheet. Name it whatever you like.
-2. In the sheet, open **Extensions → Apps Script**.
-3. Delete whatever is in `Code.gs` and paste the script from
-   [Step 5](#step-5-the-script) below.
-4. Leave `SECRET` as it is for now. You will paste the real value in Step 3.
+## Contrôle avant mise en service
 
-## Step 2. Deploy it as a web app
-
-1. In the Apps Script editor, click **Deploy → New deployment**.
-2. Click the gear next to **Select type** and choose **Web app**.
-3. Set **Execute as** to **Me**.
-4. Set **Who has access** to **Anyone**.
-
-   This is not optional and it is not a hole. The endpoint has to be reachable for
-   the shop to post to it. What protects it is the signature: every request is
-   signed, and the script rejects anything whose signature does not match. The
-   secret never travels in the URL. Without the signature this step really would be
-   a hole, which is why the secret is required before a destination can be added.
-
-5. Click **Deploy**, authorise the script when Google asks, and copy the **Web app
-   URL**. It looks like
-   `https://script.google.com/macros/s/AKfy…/exec`.
-
-## Step 3. Add the destination in the shop
-
-1. In the shop, go to **Settings → Order export**.
-2. Give it a name, paste the Web app URL, and add it.
-3. The shop generates a secret. Copy it.
-
-## Step 4. Paste the secret into the script
-
-Back in the Apps Script editor, replace the `SECRET` line, then
-**Deploy → Manage deployments → Edit → Version: New version → Deploy**. Editing the
-code without redeploying leaves the old version serving requests, which is the most
-common reason a correctly configured export appears to do nothing.
-
----
-
-## Step 5. The script
-
-```javascript
-/**
- * OpenStore DZ order receiver.
- *
- * Writes each order into this spreadsheet, upserting on the order id so that a
- * status change updates the existing row rather than adding a duplicate.
- */
-
-// 1. Paste the secret from Settings -> Order export here.
-const SECRET = "PASTE_YOUR_SECRET_HERE";
-
-// 2. The tab orders are written to. Created if it does not exist.
-const SHEET_NAME = "Orders";
-
-const COLUMNS = [
-  "order_id",
-  "event",
-  "status",
-  "created_at",
-  "customer_name",
-  "phone",
-  "wilaya",
-  "commune",
-  "address",
-  "note",
-  "items",
-  "subtotal",
-  "delivery_fee",
-  "total",
-  "tracking_number",
-  "tracking_url",
-];
-
-function doPost(e) {
-  const body = e.postData.contents;
-
-  // The shop cannot put the signature in a header, because Apps Script does not
-  // expose request headers at all. It arrives as a query parameter instead.
-  if (!verify(body, e.parameter.sig)) {
-    return respond({ ok: false, error: "bad signature" });
-  }
-
-  const payload = JSON.parse(body);
-  const sheet = sheetFor();
-  const row = rowFrom(payload).map(function (value) {
-    // A quoted CSV/JSON string can still be interpreted as a formula by Sheets.
-    return typeof value === "string" && /^[\s\uFEFF]*[=+@-]/.test(value) ? "'" + value : value;
-  });
-  const id = payload.order.id;
-
-  const ids = sheet
-    .getRange(2, 1, Math.max(sheet.getLastRow() - 1, 0), 1)
-    .getValues()
-    .map(function (r) {
-      return r[0];
-    });
-  const at = ids.indexOf(id);
-
-  if (at === -1) {
-    sheet.appendRow(row);
-  } else {
-    sheet.getRange(at + 2, 1, 1, row.length).setValues([row]);
-  }
-
-  return respond({ ok: true, event: payload.event });
-}
-
-/** HMAC-SHA256 over the raw body, hex encoded. Must match the database exactly. */
-function verify(body, signature) {
-  if (!signature) return false;
-  const raw = Utilities.computeHmacSha256Signature(body, SECRET);
-  const expected = raw
-    .map(function (b) {
-      return ((b & 0xff) + 0x100).toString(16).slice(1);
-    })
-    .join("");
-  // A plain comparison, not a constant-time one. Apps Script has no primitive for
-  // that, and the attack it defends against needs thousands of timed requests
-  // against an endpoint that logs nothing, which is not the threat here.
-  return expected === signature;
-}
-
-function sheetFor() {
-  const book = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = book.getSheetByName(SHEET_NAME);
-  if (!sheet) sheet = book.insertSheet(SHEET_NAME);
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(COLUMNS);
-    sheet.getRange(1, 1, 1, COLUMNS.length).setFontWeight("bold");
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
-function rowFrom(payload) {
-  const order = payload.order;
-  const items = (payload.items || [])
-    .map(function (i) {
-      return (
-        i.quantity + " x " + i.product_name + (i.variant_label ? " (" + i.variant_label + ")" : "")
-      );
-    })
-    .join(" | ");
-
-  return [
-    order.id,
-    payload.event,
-    order.status,
-    order.created_at,
-    order.customer_name,
-    order.phone,
-    order.wilaya,
-    order.commune,
-    order.address,
-    order.note,
-    items,
-    order.subtotal,
-    order.delivery_fee,
-    order.total,
-    order.tracking_number,
-    order.tracking_url,
-  ];
-}
-
-function respond(payload) {
-  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(
-    ContentService.MimeType.JSON,
-  );
-}
-```
-
----
-
-## What gets sent
-
-A POST with a JSON body:
-
-```json
-{
-  "event": "created",
-  "sent_at": "2026-10-14T15:02:19Z",
-  "shop": { "name": "My shop", "phone": "+213 555 00 00 00", "whatsapp": "+213 555 00 00 00" },
-  "order": {
-    "id": "5d151305-…",
-    "token": "…",
-    "customer_name": "…",
-    "phone": "0555123456",
-    "wilaya": "Alger",
-    "commune": "Bab El Oued",
-    "address": "…",
-    "note": null,
-    "subtotal": 5000,
-    "delivery_fee": 600,
-    "total": 5600,
-    "status": "pending",
-    "created_at": "…",
-    "confirmed_at": null,
-    "refused_at": null,
-    "refused_reason": null,
-    "shipped_at": null,
-    "delivered_at": null,
-    "carrier": null,
-    "tracking_number": null,
-    "tracking_url": null
-  },
-  "items": [
-    {
-      "product_name": "…",
-      "variant_label": "M / Red",
-      "quantity": 1,
-      "unit_price": 5000,
-      "line_total": 5000
-    }
-  ]
-}
-```
-
-`event` is `created` for a new order and `status_changed` for any later status
-change, so a confirmed or refused order updates its existing row rather than
-appearing twice.
-
-**If your sheet already has data, delete it first.** The script assumes row 1 is its
-own header row and writes from row 2. An existing header row will be duplicated.
-
----
-
-## Why the signature is in the URL
-
-Google Apps Script cannot read request headers. The event object it passes to
-`doPost()` has no `headers` field and never has (Google issue 67764685, open since
-2017). Many webhook providers hit this: ChatWork moved its signature into the query
-string for the same reason.
-
-So the signature arrives as `?sig=<hex>` rather than as a header. It is still an
-HMAC-SHA256 over the whole request body, keyed with your secret, so it proves the
-same thing. The shop also sends the conventional
-`X-OpenStore-Signature: sha256=<hex>` header, for any other receiver that can read
-one: a make.com scenario, a Zapier webhook, your own server.
-
----
-
-## Checking it works
-
-Place a test order on your storefront, then look at the **Recent attempts** list
-under Settings → Order export. `queued` means the shop handed the request off. It
-does not mean the script accepted it, because the request is asynchronous and the
-shop does not wait.
-
-If a row does not appear in the sheet:
-
-1. **Did you redeploy after editing the script?** Manage deployments → Edit → New
-   version. This is the usual cause.
-2. **Is the destination enabled?** The toggle on its card.
-3. **Is the secret the current one?** If you removed and re-added the destination,
-   the new secret must be pasted in again.
-4. **Did the script run at all?** In the Apps Script editor, **Executions** in the
-   sidebar lists every invocation and its outcome.
-5. **For anything else**, the raw delivery outcome is in the database:
-   ```sql
-   select id, status_code, timed_out, error_msg, created
-   from net._http_response order by created desc limit 10;
-   ```
-   Note that this table is pruned after six hours.
+Vérifier le job cron et les extensions en recette, la restriction des accès owner,
+le secret identique, le redéploiement Apps Script et les onglets privés. Tester une
+panne, une reprise et l'arrivée inversée de deux révisions avec des données fictives.
+Le succès des tests locaux ne certifie pas les quotas Google ni un déploiement externe.

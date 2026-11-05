@@ -105,6 +105,8 @@ function SettingsPage() {
       <MarketingCard form={form} set={set} />
       <CommerceCard form={form} set={set} />
       <ExportSettings />
+      <PhoneBlocklist />
     </form>
   );
 }
+import { PhoneBlocklist } from "@/components/admin/phone-blocklist";

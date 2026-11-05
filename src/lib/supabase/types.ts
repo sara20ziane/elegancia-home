@@ -192,6 +192,32 @@ export type Database = {
           },
         ];
       };
+      order_export_jobs: {
+        Row: {
+          id: number;
+          target_id: string;
+          order_id: string;
+          revision: number;
+          event: string;
+          status: string;
+          attempts: number;
+          request_id: number | null;
+          next_attempt_at: string;
+          last_error: string | null;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "order_export_jobs_target_id_fkey";
+            columns: ["target_id"];
+            isOneToOne: false;
+            referencedRelation: "order_export_targets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       order_export_targets: {
         Row: {
           created_at: string;
@@ -224,6 +250,7 @@ export type Database = {
       };
       order_items: {
         Row: {
+          reserved_components: Json;
           created_at: string;
           id: string;
           order_id: string;
@@ -234,6 +261,7 @@ export type Database = {
           variant_label: string | null;
         };
         Insert: {
+          reserved_components?: Json;
           created_at?: string;
           id?: string;
           order_id: string;
@@ -244,6 +272,7 @@ export type Database = {
           variant_label?: string | null;
         };
         Update: {
+          reserved_components?: Json;
           created_at?: string;
           id?: string;
           order_id?: string;
@@ -825,6 +854,34 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_commerce_analytics: {
+        Args: {
+          p_days?: number;
+          p_min_orders?: number;
+          p_from?: string | null;
+          p_to?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_setup_audit: { Args: never; Returns: Json };
+      pack_availability: {
+        Args: { p_product: string };
+        Returns: { variant_id: string; stock: number }[];
+      };
+      retry_order_export: { Args: { p_id: number }; Returns: undefined };
+      admin_commerce_phone_history: {
+        Args: { p_phones: string[] };
+        Returns: {
+          phone: string;
+          orders: number;
+          confirmed: number;
+          refused: number;
+          returned: number;
+          delivered: number;
+          pending: number;
+          blocked: boolean;
+        }[];
+      };
       catalog_generate: { Args: { p: Json }; Returns: string };
       catalog_presets: { Args: { p?: Json }; Returns: Json };
       catalog_apply_common: { Args: { p_product: string; p_patch: Json }; Returns: number };

@@ -115,7 +115,17 @@ async function fetchProduct(slug: string): Promise<CatalogueProduct | null> {
     .eq("status", "published")
     .maybeSingle();
   if (error) throw new Error(error.message);
-  return (data as unknown as CatalogueProduct | null) ?? null;
+  const product = (data as unknown as CatalogueProduct | null) ?? null;
+  if (product?.kind === "pack") {
+    const availability = await getSupabase().rpc("pack_availability", { p_product: product.id });
+    if (availability.error) throw new Error(availability.error.message);
+    const stocks = new Map(availability.data.map((v) => [v.variant_id, v.stock]));
+    product.product_variants = product.product_variants.map((v) => ({
+      ...v,
+      stock: stocks.get(v.id) ?? 0,
+    }));
+  }
+  return product;
 }
 
 async function fetchReviews(productId?: string): Promise<PublicReview[]> {

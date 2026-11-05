@@ -44,6 +44,17 @@ export function OrderDetail({
               <span className="text-xs text-on-surface-muted">
                 {item.variant_label} × {item.quantity}
               </span>
+              {!!item.reserved_components?.length && (
+                <span className="mt-1 block text-xs text-on-surface-muted">
+                  Contenu réservé :{" "}
+                  {item.reserved_components
+                    .map(
+                      (part) =>
+                        `${part.product_name ?? part.variant_id}${part.variant_label ? ` (${part.variant_label})` : ""} × ${part.quantity}`,
+                    )
+                    .join(" · ")}
+                </span>
+              )}
             </span>
             <span className="shrink-0 font-mono text-xs" dir="ltr">
               {formatDzd(item.unit_price * item.quantity, locale)}
@@ -94,6 +105,15 @@ export function OrderDetail({
       )}
 
       <OrderActions order={order} />
+      {history && (
+        <p className="rounded-[10px] bg-surface-mid p-3 text-xs">
+          Historique du numéro : {history.orders} commandes · {history.confirmed} confirmées ·{" "}
+          {history.refused} refusées · {history.returned} retournées · {history.pending} à
+          confirmer.
+          {history.refused >= 2 &&
+            " Refus répétés : vérifiez avec la cliente. Cette alerte ne bloque aucune commande automatiquement."}
+        </p>
+      )}
       <CarrierAction order={order} />
       <OrderFinanceSection orderId={order.id} status={order.status} />
       <DeleteOrderButton order={order} />

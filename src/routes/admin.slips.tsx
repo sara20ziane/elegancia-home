@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Printer } from "lucide-react";
 import { ShippingLabel } from "@/components/admin/shipping-label";
+import { DownloadLabels } from "@/components/admin/download-labels";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
 import { useI18n } from "@/lib/i18n-context";
@@ -55,6 +56,7 @@ function SlipsPage() {
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-semibold">{t("admin.slip.title")}</h1>
         <div className="flex flex-wrap items-center gap-2">
+          <DownloadLabels id={id} format={format} count={list.length} />
           {(["label", "a4"] as const).map((value) => (
             <button
               key={value}
@@ -77,13 +79,20 @@ function SlipsPage() {
           )}
         </div>
       </div>
+      <p className="no-print text-sm text-on-surface-muted">
+        Étiquettes internes Elegancia Home. Conservez le bordereau officiel Packers. En A4, les
+        quatre étiquettes sont adaptées à la page ; le format thermique fait exactement 100 × 150
+        mm.
+      </p>
       {list.length === 0 ? (
         <EmptyState title={t("admin.slip.none")} />
       ) : (
-        <div className={format === "a4" ? "label-sheet-a4" : "label-sheet-roll"} dir="ltr">
-          {list.map((order) => (
-            <ShippingLabel key={order.id} order={order} settings={settings} />
-          ))}
+        <div className="min-w-0 max-w-full overflow-x-auto print:overflow-visible">
+          <div className={format === "a4" ? "label-sheet-a4" : "label-sheet-roll"} dir="ltr">
+            {list.map((order) => (
+              <ShippingLabel key={order.id} order={order} settings={settings} />
+            ))}
+          </div>
         </div>
       )}
     </div>

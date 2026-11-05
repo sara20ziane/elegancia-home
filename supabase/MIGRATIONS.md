@@ -18,3 +18,21 @@ Apply migrations in timestamp order. The first migration creates the complete Op
 ## Existing Production database
 
 Do not replay historical files manually. Supabase already records those versions. Only migrations newer than the latest Production version should be applied.
+
+## Commerce integration, November 2026
+
+The six migrations `20261105102059` through `20261105102147` were applied on
+5 November 2026 to **Elegancia Home**, after explicit owner authorization and
+successful application/verification on **Elegancia Home Test**. Filenames match
+the exact Production migration versions returned by Supabase. Do not replay them.
+
+These changes do not backfill historic stock or change wilayas, delivery rates,
+secrets, or the existing Finance activation state. The legacy dashboard analytics
+RPC remains unchanged so the currently deployed frontend remains compatible.
+
+The Test project's earlier baseline and migration versions differ from Production;
+commerce changes correspond by migration name. No earlier migration was replayed
+and no historical migration record was rewritten. See
+[`docs/MIGRATION_RECEIPT.md`](../docs/MIGRATION_RECEIPT.md) for the correspondence
+and post-application verification, and
+[`docs/OPENSTORE_INTEGRATION.md`](../docs/OPENSTORE_INTEGRATION.md) for feature scope.

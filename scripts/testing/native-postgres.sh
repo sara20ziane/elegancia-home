@@ -119,3 +119,5 @@ PYCOUNT
 finance_docker exec "$finance_container" psql -U postgres -v ON_ERROR_STOP=1 -c \
   "do \$\$ begin if (select count(*) from product_variants where color_name='Concurrent')<>1 or (select count(distinct sku) from product_variants where color_name like 'Concurrent%')<>17 then raise exception 'Concurrent commercial guard or SKU allocation failed'; end if; end \$\$;"
 echo 'PASS: 16 identical concurrent requests: 1 created, 15 explicit commercial conflicts; 16 distinct colours: all created with unique SKUs.'
+
+bash scripts/testing/commerce-concurrency.sh "$finance_container"
