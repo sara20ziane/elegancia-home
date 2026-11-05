@@ -9,7 +9,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, LoadingState } from "@/components/ui/feedback";
 import { setProductCategories, updateProduct, useAdminProduct } from "@/lib/admin-products";
 import { useI18n } from "@/lib/i18n-context";
-import { useProductPicker } from "@/lib/product-picker";
+import { usePackComponentPicker } from "@/lib/product-picker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Save } from "lucide-react";
@@ -27,8 +27,7 @@ function ProductEditPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const { data: product, isPending } = useAdminProduct(id);
-  const { data: allProducts } = useProductPicker();
-  const allVariants = (allProducts ?? []).flatMap((p) => p.product_variants);
+  const allVariants = usePackComponentPicker();
 
   const [draft, setDraft] = useState<ProductDraft | null>(null);
 

@@ -24,7 +24,9 @@ function ReviewsPage() {
   const queryClient = useQueryClient();
   const [showApproved, setShowApproved] = useState(false);
   const [page, setPage] = useState(1);
-  const reviews = useReviewsPage(showApproved, page);
+  const [productId, setProductId] = useState("");
+  const products = useProductPicker();
+  const reviews = useReviewsPage(showApproved, page, productId);
   const counts = useReviewCounts();
 
   const invalidate = () => {
@@ -77,6 +79,23 @@ function ReviewsPage() {
         </div>
       </div>
 
+      <label className="text-sm">
+        Filtrer par produit
+        <Select
+          value={productId}
+          onChange={(e) => {
+            setProductId(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">Tous les produits</option>
+          {products.data?.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </Select>
+      </label>
       {list.length === 0 ? (
         <EmptyState title={t("admin.reviews.empty")} />
       ) : (
@@ -102,3 +121,5 @@ function ReviewsPage() {
     </div>
   );
 }
+import { useProductPicker } from "@/lib/product-picker";
+import { Select } from "@/components/ui/form";

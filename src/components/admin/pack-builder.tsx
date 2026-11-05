@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
+import { getSupabase } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n-context";
 import type { PickerVariant } from "@/lib/product-picker";
 import { fetchPackItems, removePackItem, upsertPackItem, type PackItem } from "@/lib/admin-content";
@@ -13,7 +14,9 @@ import { fetchPackItems, removePackItem, upsertPackItem, type PackItem } from "@
 function label(variant: PickerVariant | undefined): string {
   if (!variant) return "—";
   const parts = [variant.size, variant.color_name].filter(Boolean);
-  return parts.length > 0 ? parts.join(" / ") : variant.id.slice(0, 8);
+  return [variant.product_name, parts.length > 0 ? parts.join(" / ") : variant.id.slice(0, 8)]
+    .filter(Boolean)
+    .join(" — ");
 }
 
 /**
@@ -21,8 +24,7 @@ function label(variant: PickerVariant | undefined): string {
  *
  * A pack is a product whose price is set on its own variants, and whose contents
  * are a list of references to other products' variants. The contents are
- * informational for the buyer and used later to work out what to ship; the price
- * is not derived from them, so a seller can discount a bundle freely.
+ * snapshotted and reserved atomically at checkout. Price remains seller-defined.
  */
 export function PackBuilder({
   productId,
@@ -34,6 +36,14 @@ export function PackBuilder({
 }) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const capacity = useQuery({
+    queryKey: ["pack_capacity", productId],
+    queryFn: async () => {
+      const result = await getSupabase().rpc("pack_availability", { p_product: productId });
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
+    },
+  });
 
   const { data: items } = useQuery({
     queryKey: ["pack_items", productId],
@@ -44,6 +54,9 @@ export function PackBuilder({
     void queryClient.invalidateQueries({ queryKey: ["pack_items", productId] });
     void queryClient.invalidateQueries({ queryKey: ["admin_product", productId] });
     void queryClient.invalidateQueries({ queryKey: ["products"] });
+    void queryClient.invalidateQueries({ queryKey: ["pack_capacity", productId] });
+    void queryClient.invalidateQueries({ queryKey: ["catalogue"] });
+    void queryClient.invalidateQueries({ queryKey: ["product"] });
   };
 
   const save = useMutation({
@@ -64,6 +77,18 @@ export function PackBuilder({
 
   return (
     <div className="flex flex-col gap-4">
+      <p className="text-xs text-on-surface-muted">
+        Le prix global et la réduction se règlent sur les configurations du pack. La disponibilité
+        est limitée par son stock et celui de chaque composant. Seules les nouvelles commandes
+        réservent les composants ; les anciennes réservations restent inchangées.
+      </p>
+      {capacity.isError ? (
+        <p role="alert">Disponibilité du pack non vérifiée.</p>
+      ) : (
+        <p className="text-sm">
+          Stock vendable par configuration : {capacity.data?.map((v) => v.stock).join(" / ") || "0"}
+        </p>
+      )}
       {listed.length === 0 ? (
         <p className="text-sm text-on-surface-muted">{t("admin.pack.empty")}</p>
       ) : (
@@ -79,10 +104,30 @@ export function PackBuilder({
                   </span>
                 </span>
                 <span className="flex items-center gap-3">
-                  <Badge tone="primary">×{item.quantity}</Badge>
+                  <Badge tone="primary">×</Badge>
+                  <Input
+                    aria-label={`Quantité ${label(variant)}`}
+                    className="w-20"
+                    type="number"
+                    min={1}
+                    max={100}
+                    defaultValue={item.quantity}
+                    disabled={save.isPending}
+                    onBlur={(e) => {
+                      const quantity = Number(e.target.value);
+                      if (
+                        Number.isInteger(quantity) &&
+                        quantity >= 1 &&
+                        quantity <= 100 &&
+                        quantity !== item.quantity
+                      )
+                        save.mutate({ variant_id: item.variant_id, quantity });
+                    }}
+                  />
                   <button
                     type="button"
                     onClick={() => remove.mutate(item.id)}
+                    disabled={remove.isPending || save.isPending}
                     aria-label={t("common.delete")}
                     className="text-on-surface-muted hover:text-error"
                   >
@@ -133,6 +178,7 @@ function AddPackItem({
         <Input
           type="number"
           min={1}
+          max={100}
           value={quantity}
           onChange={(event) => setQuantity(event.target.value)}
           dir="ltr"
@@ -142,7 +188,13 @@ function AddPackItem({
       <Button
         type="button"
         variant="secondary"
-        disabled={!variantId || busy}
+        disabled={
+          !variantId ||
+          busy ||
+          !Number.isInteger(Number(quantity)) ||
+          Number(quantity) < 1 ||
+          Number(quantity) > 100
+        }
         onClick={() => {
           onAdd({ variant_id: variantId, quantity: Number(quantity) || 1 });
           setVariantId("");

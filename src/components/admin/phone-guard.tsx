@@ -21,7 +21,7 @@ export function PhoneBadge({ history }: { history: PhoneHistory | undefined }) {
       </Badge>
     );
   }
-  if (history.refused === 0) return null;
+  if (history.refused < 2) return null;
   return (
     <Badge tone="warning">
       <ShieldAlert size={12} aria-hidden="true" />

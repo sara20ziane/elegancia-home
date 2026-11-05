@@ -29,6 +29,7 @@ import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminSlipsRouteImport } from './routes/admin.slips'
 import { Route as AdminWelcomeRouteImport } from './routes/admin.welcome'
+import { Route as ApiShippingLabelsRouteImport } from './routes/api.shipping-labels'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as OrderTokenRouteImport } from './routes/order.$token'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
@@ -136,6 +137,11 @@ const AdminWelcomeRoute = AdminWelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiShippingLabelsRoute = ApiShippingLabelsRouteImport.update({
+  id: '/api/shipping-labels',
+  path: '/api/shipping-labels',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/slips': typeof AdminSlipsRoute
   '/admin/welcome': typeof AdminWelcomeRoute
+  '/api/shipping-labels': typeof ApiShippingLabelsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/order/$token': typeof OrderTokenRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/slips': typeof AdminSlipsRoute
   '/admin/welcome': typeof AdminWelcomeRoute
+  '/api/shipping-labels': typeof ApiShippingLabelsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/order/$token': typeof OrderTokenRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/slips': typeof AdminSlipsRoute
   '/admin/welcome': typeof AdminWelcomeRoute
+  '/api/shipping-labels': typeof ApiShippingLabelsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/order/$token': typeof OrderTokenRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/slips'
     | '/admin/welcome'
+    | '/api/shipping-labels'
     | '/category/$slug'
     | '/order/$token'
     | '/product/$slug'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/slips'
     | '/admin/welcome'
+    | '/api/shipping-labels'
     | '/category/$slug'
     | '/order/$token'
     | '/product/$slug'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/slips'
     | '/admin/welcome'
+    | '/api/shipping-labels'
     | '/category/$slug'
     | '/order/$token'
     | '/product/$slug'
@@ -348,6 +360,7 @@ export interface RootRouteChildren {
   SetupRoute: typeof SetupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackRoute: typeof TrackRoute
+  ApiShippingLabelsRoute: typeof ApiShippingLabelsRoute
   CategorySlugRoute: typeof CategorySlugRoute
   OrderTokenRoute: typeof OrderTokenRoute
   ProductSlugRoute: typeof ProductSlugRoute
@@ -497,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWelcomeRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/shipping-labels': {
+      id: '/api/shipping-labels'
+      path: '/api/shipping-labels'
+      fullPath: '/api/shipping-labels'
+      preLoaderRoute: typeof ApiShippingLabelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -583,6 +603,7 @@ const rootRouteChildren: RootRouteChildren = {
   SetupRoute: SetupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackRoute: TrackRoute,
+  ApiShippingLabelsRoute: ApiShippingLabelsRoute,
   CategorySlugRoute: CategorySlugRoute,
   OrderTokenRoute: OrderTokenRoute,
   ProductSlugRoute: ProductSlugRoute,

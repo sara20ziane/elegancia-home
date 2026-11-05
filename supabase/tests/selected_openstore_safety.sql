@@ -96,7 +96,7 @@ begin
  assert not has_table_privilege('authenticated','public.order_connection_limits','select');
  delete from public.reviews;
  for i in 1..20 loop
-  insert into public.reviews(customer_name,rating,comment,is_approved) values('TEST ONLY',5,'Disposable review',true);
+  insert into public.reviews(customer_name,rating,comment,is_approved) values('TEST ONLY',5,'Disposable review '||i,true);
  end loop;
  assert (select count(*)=20 from public.reviews where not is_approved);
  begin

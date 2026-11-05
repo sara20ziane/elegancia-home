@@ -18,6 +18,7 @@ import { getSupabase } from "./supabase/client";
  * query stays small. If the picker ever needs a price it should say so here.
  */
 export type PickerVariant = {
+  product_name?: string;
   id: string;
   size: string | null;
   color_name: string | null;
@@ -59,4 +60,11 @@ async function fetchProductPicker(): Promise<PickerProduct[]> {
 
 export function useProductPicker() {
   return useQuery({ queryKey: ["product_picker"] as const, queryFn: fetchProductPicker });
+}
+
+export function usePackComponentPicker() {
+  const query = useProductPicker();
+  return (query.data ?? [])
+    .filter((p) => p.kind === "single")
+    .flatMap((p) => p.product_variants.map((v) => ({ ...v, product_name: p.name })));
 }

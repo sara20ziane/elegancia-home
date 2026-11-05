@@ -19,6 +19,11 @@ export type WilayaStat = {
   refused: number;
   /** refused / total, 0 to 1. */
   rate: number;
+  returned: number;
+  cancelled: number;
+  refusedValue: number;
+  deliveredValue: number;
+  eligible: boolean;
 };
 
 type TopProduct = { name: string; units: number; value: number };
@@ -29,28 +34,49 @@ export type Analytics = {
   days: number;
   revenue: RevenueDay[];
   funnel: Record<string, number>;
-  totals: { orders: number; confirmedValue: number; refused: number };
+  totals: {
+    orders: number;
+    confirmedOrders: number;
+    confirmedValue: number;
+    deliveredValue: number;
+    refused: number;
+    returned: number;
+    cancelled: number;
+  };
+  minOrders: number;
+  cashReceived: number | null;
   byWilaya: WilayaStat[];
   topProducts: TopProduct[];
+  slowProducts: TopProduct[];
   lowStock: LowStockRow[];
 };
 
-async function fetchAnalytics(days: number): Promise<Analytics> {
-  const { data, error } = await getSupabase().rpc("admin_analytics", { p_days: days });
+async function fetchAnalytics(
+  days: number,
+  minimum: number,
+  from?: string,
+  to?: string,
+): Promise<Analytics> {
+  const { data, error } = await getSupabase().rpc("admin_commerce_analytics", {
+    p_days: days,
+    p_min_orders: minimum,
+    p_from: from || null,
+    p_to: to || null,
+  });
   if (error) throw new Error(error.message);
   // The RPC is typed as Json, so narrow once here rather than casting at every
   // use site.
   return data as unknown as Analytics;
 }
 
-const analyticsQuery = (days: number) =>
+const analyticsQuery = (days: number, minimum: number, from?: string, to?: string) =>
   queryOptions({
-    queryKey: ["admin_analytics", days] as const,
-    queryFn: () => fetchAnalytics(days),
+    queryKey: ["admin_analytics", days, minimum, from, to] as const,
+    queryFn: () => fetchAnalytics(days, minimum, from, to),
   });
 
-export function useAnalytics(days: number) {
-  return useQuery(analyticsQuery(days));
+export function useAnalytics(days: number, minimum = 3, from?: string, to?: string) {
+  return useQuery(analyticsQuery(days, minimum, from, to));
 }
 
 /** Share of orders that failed to become sales, 0 to 1. */
@@ -68,10 +94,18 @@ export function refusalRate(analytics: Analytics | undefined): number {
  * and it is here rather than in the component so it can be changed in one place
  * once real numbers exist.
  */
-export const WORRYING_REFUSAL_RATE = 0.2;
+const WORRYING_REFUSAL_RATE = 0.2;
 
 export function wilayasToWatch(analytics: Analytics | undefined): WilayaStat[] {
-  return (analytics?.byWilaya ?? []).filter((entry) => entry.rate >= WORRYING_REFUSAL_RATE);
+  return (analytics?.byWilaya ?? []).filter(
+    (entry) => entry.eligible && entry.rate >= WORRYING_REFUSAL_RATE,
+  );
+}
+
+export function averageConfirmedOrder(analytics: Analytics | undefined): number {
+  return analytics?.totals.confirmedOrders
+    ? analytics.totals.confirmedValue / analytics.totals.confirmedOrders
+    : 0;
 }
 
 /** Percentage change between the two halves of the window, or null if unseen. */
@@ -83,6 +117,6 @@ export function revenueTrend(analytics: Analytics | undefined): number | null {
   const sum = (rows: RevenueDay[]) => rows.reduce((total, row) => total + row.value, 0);
   const earlier = sum(days.slice(0, midpoint));
   const later = sum(days.slice(midpoint));
-  if (earlier === 0) return later === 0 ? null : 1;
+  if (earlier === 0) return null;
   return (later - earlier) / earlier;
 }

@@ -10,19 +10,24 @@ export type PhoneHistory = {
   phone: string;
   orders: number;
   refused: number;
+  confirmed: number;
+  returned: number;
+  pending: number;
   delivered: number;
   blocked: boolean;
 };
 
 /** Mirrors `canonical_dz_phone()` so a row can find its own history. */
 export function canonicalPhone(raw: string): string {
-  const p = raw.replace(/[^0-9+]/g, "");
+  const p = raw.replace(/[^0-9+]/g, "").replace(/^00213/, "+213");
   return /^\+?213/.test(p) ? `0${p.replace(/^\+?213/, "")}` : p;
 }
 
 async function fetchHistory(phones: string[]): Promise<Map<string, PhoneHistory>> {
   if (phones.length === 0) return new Map();
-  const { data, error } = await getSupabase().rpc("admin_phone_history", { p_phones: phones });
+  const { data, error } = await getSupabase().rpc("admin_commerce_phone_history", {
+    p_phones: phones,
+  });
   if (error) throw new Error(error.message);
   return new Map(
     ((data ?? []) as PhoneHistory[]).map((row) => [
@@ -32,6 +37,9 @@ async function fetchHistory(phones: string[]): Promise<Map<string, PhoneHistory>
         orders: Number(row.orders),
         refused: Number(row.refused),
         delivered: Number(row.delivered),
+        confirmed: Number(row.confirmed),
+        returned: Number(row.returned),
+        pending: Number(row.pending),
       },
     ]),
   );

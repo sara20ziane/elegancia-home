@@ -56,32 +56,34 @@ function dimensions(source: ImageBitmap | HTMLImageElement): { w: number; h: num
  */
 async function resizeImage(file: File, frame?: ImageFrame): Promise<Blob> {
   const source = await decode(file);
-  const full = dimensions(source);
-  if (full.w * full.h > 50_000_000) {
+  try {
+    const full = dimensions(source);
+    if (full.w * full.h > 50_000_000) {
+      throw new Error("Image dimensions are too large.");
+    }
+    const { sx, sy, cw: w, ch: h } = cropRect(full.w, full.h, frame);
+    const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+    const width = Math.max(1, Math.round(w * scale));
+    const height = Math.max(1, Math.round(h * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("This browser cannot process images.");
+
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(source as CanvasImageSource, sx, sy, w, h, 0, 0, width, height);
+
+    const asWebp = await toBlob(canvas, "image/webp");
+    if (asWebp) return asWebp;
+    const asJpeg = await toBlob(canvas, "image/jpeg");
+    if (asJpeg) return asJpeg;
+
+    throw new Error("This browser cannot encode the image.");
+  } finally {
     if ("close" in source) source.close();
-    throw new Error("Image dimensions are too large.");
   }
-  const { sx, sy, cw: w, ch: h } = cropRect(full.w, full.h, frame);
-  const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
-  const width = Math.max(1, Math.round(w * scale));
-  const height = Math.max(1, Math.round(h * scale));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("This browser cannot process images.");
-
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(source as CanvasImageSource, sx, sy, w, h, 0, 0, width, height);
-  if ("close" in source) source.close();
-
-  const asWebp = await toBlob(canvas, "image/webp");
-  if (asWebp) return asWebp;
-  const asJpeg = await toBlob(canvas, "image/jpeg");
-  if (asJpeg) return asJpeg;
-
-  throw new Error("This browser cannot encode the image.");
 }
 
 function toBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {

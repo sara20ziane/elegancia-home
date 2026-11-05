@@ -1,3 +1,5 @@
+import { ExportAttempts } from "./export-attempts";
+import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, Plus, Trash2 } from "lucide-react";
@@ -10,7 +12,6 @@ import {
   createExportTarget,
   deleteExportTarget,
   listExportTargets,
-  listRecentExports,
   setExportTargetEnabled,
   type ExportTarget,
 } from "@/lib/order-export";
@@ -118,13 +119,17 @@ function ExportTargetRow({
  * screen is on the checkout path.
  */
 export function ExportSettings() {
+  const { role } = useAuth();
+  return role === "owner" ? <OwnerExportSettings /> : null;
+}
+
+function OwnerExportSettings() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
 
   const targets = useQuery({ queryKey: TARGETS_KEY, queryFn: listExportTargets });
-  const log = useQuery({ queryKey: LOG_KEY, queryFn: () => listRecentExports(8) });
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: TARGETS_KEY });
@@ -218,23 +223,7 @@ export function ExportSettings() {
           </Button>
         </div>
 
-        {(log.data ?? []).length > 0 && (
-          <div className="flex flex-col gap-1 border-t border-outline pt-4">
-            <span className="text-xs font-semibold text-on-surface-muted">
-              {t("admin.export.recent")}
-            </span>
-            <ul className="flex flex-col gap-1 text-xs">
-              {(log.data ?? []).map((row) => (
-                <li key={row.id} className="flex items-center justify-between gap-2">
-                  <span className="truncate text-on-surface-muted">{row.label}</span>
-                  <span dir="ltr" className="font-mono text-on-surface-muted">
-                    {row.status}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <ExportAttempts />
       </CardBody>
     </Card>
   );

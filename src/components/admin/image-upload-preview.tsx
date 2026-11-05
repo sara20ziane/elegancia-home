@@ -16,6 +16,8 @@ export function ImageUploadPreview({
   const [url, setUrl] = useState("");
   const [crop, setCrop] = useState(false);
   const [focus, setFocus] = useState(0.5);
+  const [focusX, setFocusX] = useState(0.5);
+  const [unreadable, setUnreadable] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const locked = useRef(false);
@@ -30,7 +32,7 @@ export function ImageUploadPreview({
     setBusy(true);
     setError(false);
     try {
-      await onUpload(crop ? { aspect: GALLERY_ASPECT, focus } : undefined);
+      await onUpload(crop ? { aspect: GALLERY_ASPECT, focus, focusX } : undefined);
     } catch {
       setError(true);
     } finally {
@@ -51,7 +53,11 @@ export function ImageUploadPreview({
           src={url}
           alt={file.name}
           className="aspect-[4/5] w-full rounded-[12px] bg-surface-mid"
-          style={{ objectFit: crop ? "cover" : "contain", objectPosition: `50% ${focus * 100}%` }}
+          onError={() => setUnreadable(true)}
+          style={{
+            objectFit: crop ? "cover" : "contain",
+            objectPosition: `${focusX * 100}% ${focus * 100}%`,
+          }}
         />
       )}
       <label className="flex gap-2 text-sm">
@@ -64,6 +70,22 @@ export function ImageUploadPreview({
         {t("image.crop")}
       </label>
       {!crop && <p className="text-xs text-on-surface-muted">{t("image.full")}</p>}
+      {crop && (
+        <label className="text-sm">
+          {t("image.focus")} ↔
+          <input
+            aria-label={`${t("image.focus")} ↔`}
+            className="w-full"
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={focusX}
+            disabled={busy}
+            onChange={(e) => setFocusX(Number(e.target.value))}
+          />
+        </label>
+      )}
       {crop && (
         <label className="text-sm">
           {t("image.focus")}
@@ -81,7 +103,7 @@ export function ImageUploadPreview({
         </label>
       )}
       <div className="flex gap-2">
-        <Button disabled={busy} onClick={() => void upload()}>
+        <Button disabled={busy || unreadable} onClick={() => void upload()}>
           {t("image.upload")}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={onCancel}>
@@ -89,6 +111,12 @@ export function ImageUploadPreview({
         </Button>
       </div>
       {error && <p role="alert">{t("common.somethingWrong")}</p>}
+      {unreadable && (
+        <p role="alert">
+          Image illisible. Utilisez JPEG, PNG, WebP ou AVIF ; convertissez les fichiers HEIC avant
+          l’envoi.
+        </p>
+      )}
     </section>
   );
 }

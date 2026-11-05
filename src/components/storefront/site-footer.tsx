@@ -138,6 +138,7 @@ export function SiteFooter() {
         <Link to="/livraison" className="font-medium text-primary hover:underline">
           {deliveryLink[locale]}
         </Link>
+        <SourceOffer />
       </div>
 
       {settings?.returns_note && (
@@ -146,5 +147,20 @@ export function SiteFooter() {
         </div>
       )}
     </footer>
+  );
+}
+
+function SourceOffer() {
+  const { locale } = useI18n();
+  return (
+    <a
+      href="https://github.com/sara20ziane/elegancia-home"
+      className="inline-flex min-h-11 items-center text-primary hover:underline"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {locale === "ar" ? "الشفرة المصدرية" : locale === "en" ? "Source code" : "Code source"} ·
+      AGPL-3.0
+    </a>
   );
 }

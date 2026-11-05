@@ -20,6 +20,12 @@ type AdminOrderItem = {
   variant_label: string | null;
   quantity: number;
   unit_price: number;
+  reserved_components?: {
+    variant_id: string;
+    quantity: number;
+    product_name?: string;
+    variant_label?: string | null;
+  }[];
 };
 
 export type AdminOrder = {
@@ -56,7 +62,7 @@ export const ORDER_SELECT = `
   delivery_method, stopdesk_id, stopdesk_name,
   subtotal, delivery_fee, total, status, confirmed_at, refused_at, refused_reason,
   carrier, carrier_status, carrier_status_updated_at, tracking_number, tracking_url, created_at,
-  order_items ( id, product_name, variant_label, quantity, unit_price )
+  order_items ( id, product_name, variant_label, quantity, unit_price, reserved_components )
 `;
 
 /** One page of orders, plus what the pager needs. */
