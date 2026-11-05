@@ -1,3 +1,4 @@
+import { handleCommerce } from "./commerce-admin.mjs";
 import { createServer } from "node:http";
 import { handleCatalogAdmin, testAdminId } from "./catalog-admin.mjs";
 import { nativeTestDatabase } from "./native-database.ts";
@@ -33,6 +34,19 @@ for (const variant of variants)
   );
 await db.query("insert into auth.users(id) values($1);", [testAdminId]);
 await db.query("insert into admin_users(user_id,role) values($1,'owner')", [testAdminId]);
+const shippingFixture = await db.query("select place_order($1::jsonb,$2::jsonb) token", [
+  JSON.stringify({
+    customer_name: "Fixture étiquette",
+    phone: "0555999901",
+    wilaya: "Alger",
+    commune: "Alger Centre",
+    address: "Adresse synthétique étiquette",
+  }),
+  JSON.stringify([{ variant_id: variants[0].id, quantity: 1 }]),
+]);
+await db.query("update orders set status='confirmed' where public_token=$1", [
+  shippingFixture.rows[0].token,
+]);
 let queue = Promise.resolve();
 
 async function handle(req, res) {
@@ -56,6 +70,7 @@ async function handle(req, res) {
     if (raw.length > 100000) return send({ message: "Too large" }, 413);
   }
   const body = raw ? JSON.parse(raw) : {};
+  if (await handleCommerce(db, req, path, body, send, testAdminId)) return;
   if (await handleCatalogAdmin(db, req, path, body, send)) return;
   if (path.endsWith("/rpc/catalogue_page"))
     return send({

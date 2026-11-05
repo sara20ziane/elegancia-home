@@ -25,7 +25,10 @@ jobs:
         check:
           - { name: TypeScript, command: "npm run typecheck" }
           - { name: ESLint, command: "npm run lint -- --max-warnings=0" }
-          - { name: Unit tests, command: "npm test -- --exclude '**/database.test.ts' --maxWorkers=2" }
+          - {
+              name: Unit tests,
+              command: "npm test -- --exclude '**/*database.test.ts' --maxWorkers=2",
+            }
           - { name: Dead code, command: "npm run knip" }
           - { name: Production build, command: "npm run build && npm run check:client-secrets" }
     steps:

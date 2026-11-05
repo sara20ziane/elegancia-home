@@ -18,3 +18,16 @@ Apply migrations in timestamp order. The first migration creates the complete Op
 ## Existing Production database
 
 Do not replay historical files manually. Supabase already records those versions. Only migrations newer than the latest Production version should be applied.
+
+## Commerce integration, November 2026
+
+The six `20261105083853` through `20261105083858` commerce migrations are proposed
+for review, not applied by the integration work. See
+[`docs/OPENSTORE_INTEGRATION.md`](../docs/OPENSTORE_INTEGRATION.md) for scope,
+preservation rules, deployment prerequisites and isolated verification.
+
+Apply them in filename order only after owner validation. They do not backfill
+historic stock, change wilayas or delivery rates, or enable Finance. The phone
+normalization migration rebuilds the existing phone expression index; allow for
+its lock when scheduling the approved change. Verify pg_net/pg_cron and update
+the Apps Script receiver before enabling a Sheets destination.
