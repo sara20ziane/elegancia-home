@@ -60,10 +60,8 @@ begin
 end $$;
 revoke all on function public.admin_commerce_analytics(integer,integer,date,date) from public,anon;
 grant execute on function public.admin_commerce_analytics(integer,integer,date,date) to authenticated;
-create or replace function public.admin_analytics(p_days integer default 30) returns jsonb
-language sql stable security definer set search_path='' as $$
- select public.admin_commerce_analytics(p_days);
-$$;
+-- Leave admin_analytics unchanged for the currently deployed administration.
+-- The new UI uses admin_commerce_analytics after the PR is deployed.
 
 create function public.admin_commerce_phone_history(p_phones text[])
 returns table(phone text,orders bigint,confirmed bigint,refused bigint,returned bigint,delivered bigint,pending bigint,blocked boolean)

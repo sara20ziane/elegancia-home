@@ -1,22 +1,10 @@
--- Preserve Elegancia multi-category filters and all existing catalogue fields.
-create or replace function public.catalogue_page(
-  p_category_slug text default null,
-  p_query text default null,
-  p_sizes text[] default null,
-  p_colors text[] default null,
-  p_min_price int default null,
-  p_max_price int default null,
-  p_in_stock boolean default false,
-  p_sort text default 'newest',
-  p_limit int default 12,
-  p_offset int default 0
-)
-returns jsonb
-language sql
-stable
-security definer
-set search_path = ''
-as $$
+-- Preserve the current Elegancia multi-category and bedding catalogue contract.
+CREATE OR REPLACE FUNCTION public.catalogue_page(p_category_slug text DEFAULT NULL::text, p_query text DEFAULT NULL::text, p_sizes text[] DEFAULT NULL::text[], p_colors text[] DEFAULT NULL::text[], p_min_price integer DEFAULT NULL::integer, p_max_price integer DEFAULT NULL::integer, p_in_stock boolean DEFAULT false, p_sort text DEFAULT 'newest'::text, p_limit integer DEFAULT 12, p_offset integer DEFAULT 0)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
 with matched as (
   select
     p.id,
@@ -27,9 +15,18 @@ with matched as (
     (select max(v.price) from public.product_variants v
       where v.product_id = p.id and v.is_active) as max_price
   from public.products p
-  left join public.categories c on c.id = p.category_id
   where p.status = 'published'
-    and (p_category_slug is null or c.slug = p_category_slug)
+    and (
+      p_category_slug is null
+      or exists (
+        select 1
+        from public.product_categories pc
+        join public.categories c on c.id = pc.category_id
+        where pc.product_id = p.id
+          and c.slug = p_category_slug
+          and c.is_active
+      )
+    )
     and (
       coalesce(trim(p_query), '') = ''
       or not exists (
@@ -108,24 +105,27 @@ select jsonb_build_object(
         'status', p.status,
         'category_id', p.category_id,
         'published_at', p.published_at,
-        -- Card ratings, aggregated here so a grid of twelve does not send twelve
-        -- review requests of its own.
-        'rating_avg', (select round(avg(r.rating)::numeric, 2) from public.reviews r
-                        where r.product_id = p.id and r.is_approved),
-        'rating_count', (select count(*) from public.reviews r
-                          where r.product_id = p.id and r.is_approved),
+        'rating_avg', (select round(avg(r.rating)::numeric, 2) from public.reviews r where r.product_id = p.id and r.is_approved),
+        'rating_count', (select count(*) from public.reviews r where r.product_id = p.id and r.is_approved),
         'categories', case when c.id is null then null else jsonb_build_object(
           'slug', c.slug, 'name', c.name, 'name_fr', c.name_fr
         ) end,
-        -- Only what a card draws: price, sale, stock, order, and one photo. A
-        -- product page fetches everything else itself. Sending every variant's
-        -- every photo made the home page 510 KB of HTML for twelve cards.
         'product_variants', coalesce((
           select jsonb_agg(
             jsonb_build_object(
               'id', v.id,
               'size', v.size,
               'color_name', v.color_name,
+              'color_hex', v.color_hex,
+              'sku', v.sku,
+              'fabric', v.fabric,
+              'fabric_origin', v.fabric_origin,
+              'set_type', v.set_type,
+              'piece_count', v.piece_count,
+              'composition', v.composition,
+              'flat_sheet_size', v.flat_sheet_size,
+              'fitted_sheet_size', v.fitted_sheet_size,
+              'duvet_cover_size', v.duvet_cover_size,
               'price', v.price,
               'compare_at_price', v.compare_at_price,
               'stock', commerce_private.sellable_stock(v.id),
@@ -140,13 +140,11 @@ select jsonb_build_object(
                   limit 1
                 ) then coalesce((
                   select jsonb_agg(jsonb_build_object('id', i.id, 'url', i.url, 'alt', i.alt, 'sort_order', i.sort_order))
-                  from (select * from public.variant_images
-                        where variant_id = v.id order by sort_order limit 1) i
+                  from (select * from public.variant_images where variant_id = v.id order by sort_order limit 1) i
                 ), '[]'::jsonb)
                 else '[]'::jsonb
               end
-            )
-            order by v.sort_order
+            ) order by v.sort_order
           )
           from public.product_variants v
           where v.product_id = p.id and v.is_active
@@ -158,8 +156,6 @@ select jsonb_build_object(
     join public.products p on p.id = page.id
     left join public.categories c on c.id = p.category_id
   ), '[]'::jsonb),
-  -- Facets come from the whole published catalogue, not the filtered page, so the
-  -- filter panel does not empty itself out as the buyer narrows.
   'facets', jsonb_build_object(
     'sizes', coalesce((
       select jsonb_agg(distinct v.size order by v.size)
@@ -185,4 +181,4 @@ select jsonb_build_object(
     ), 0)
   )
 );
-$$;
+$function$;
