@@ -2,13 +2,14 @@
 
 Fonction facultative. Une nouvelle destination est **désactivée**. Les commandes
 fonctionnent sans Google : le checkout écrit une file PostgreSQL et le traitement
-planifié effectue les requêtes après validation de la transaction. Les migrations
-ne sont pas appliquées à la boutique par cette PR.
+planifié effectue les requêtes après validation de la transaction. Les six migrations ont été appliquées le 5 novembre 2026 après validation ; voir
+[MIGRATION_RECEIPT.md](MIGRATION_RECEIPT.md). Ne pas les rejouer.
 
 ## Configuration après validation
 
-1. Faire valider et appliquer uniquement les nouvelles migrations de cette PR
-   selon `supabase/MIGRATIONS.md`. Ne jamais réexécuter `schema.sql` sur la boutique.
+1. Vérifier l’historique selon `supabase/MIGRATIONS.md` : les migrations commerce
+   sont déjà appliquées sur Elegancia Home. Ne pas les rejouer et ne jamais
+   réexécuter `schema.sql` sur la boutique.
 2. Créer une feuille privée dans votre compte Google. Ne pas la publier et ne pas
    activer « toute personne disposant du lien ». Limiter les partages aux personnes
    autorisées à traiter les données clientes.

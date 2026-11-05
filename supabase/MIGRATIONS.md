@@ -21,13 +21,18 @@ Do not replay historical files manually. Supabase already records those versions
 
 ## Commerce integration, November 2026
 
-The six `20261105083853` through `20261105083858` commerce migrations are proposed
-for review, not applied by the integration work. See
-[`docs/OPENSTORE_INTEGRATION.md`](../docs/OPENSTORE_INTEGRATION.md) for scope,
-preservation rules, deployment prerequisites and isolated verification.
+The six migrations `20261105102059` through `20261105102147` were applied on
+5 November 2026 to **Elegancia Home**, after explicit owner authorization and
+successful application/verification on **Elegancia Home Test**. Filenames match
+the exact Production migration versions returned by Supabase. Do not replay them.
 
-Apply them in filename order only after owner validation. They do not backfill
-historic stock, change wilayas or delivery rates, or enable Finance. The phone
-normalization migration rebuilds the existing phone expression index; allow for
-its lock when scheduling the approved change. Verify pg_net/pg_cron and update
-the Apps Script receiver before enabling a Sheets destination.
+These changes do not backfill historic stock or change wilayas, delivery rates,
+secrets, or the existing Finance activation state. The legacy dashboard analytics
+RPC remains unchanged so the currently deployed frontend remains compatible.
+
+The Test project's earlier baseline and migration versions differ from Production;
+commerce changes correspond by migration name. No earlier migration was replayed
+and no historical migration record was rewritten. See
+[`docs/MIGRATION_RECEIPT.md`](../docs/MIGRATION_RECEIPT.md) for the correspondence
+and post-application verification, and
+[`docs/OPENSTORE_INTEGRATION.md`](../docs/OPENSTORE_INTEGRATION.md) for feature scope.
