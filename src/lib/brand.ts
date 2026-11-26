@@ -9,19 +9,19 @@ const copy = {
     category: "Linge de maison",
     description: "Découvrez le linge de maison Cotonia Home, du linge de lit aux plaids et jetées.",
     menu: "Navigation principale",
-    openMenu: "Ouvrir le menu",
+    mobileMenu: "Menu",
   },
   en: {
     category: "Home linens",
     description: "Discover Cotonia Home linens, from bedding to blankets and throws.",
     menu: "Main navigation",
-    openMenu: "Open menu",
+    mobileMenu: "Menu",
   },
   ar: {
     category: "مفروشات الدار",
     description: "اكتشفي مفروشات Cotonia Home، من أطقم الفرش حتى البلايدات وأغطية السرير.",
     menu: "القائمة الرئيسية",
-    openMenu: "افتحي القائمة",
+    mobileMenu: "القائمة",
   },
 } satisfies Record<Locale, Record<string, string>>;
 

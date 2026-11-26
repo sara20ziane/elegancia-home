@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
-import { useState } from "react";
+import { useRef } from "react";
 import { BrandSignature } from "@/components/brand-signature";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -11,13 +11,17 @@ import { useI18n } from "@/lib/i18n-context";
 export function SiteHeader() {
   const { t, locale } = useI18n();
   const { count, openCart } = useCart();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const mobileMenu = useRef<HTMLDetailsElement>(null);
   const copy = brandCopy(locale);
   const links = [
     { to: "/catalogue", label: t("nav.shop") },
     { to: "/livraison", label: t("nav.delivery") },
     { to: "/track", label: t("nav.trackOrder") },
   ] as const;
+
+  function closeMenu() {
+    if (mobileMenu.current) mobileMenu.current.open = false;
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-outline bg-nav-bg/95 backdrop-blur">
@@ -69,46 +73,48 @@ export function SiteHeader() {
               </span>
             )}
           </button>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            className="header-icon inline-flex lg:hidden"
-            aria-controls="mobile-shop-nav"
-            aria-expanded={menuOpen}
-            aria-label={menuOpen ? t("common.close") : copy.openMenu}
+          <details
+            ref={mobileMenu}
+            id="mobile-shop-nav"
+            className="group lg:hidden"
+            suppressHydrationWarning
           >
-            {menuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
-          </button>
-        </div>
-      </div>
-
-      <div
-        id="mobile-shop-nav"
-        hidden={!menuOpen}
-        className="border-t border-outline bg-nav-bg lg:hidden"
-      >
-        <nav className="container-page flex flex-col gap-1 py-3" aria-label={copy.menu}>
-          {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              onClick={() => setMenuOpen(false)}
-              className="rounded-sm px-3 py-3 text-sm font-semibold hover:bg-surface-high"
-              activeProps={{ className: "bg-surface-high text-primary" }}
+            <summary
+              className="header-icon mobile-menu-summary inline-flex list-none"
+              aria-label={copy.mobileMenu}
             >
-              {link.label}
-            </Link>
-          ))}
-          <Link
-            to="/search"
-            onClick={() => setMenuOpen(false)}
-            className="flex items-center gap-2 rounded-sm px-3 py-3 text-sm font-semibold hover:bg-surface-high"
-          >
-            <Search size={17} aria-hidden="true" />
-            {t("nav.search")}
-          </Link>
-          <LocaleSwitcher className="mt-2 sm:hidden" />
-        </nav>
+              <Menu size={18} className="group-open:hidden" aria-hidden="true" />
+              <X size={18} className="hidden group-open:block" aria-hidden="true" />
+            </summary>
+            <nav
+              className="absolute inset-x-0 top-full border-y border-outline bg-nav-bg py-3 shadow-md"
+              aria-label={copy.menu}
+            >
+              <div className="container-page flex flex-col gap-1">
+                {links.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={closeMenu}
+                    className="rounded-sm px-3 py-3 text-sm font-semibold hover:bg-surface-high"
+                    activeProps={{ className: "bg-surface-high text-primary" }}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <Link
+                  to="/search"
+                  onClick={closeMenu}
+                  className="flex items-center gap-2 rounded-sm px-3 py-3 text-sm font-semibold hover:bg-surface-high"
+                >
+                  <Search size={17} aria-hidden="true" />
+                  {t("nav.search")}
+                </Link>
+                <LocaleSwitcher className="mt-2 sm:hidden" />
+              </div>
+            </nav>
+          </details>
+        </div>
       </div>
     </header>
   );

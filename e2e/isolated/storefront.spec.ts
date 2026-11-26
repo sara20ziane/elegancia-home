@@ -32,11 +32,11 @@ test("identité Cotonia, navigation et métadonnées sur mobile et ordinateur", 
     "href",
     "/favicon.svg",
   );
-  const mobileMenu = page.locator('button[aria-controls="mobile-shop-nav"]');
+  const mobileMenu = page.locator("#mobile-shop-nav");
   if (await mobileMenu.isVisible()) {
-    await expect(page.locator("#mobile-shop-nav")).toBeHidden();
-    await mobileMenu.click();
-    await expect(mobileMenu).toHaveAttribute("aria-expanded", "true");
+    await expect(mobileMenu.locator("nav")).toBeHidden();
+    await mobileMenu.locator("summary").click();
+    await expect(mobileMenu).toHaveAttribute("open", "");
   }
   await page.locator('header nav:visible a[href="/livraison"]').click();
   await expect(page).toHaveURL(/\/livraison$/);

@@ -1567,3 +1567,10 @@ html[dir="rtl"] {
     display: block;
   }
 }
+
+.mobile-menu-summary {
+  cursor: pointer;
+}
+.mobile-menu-summary::-webkit-details-marker {
+  display: none;
+}
