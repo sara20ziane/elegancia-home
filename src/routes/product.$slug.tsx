@@ -1,3 +1,4 @@
+import { BRAND_NAME, rebrandStoreCopy } from "@/lib/brand";
 import { ProductDetail } from "@/components/storefront/product-detail";
 import { RelatedProducts } from "@/components/storefront/related-products";
 import { ReviewForm, ReviewList } from "@/components/storefront/reviews";
@@ -34,12 +35,12 @@ export const Route = createFileRoute("/product/$slug")({
   },
   head: ({ loaderData, match }) => {
     const product = loaderData?.product;
-    if (!product) return { meta: [{ title: "Elegancia Home" }] };
+    if (!product) return { meta: [{ title: BRAND_NAME }] };
     const locale = match.context.locale;
     const name = localized(locale, product.name, product.name_fr);
     const description =
-      localized(locale, product.description ?? "", product.description_fr)
-        .trim()
+      rebrandStoreCopy(localized(locale, product.description ?? "", product.description_fr))
+        ?.trim()
         .slice(0, 155) || name;
     const url = canonicalUrl(`/product/${product.slug}`);
     const image = absoluteUrl(productImage(product));
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/product/$slug")({
       description,
       url,
       ...(image ? { image: [image] } : {}),
-      brand: { "@type": "Brand", name: "Elegancia Home" },
+      brand: { "@type": "Brand", name: BRAND_NAME },
       ...(range
         ? {
             offers: {
@@ -82,12 +83,12 @@ export const Route = createFileRoute("/product/$slug")({
 
     return {
       meta: [
-        { title: `${name} | Elegancia Home` },
+        { title: `${name} | ${BRAND_NAME}` },
         { name: "description", content: description },
         { property: "og:title", content: name },
         { property: "og:description", content: description },
         { property: "og:type", content: "product" },
-        { property: "og:site_name", content: "Elegancia Home" },
+        { property: "og:site_name", content: BRAND_NAME },
         { property: "og:url", content: url },
         ...(image ? [{ property: "og:image", content: image }] : []),
         ...(range

@@ -1,3 +1,4 @@
+import { rebrandStoreCopy } from "@/lib/brand";
 import { trackEcommerce } from "@/lib/analytics-events";
 import {
   beddingChoiceForVariant,
@@ -63,9 +64,11 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
     legacyChoice,
   } = useProductChoices(product);
   const rating = reviews ? averageRating(reviews) : null;
-  const description = product.description
-    ? localized(locale, product.description, product.description_fr)
-    : product.description_fr;
+  const description = rebrandStoreCopy(
+    product.description
+      ? localized(locale, product.description, product.description_fr)
+      : product.description_fr,
+  );
   const name = localized(locale, product.name, product.name_fr);
   const galleryAlt = bedding
     ? [name, beddingChoice.colour, beddingChoice.fabric, beddingChoice.setType]
@@ -89,7 +92,7 @@ export function ProductDetail({ product }: { product: CatalogueProduct }) {
 
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <h1 className="font-display text-2xl font-semibold sm:text-3xl">{name}</h1>
+          <h1 className="font-display text-3xl font-semibold text-primary sm:text-4xl">{name}</h1>
           {reviews && reviews.length > 0 && (
             <span className="flex items-center gap-2">
               <StarRating value={rating ?? 0} />

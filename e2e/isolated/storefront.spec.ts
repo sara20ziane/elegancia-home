@@ -15,6 +15,34 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
+test("identité Cotonia, navigation et métadonnées sur mobile et ordinateur", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle(/Cotonia Home/);
+  const signature = page.locator("header").getByRole("img", { name: "Cotonia Home" });
+  await expect(signature).toHaveAttribute("src", "/brand/cotonia-horizontal.svg");
+  await expect
+    .poll(() => signature.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#6B2F3A");
+  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute(
+    "content",
+    "Cotonia Home",
+  );
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute(
+    "href",
+    "/favicon.svg",
+  );
+  const mobileMenu = page.locator('button[aria-controls="mobile-shop-nav"]');
+  if (await mobileMenu.isVisible()) {
+    await expect(page.locator("#mobile-shop-nav")).toBeHidden();
+    await mobileMenu.click();
+    await expect(mobileMenu).toHaveAttribute("aria-expanded", "true");
+  }
+  await page.locator('header nav:visible a[href="/livraison"]').click();
+  await expect(page).toHaveURL(/\/livraison$/);
+  await noOverflow(page);
+});
+
 test("homepage, catalogue, variante, panier, validation, livraison et commande COD", async ({
   page,
 }, info) => {
@@ -35,7 +63,7 @@ test("homepage, catalogue, variante, panier, validation, livraison et commande C
   );
   await expect(page.locator(".gallery-main img").first()).toHaveAttribute(
     "alt",
-    /Vert sauge.*Elegancia Home/,
+    /Vert sauge.*Cotonia Home/,
   );
   await noOverflow(page);
   await page.getByRole("button", { name: /أضف إلى السلة/ }).click();
@@ -91,6 +119,7 @@ test("canonical, Product JSON-LD et cartes sociales préservés", async ({ page 
   );
   const json = await page.locator('script[type="application/ld+json"]').textContent();
   const product = JSON.parse(json!);
+  expect(product.brand.name).toBe("Cotonia Home");
   expect(product.offers.priceCurrency).toBe("DZD");
   expect(product.offers.offers).toHaveLength(2);
   expect(product.offers.availability).toBe("https://schema.org/InStock");

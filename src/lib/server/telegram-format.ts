@@ -50,7 +50,7 @@ export function formatNewOrder(order: TelegramOrder): string {
     hour12: false,
   }).format(new Date(order.created_at));
   return [
-    "🛍️ NOUVELLE COMMANDE — ELEGANCIA HOME",
+    "🛍️ NOUVELLE COMMANDE — COTONIA HOME",
     "",
     "👤 CLIENTE",
     `Nom : ${label(order.customer_name)}`,
@@ -88,7 +88,7 @@ export function formatNewOrder(order: TelegramOrder): string {
 
 export function formatPackersParcel(order: TelegramParcel): string {
   return [
-    "📦 COLIS PACKERS CRÉÉ — ELEGANCIA HOME",
+    "📦 COLIS PACKERS CRÉÉ — COTONIA HOME",
     "",
     `👤 ${label(order.customer_name)}`,
     `📞 ${label(order.phone)}`,

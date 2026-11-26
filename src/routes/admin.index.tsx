@@ -148,7 +148,7 @@ function DashboardStats({ data, queueCount }: { data: Analytics | undefined; que
       <StatTile
         label="CA livré · collecté par le transporteur"
         value={formatDzd(data?.totals.deliveredValue ?? 0, locale)}
-        hint="Ne prouve pas le reversement à Elegancia."
+        hint="Ne prouve pas le reversement à Cotonia Home."
       />
       <StatTile
         label="Encaissements boutique · nets de frais"

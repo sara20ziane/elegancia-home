@@ -43,7 +43,7 @@ export const frAdmin = {
   "admin.settings.commerce": "Règles de vente",
   "admin.settings.packersManaged": "Livraison gérée par Packers / EcoTrack",
   "admin.settings.packersManagedHint":
-    "Départ Alger. Les tarifs domicile et Stop Desk viennent de Packers. Offre Elegancia : 2 parures = Stop Desk offert · 3 parures = livraison à domicile offerte.",
+    "Départ Alger. Les tarifs domicile et Stop Desk viennent de Packers. Offre Cotonia Home : dès 2 parures, le Stop Desk est offert. Dès 3 parures, la livraison est offerte à domicile ou en Stop Desk.",
   "admin.settings.deliveryFee": "Frais de livraison",
   "admin.settings.returnsDays": "Délai de retour (jours)",
   "admin.settings.saved": "Paramètres enregistrés",

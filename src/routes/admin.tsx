@@ -3,14 +3,22 @@ import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
 import { UpdateNotices } from "@/components/admin/update-notices";
 import { OrderNotifications } from "@/components/admin/order-notifications";
+import { BrandSignature } from "@/components/brand-signature";
+import { BRAND_NAME } from "@/lib/brand";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/feedback";
 import { useAuth } from "@/lib/auth";
+import { translate } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "لوحة التحكم" }, { name: "robots", content: "noindex" }] }),
+  head: ({ match }) => ({
+    meta: [
+      { title: `${translate(match.context.locale, "admin.dashboard.title")} | ${BRAND_NAME}` },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: AdminLayout,
 });
 
@@ -101,7 +109,7 @@ function AdminLayout() {
           >
             <Menu size={18} aria-hidden="true" />
           </button>
-          <span className="truncate font-display font-semibold">{t("admin.dashboard.title")}</span>
+          <BrandSignature />
         </div>
 
         <main className="container-page py-6 sm:py-8">

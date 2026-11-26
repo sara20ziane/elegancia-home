@@ -1,6 +1,8 @@
 import "@tanstack/react-start/server-only";
 import { generate } from "@pdfme/generator";
 import { text, table, image } from "@pdfme/schemas";
+import { BRAND_NAME } from "../brand";
+import cotoniaLogo from "./assets/cotonia-horizontal.png?inline";
 import documentFont from "./assets/EleganciaDocument-Regular.ttf?inline";
 import type { InvoicePayload } from "./types";
 
@@ -39,9 +41,11 @@ function label(
 }
 
 export function invoiceTemplate(doc: InvoicePayload, logo?: string): Template {
-  if (doc.renderer_version !== "elegancia-a4-v1" || !doc.items.length)
+  const cotonia = doc.renderer_version === "cotonia-a4-v2";
+  if ((!cotonia && doc.renderer_version !== "elegancia-a4-v1") || !doc.items.length)
     throw new Error("Version de document invalide.");
   const issuer = doc.issuer;
+  const accent = cotonia ? "#6B2F3A" : invoiceColor(issuer.brand_color);
   const rows = doc.items.map((item) => [
     item.name,
     item.sku || "—",
@@ -105,18 +109,18 @@ export function invoiceTemplate(doc: InvoicePayload, logo?: string): Template {
         fontName: "Document",
         fontSize: 8,
         padding: { top: 2, right: 2, bottom: 2, left: 2 },
-        borderColor: "#E5DDD4",
+        borderColor: cotonia ? "#C2A997" : "#E5DDD4",
         fontColor: "#302B27",
-        alternateBackgroundColor: "#F8F5F1",
+        alternateBackgroundColor: cotonia ? "#F7F3EA" : "#F8F5F1",
       },
       headStyles: {
         ...table.propPanel.defaultSchema.headStyles,
         fontName: "Document",
         fontSize: 8,
         padding: { top: 2, right: 2, bottom: 2, left: 2 },
-        borderColor: invoiceColor(issuer.brand_color),
-        backgroundColor: invoiceColor(issuer.brand_color),
-        fontColor: "#FFFFFF",
+        borderColor: accent,
+        backgroundColor: accent,
+        fontColor: cotonia ? "#F7F3EA" : "#FFFFFF",
       },
     },
     label(
@@ -142,21 +146,35 @@ export function invoiceTemplate(doc: InvoicePayload, logo?: string): Template {
     label("total", `TOTAL : ${money(doc.total)}`, 100, 169, 95, 15, 17),
     label("reason", doc.reason || "", 15, 188, 180, 15, 9),
     label("legal", legal, 15, 211, 180, 20, 8),
-    label("footer", "Elegancia Home · DZD / DA", 15, 235, 180, 8, 8),
+    label("footer", `${cotonia ? BRAND_NAME : "Elegancia Home"} · DZD / DA`, 15, 235, 180, 8, 8),
   ];
-  if (logo) {
-    schemas[0] = {
-      ...image.propPanel.defaultSchema,
-      name: "logo",
-      type: "image",
-      readOnly: true,
-      content: logo,
-      position: { x: 15, y: 12 },
-      width: 48,
-      height: 19,
-    };
+  if (cotonia) {
+    schemas[0] = logoOnInvoice("brand", cotoniaLogo, 15, 12, 50, 17);
+    if (logo) schemas.push(logoOnInvoice("issuer-logo", logo, 76, 12, 31, 17));
+  } else if (logo) {
+    schemas[0] = logoOnInvoice("logo", logo, 15, 12, 48, 19);
   }
   return { basePdf: { width: 210, height: 297, padding: [12, 15, 15, 15] }, schemas: [schemas] };
+}
+
+function logoOnInvoice(
+  name: string,
+  content: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): Schema {
+  return {
+    ...image.propPanel.defaultSchema,
+    name,
+    type: "image",
+    readOnly: true,
+    content,
+    position: { x, y },
+    width,
+    height,
+  };
 }
 
 export async function renderInvoicePdf(doc: InvoicePayload, logo?: string): Promise<Uint8Array> {

@@ -1,3 +1,4 @@
+import { BRAND_NAME, rebrandStoreCopy } from "@/lib/brand";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { StoreLayout } from "@/components/storefront/store-layout";
 import { CatalogueView } from "@/components/storefront/catalogue-view";
@@ -20,10 +21,11 @@ export const Route = createFileRoute("/category/$slug")({
   },
   head: ({ loaderData, match }) => {
     const category = loaderData?.category;
-    if (!category) return { meta: [{ title: "Elegancia Home" }] };
+    if (!category) return { meta: [{ title: BRAND_NAME }] };
     const name = localized(match.context.locale, category.name, category.name_fr);
-    const title = `${name} | Elegancia Home`;
-    const description = category.description?.trim() || `${name} — collection Elegancia Home.`;
+    const title = `${name} | ${BRAND_NAME}`;
+    const description =
+      rebrandStoreCopy(category.description)?.trim() || `${name} — collection ${BRAND_NAME}.`;
     const url = canonicalUrl(`/category/${category.slug}`);
     return {
       meta: [
@@ -32,7 +34,7 @@ export const Route = createFileRoute("/category/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
-        { property: "og:site_name", content: "Elegancia Home" },
+        { property: "og:site_name", content: BRAND_NAME },
         { property: "og:url", content: url },
         { name: "twitter:card", content: "summary" },
       ],
@@ -58,7 +60,7 @@ function CategoryPage() {
       <div className="container-page py-10">
         <CatalogueView
           heading={heading}
-          subheading={category.description ?? undefined}
+          subheading={rebrandStoreCopy(category.description) ?? undefined}
           initialFilters={{ ...EMPTY_FILTERS, categorySlug: category.slug }}
         />
 

@@ -10,20 +10,20 @@ const copy = {
   fr: {
     title: "Livraison",
     intro:
-      "Elegancia Home expédie avec Packers / EcoTrack. Les tarifs affichés ci-dessous sont synchronisés depuis Packers et peuvent être actualisés sans modifier le site.",
+      "Cotonia Home expédie avec Packers / EcoTrack. Les tarifs affichés ci-dessous sont synchronisés depuis Packers et peuvent être actualisés sans modifier le site.",
     origin: "Départ Alger",
-    originBody: "Toutes les expéditions Elegancia Home partent d’Alger.",
+    originBody: "Toutes les expéditions Cotonia Home partent d’Alger.",
     home: "Livraison à domicile",
     homeBody: "Le tarif dépend de la wilaya de destination.",
     stop: "Stop Desk Packers",
     stopBody:
       "Disponible uniquement dans les communes indiquées par Packers. Si la commune choisie n’a pas de Stop Desk, cette option est automatiquement désactivée au checkout.",
-    offer: "Offre livraison Elegancia",
+    offer: "Offre livraison Cotonia Home",
     offerBody:
-      "2 parures achetées : livraison Stop Desk offerte · 3 parures achetées ou plus : livraison à domicile offerte.",
+      "Dès 2 parures, le Stop Desk est offert. Dès 3 parures, la livraison est offerte à domicile ou en Stop Desk.",
     rates: "Tarifs Packers actuellement synchronisés",
     rateNote:
-      "Les montants ci-dessous sont les tarifs de base. Une offre Elegancia éligible est appliquée automatiquement au checkout.",
+      "Les montants ci-dessous sont les tarifs de base. Une offre Cotonia Home éligible est appliquée automatiquement au checkout.",
     wilaya: "Wilaya",
     homeCol: "Domicile",
     stopCol: "Stop Desk",
@@ -37,20 +37,20 @@ const copy = {
   en: {
     title: "Delivery",
     intro:
-      "Elegancia Home ships with Packers / EcoTrack. The rates below are synchronized from Packers and can be refreshed without changing the site.",
+      "Cotonia Home ships with Packers / EcoTrack. The rates below are synchronized from Packers and can be refreshed without changing the site.",
     origin: "Dispatch from Algiers",
-    originBody: "All Elegancia Home parcels are dispatched from Algiers.",
+    originBody: "All Cotonia Home parcels are dispatched from Algiers.",
     home: "Home delivery",
     homeBody: "The rate depends on the destination wilaya.",
     stop: "Packers Stop Desk",
     stopBody:
       "Available only in communes supported by Packers. If the selected commune has no Stop Desk, this option is automatically disabled at checkout.",
-    offer: "Elegancia delivery offer",
+    offer: "Cotonia Home delivery offer",
     offerBody:
-      "Buy 2 bedding sets: free Stop Desk delivery · Buy 3 or more bedding sets: free home delivery.",
+      "Free Stop Desk delivery on 2 or more bedding sets. Free home or Stop Desk delivery on 3 or more.",
     rates: "Currently synchronized Packers rates",
     rateNote:
-      "These are the base rates. Any eligible Elegancia offer is applied automatically at checkout.",
+      "These are the base rates. Any eligible Cotonia Home offer is applied automatically at checkout.",
     wilaya: "Wilaya",
     homeCol: "Home",
     stopCol: "Stop Desk",
@@ -64,20 +64,20 @@ const copy = {
   ar: {
     title: "التوصيل",
     intro:
-      "تعتمد Elegancia Home على Packers / EcoTrack. الأسعار أدناه متزامنة مباشرة مع Packers ويمكن تحديثها دون تغيير الموقع.",
+      "تعتمد Cotonia Home على Packers / EcoTrack. الأسعار أدناه متزامنة مباشرة مع Packers ويمكن تحديثها دون تغيير الموقع.",
     origin: "الانطلاق من الجزائر",
-    originBody: "كل شحنات Elegancia Home تنطلق من الجزائر العاصمة.",
+    originBody: "كل شحنات Cotonia Home تنطلق من الجزائر العاصمة.",
     home: "التوصيل إلى المنزل",
     homeBody: "السعر يختلف حسب ولاية الوجهة.",
     stop: "Packers Stop Desk",
     stopBody:
       "متوفر فقط في البلديات التي تحددها Packers. إذا لم يوجد Stop Desk في البلدية المختارة، يتم تعطيل الخيار تلقائياً عند الطلب.",
-    offer: "عرض التوصيل من Elegancia",
+    offer: "عرض التوصيل من Cotonia Home",
     offerBody:
-      "عند شراء طقمين: Stop Desk مجاني · عند شراء 3 أطقم أو أكثر: التوصيل إلى المنزل مجاني.",
+      "من زوج أطقم، التوصيل لـ Stop Desk مجاني. من 3 أطقم، التوصيل للدار ولا لـ Stop Desk مجاني.",
     rates: "أسعار Packers المتزامنة حالياً",
     rateNote:
-      "هذه هي الأسعار الأساسية. إذا كان الطلب مؤهلاً لعرض Elegancia يتم تطبيق المجانية تلقائياً عند إتمام الطلب.",
+      "هذه هي الأسعار الأساسية. إذا كان الطلب مؤهلاً لعرض Cotonia Home يتم تطبيق المجانية تلقائياً عند إتمام الطلب.",
     wilaya: "الولاية",
     homeCol: "المنزل",
     stopCol: "Stop Desk",
@@ -91,7 +91,7 @@ const copy = {
 
 export const Route = createFileRoute("/livraison")({
   head: ({ match }) => ({
-    meta: [{ title: `${copy[match.context.locale].title} — Elegancia Home` }],
+    meta: [{ title: `${copy[match.context.locale].title} — Cotonia Home` }],
   }),
   component: DeliveryInfoPage,
 });
@@ -104,7 +104,7 @@ function DeliveryInfoPage() {
 
   return (
     <StoreLayout>
-      <main className="container-page py-10 sm:py-14">
+      <div className="container-page py-10 sm:py-14">
         <div className="mx-auto max-w-4xl">
           <span className="section-label">Packers · EcoTrack</span>
           <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
@@ -144,7 +144,7 @@ function DeliveryInfoPage() {
               </div>
             ) : (
               <div className="overflow-hidden rounded-[16px] border border-outline bg-surface">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" role="region" aria-label={c.rates} tabIndex={0}>
                   <table className="w-full min-w-[520px] text-sm">
                     <thead className="bg-surface-mid text-start text-xs uppercase tracking-wide text-on-surface-muted">
                       <tr>
@@ -159,10 +159,10 @@ function DeliveryInfoPage() {
                           <td className="px-4 py-3 font-medium">
                             {wilayaLabel(zone.wilaya, locale)}
                           </td>
-                          <td className="px-4 py-3 text-end font-mono" dir="ltr">
+                          <td className="px-4 py-3 text-end tabular-nums" dir="ltr">
                             {formatDzd(zone.fee, locale)}
                           </td>
-                          <td className="px-4 py-3 text-end font-mono" dir="ltr">
+                          <td className="px-4 py-3 text-end tabular-nums" dir="ltr">
                             {zone.stopdesk_fee === null
                               ? c.unavailable
                               : formatDzd(zone.stopdesk_fee, locale)}
@@ -187,7 +187,7 @@ function DeliveryInfoPage() {
             </div>
           </section>
         </div>
-      </main>
+      </div>
     </StoreLayout>
   );
 }

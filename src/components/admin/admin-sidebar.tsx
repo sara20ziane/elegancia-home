@@ -13,6 +13,7 @@ import {
   Receipt,
   X,
 } from "lucide-react";
+import { BrandSignature } from "@/components/brand-signature";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth";
@@ -76,8 +77,7 @@ export function AdminSidebar({
             onClick={onNavigate}
             className="admin-sidebar-brand flex min-w-0 items-center gap-2 font-display font-semibold"
           >
-            <Store size={18} className="shrink-0 text-primary" aria-hidden="true" />
-            <span className="truncate">{t("admin.dashboard.title")}</span>
+            <BrandSignature />
           </Link>
 
           <button

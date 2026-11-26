@@ -19,7 +19,7 @@ export function configurationChecks(settings: StoreSettings | null, audit: Setup
       ok: !!settings && !gaps.has("name"),
       to: "/admin/settings" as const,
     },
-    { label: "Logo", ok: !!settings?.logo_url, to: "/admin/settings" as const },
+    { label: "Logo Cotonia Home", ok: !!settings, to: "/admin/settings" as const },
     {
       label: "Coordonnées de contact",
       ok: !!settings && !gaps.has("phone") && !!(settings.address_fr || settings.address)?.trim(),

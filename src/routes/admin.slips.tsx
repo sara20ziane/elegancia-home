@@ -80,9 +80,8 @@ function SlipsPage() {
         </div>
       </div>
       <p className="no-print text-sm text-on-surface-muted">
-        Étiquettes internes Elegancia Home. Conservez le bordereau officiel Packers. En A4, les
-        quatre étiquettes sont adaptées à la page ; le format thermique fait exactement 100 × 150
-        mm.
+        Étiquettes internes Cotonia Home. Conservez le bordereau officiel Packers. En A4, les quatre
+        étiquettes sont adaptées à la page ; le format thermique fait exactement 100 × 150 mm.
       </p>
       {list.length === 0 ? (
         <EmptyState title={t("admin.slip.none")} />

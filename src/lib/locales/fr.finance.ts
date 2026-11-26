@@ -103,7 +103,7 @@ export const frFinance = {
   "finance.receipt_path": "Justificatif photo ou PDF",
   "finance.orders": "Commandes",
   "finance.selectOrders": "Sélectionnez les commandes livrées concernées",
-  "finance.attest": "J’atteste la réception effective des fonds par Elegancia.",
+  "finance.attest": "J’atteste la réception effective des fonds par Cotonia Home.",
   "finance.prepare": "Préparer une facture brouillon",
   "finance.issue": "Émettre la facture",
   "finance.download": "Télécharger la facture",

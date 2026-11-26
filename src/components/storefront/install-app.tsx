@@ -6,9 +6,9 @@ type InstallEvent = Event & {
   userChoice: Promise<{ outcome: string }>;
 };
 const copy = {
-  fr: ["Installer Elegancia Home", "Sur iPhone : Partager → Sur l’écran d’accueil.", "Plus tard"],
+  fr: ["Installer Cotonia Home", "Sur iPhone : Partager → Sur l’écran d’accueil.", "Plus tard"],
   ar: ["تثبيت إليغانسيا هوم", "على آيفون: مشاركة ← إضافة إلى الشاشة الرئيسية.", "لاحقًا"],
-  en: ["Install Elegancia Home", "On iPhone: Share → Add to Home Screen.", "Later"],
+  en: ["Install Cotonia Home", "On iPhone: Share → Add to Home Screen.", "Later"],
 };
 export function InstallApp() {
   const { locale } = useI18n();

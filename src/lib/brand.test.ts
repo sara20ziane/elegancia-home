@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { brandCss, textOn } from "./brand";
+import { rebrandStoreCopy } from "./brand";
 
-describe("brand colour", () => {
-  it("puts readable text on light and dark brands", () => {
-    expect(textOn("#f5d90a")).toBe("#111111");
-    expect(textOn("#1c2a4a")).toBe("#ffffff");
-  });
-
-  it("refuses anything that is not a plain hex colour", () => {
-    expect(brandCss("red;}body{display:none")).toBeNull();
-    expect(brandCss(null)).toBeNull();
-    expect(brandCss("#c2410c")).toContain("--primary:#c2410c");
+describe("rebrandStoreCopy", () => {
+  it("updates the brand in editorial content without changing the surrounding text", () => {
+    expect(rebrandStoreCopy("Offre ELEGANCIA HOME : 2 parures = Stop Desk offert")).toBe(
+      "Offre Cotonia Home : 2 parures = Stop Desk offert",
+    );
+    expect(rebrandStoreCopy("أهلا بيك في Elegancia")).toBe("أهلا بيك في Cotonia Home");
+    expect(rebrandStoreCopy(null)).toBeNull();
   });
 });

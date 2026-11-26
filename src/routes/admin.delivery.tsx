@@ -93,7 +93,7 @@ function CarrierCard() {
         <div className="rounded-[12px] border border-outline bg-surface-mid px-4 py-3 text-sm">
           <p className="font-medium">Départ fixe : Alger (16)</p>
           <p className="mt-1 text-xs text-on-surface-muted">
-            Les tarifs domicile et Stop Desk affichés par Elegancia proviennent exclusivement de
+            Les tarifs domicile et Stop Desk affichés par Cotonia Home proviennent exclusivement de
             Packers.
           </p>
         </div>

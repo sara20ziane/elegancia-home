@@ -10,7 +10,7 @@ import type { Database } from "./types";
  */
 
 const MISSING_ENV_MESSAGE =
-  "OpenStore is missing its Supabase configuration. Copy .env.example to .env and fill in " +
+  "Cotonia Home is missing its Supabase configuration. Copy .env.example to .env and fill in " +
   "VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY, then restart the dev server. " +
   "If you are setting this up with an AI agent, run the setup prompt in the README.";
 

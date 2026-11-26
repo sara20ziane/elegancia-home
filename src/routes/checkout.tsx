@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "@/lib/brand";
 import { OrderPlaced } from "@/components/orders/order-placed";
 import { AddressFields, CheckoutSummary, CodNotice } from "@/components/storefront/checkout-panels";
 import { DeliveryChoice } from "@/components/storefront/delivery-choice";
@@ -19,7 +20,7 @@ import { useState } from "react";
 export const Route = createFileRoute("/checkout")({
   head: ({ match }) => ({
     meta: [
-      { title: translate(match.context.locale, "checkout.title") },
+      { title: `${translate(match.context.locale, "checkout.title")} | ${BRAND_NAME}` },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -76,22 +77,14 @@ function CheckoutPage() {
             <div className="flex items-start gap-3 rounded-[14px] border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
               <Gift size={18} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
               <div>
-                <p className="font-medium text-on-surface">Offre livraison Elegancia</p>
-                {parureQuantity >= 3 ? (
-                  <p className="mt-1 text-on-surface-muted">
-                    Livraison offerte à domicile ou en Stop Desk pour vos {parureQuantity} parures.
-                  </p>
-                ) : parureQuantity >= 2 ? (
-                  <p className="mt-1 text-on-surface-muted">
-                    Livraison Stop Desk offerte. Ajoutez encore 1 parure pour profiter aussi de la
-                    livraison à domicile gratuite.
-                  </p>
-                ) : (
-                  <p className="mt-1 text-on-surface-muted">
-                    2 parures achetées : Stop Desk offert · 3 parures achetées : livraison à
-                    domicile offerte.
-                  </p>
-                )}
+                <p className="font-semibold text-on-surface">{t("checkout.offerTitle")}</p>
+                <p className="mt-1 text-on-surface-muted">
+                  {parureQuantity >= 3
+                    ? t("checkout.offerHome", { count: parureQuantity })
+                    : parureQuantity >= 2
+                      ? t("checkout.offerStopDesk")
+                      : t("checkout.offerThresholds")}
+                </p>
               </div>
             </div>
 

@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "@/lib/brand";
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
@@ -10,7 +11,9 @@ import { SavedOrders } from "@/components/orders/saved-orders";
 import { isTokenShaped } from "@/lib/order";
 
 export const Route = createFileRoute("/track")({
-  head: ({ match }) => ({ meta: [{ title: translate(match.context.locale, "order.title") }] }),
+  head: ({ match }) => ({
+    meta: [{ title: `${translate(match.context.locale, "order.title")} | ${BRAND_NAME}` }],
+  }),
   component: TrackPage,
 });
 

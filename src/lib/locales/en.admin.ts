@@ -43,7 +43,7 @@ export const enAdmin = {
   "admin.settings.commerce": "Selling rules",
   "admin.settings.packersManaged": "Delivery managed by Packers / EcoTrack",
   "admin.settings.packersManagedHint":
-    "Dispatch is always from Algiers. Home and Stop Desk rates come from Packers. Elegancia offer: 2 bedding sets = free Stop Desk · 3 bedding sets = free home delivery.",
+    "Dispatch is always from Algiers. Home and Stop Desk rates come from Packers. Cotonia Home offer: free Stop Desk delivery on 2 or more bedding sets. Free home or Stop Desk delivery on 3 or more.",
   "admin.settings.deliveryFee": "Delivery fee",
   "admin.settings.returnsDays": "Return window (days)",
   "admin.settings.saved": "Settings saved",

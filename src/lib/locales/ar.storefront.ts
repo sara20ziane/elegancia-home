@@ -106,6 +106,12 @@ export const arStorefront = {
   "common.previous": "السابق",
   "common.next": "التالي",
   "common.pagination": "التنقل بين الصفحات",
+  "checkout.offerTitle": "عرض التوصيل من Cotonia Home",
+  "checkout.offerHome": "مع {count} أطقم، التوصيل للدار ولا لـ Stop Desk مجاني.",
+  "checkout.offerStopDesk":
+    "التوصيل لـ Stop Desk مجاني. زيدي طقم باش تستفادي حتى من توصيل مجاني للدار.",
+  "checkout.offerThresholds":
+    "من زوج أطقم، التوصيل لـ Stop Desk مجاني. من 3 أطقم، التوصيل للدار ولا لـ Stop Desk مجاني.",
   "checkout.title": "إتمام الطلب",
   "checkout.yourInfo": "معلومات التوصيل",
   "checkout.fullName": "الاسم الكامل",

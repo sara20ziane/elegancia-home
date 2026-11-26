@@ -1,3 +1,4 @@
+import { BrandSignature } from "@/components/brand-signature";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Switch, Textarea } from "@/components/ui/form";
 import { useI18n } from "@/lib/i18n-context";
@@ -18,14 +19,25 @@ export type SettingsSetter = <K extends keyof SettingsDraft>(
   value: SettingsDraft[K],
 ) => void;
 
+const identityCopy = {
+  fr: ["Identité publique Cotonia Home", "Paramètres de marque enregistrés"],
+  en: ["Cotonia Home storefront identity", "Stored brand settings"],
+  ar: ["هوية واجهة Cotonia Home", "إعدادات العلامة المحفوظة"],
+} as const;
+
 export function IdentityCard({ form, set }: { form: SettingsDraft; set: SettingsSetter }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const [publicIdentity, storedSettings] = identityCopy[locale];
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t("admin.settings.identity")}</CardTitle>
       </CardHeader>
       <CardBody className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-wrap items-center gap-4 rounded-sm border border-outline bg-section-alt p-3 sm:col-span-2">
+          <BrandSignature />
+          <p className="text-sm font-semibold text-primary">{publicIdentity}</p>
+        </div>
         <Field label={t("common.name")} required className="sm:col-span-2">
           <Input
             value={form.name}
@@ -73,8 +85,15 @@ export function IdentityCard({ form, set }: { form: SettingsDraft; set: Settings
             dir="ltr"
           />
         </Field>
-        <LogoField value={form.logo_url} onChange={(url) => set("logo_url", url)} />
-        <ColorField value={form.brand_color} onChange={(color) => set("brand_color", color)} />
+        <details className="rounded-sm border border-outline p-3 sm:col-span-2">
+          <summary className="cursor-pointer text-sm font-semibold text-primary">
+            {storedSettings}
+          </summary>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <LogoField value={form.logo_url} onChange={(url) => set("logo_url", url)} />
+            <ColorField value={form.brand_color} onChange={(color) => set("brand_color", color)} />
+          </div>
+        </details>
         <Field label={t("admin.settings.bannerUrl")}>
           <Input
             value={form.banner_url ?? ""}

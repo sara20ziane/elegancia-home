@@ -61,7 +61,7 @@ function ProductCard({ product }: { product: CatalogueProduct }) {
         )}
         {soldOut ? <span className="pc-flag out">{t("store.outOfStock")}</span> : null}
         {!soldOut && colourCount > 1 ? (
-          <span className="absolute end-2.5 top-2.5 rounded-full border border-white/70 bg-white/90 px-2.5 py-1 text-[0.68rem] font-semibold text-[#4B392E] shadow-sm backdrop-blur-sm">
+          <span className="absolute end-2.5 top-2.5 rounded-full border border-outline bg-surface/95 px-2.5 py-1 text-xs font-semibold text-on-surface shadow-sm backdrop-blur-sm">
             {colourLabel(locale, colourCount)}
           </span>
         ) : null}

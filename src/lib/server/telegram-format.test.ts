@@ -11,7 +11,7 @@ describe("Telegram plain text formatting", () => {
       note: "Private note",
     } as typeof order);
     for (const value of [
-      "NOUVELLE COMMANDE — ELEGANCIA HOME",
+      "NOUVELLE COMMANDE — COTONIA HOME",
       "Cliente test",
       "0555550199",
       "Alger",

@@ -1,5 +1,5 @@
-/* Elegancia: only immutable build resources and a data-free offline page. */
-const VERSION = "elegancia-commerce-v2";
+/* Cotonia Home: only immutable build resources and a data-free offline page. */
+const VERSION = "cotonia-commerce-v1";
 const CACHE = `${VERSION}-static`;
 const ASSETS = /^\/(?:assets|_build|build)\/.+\.(?:js|css|woff2?|ttf|otf)$/i;
 self.addEventListener("install", (event) => {
@@ -18,7 +18,7 @@ self.addEventListener("activate", (event) => {
       const keys = await caches.keys();
       await Promise.all(
         keys
-          .filter((key) => key !== CACHE && /^(elegancia|openstore)/.test(key))
+          .filter((key) => key !== CACHE && /^(cotonia|elegancia|openstore)/.test(key))
           .map((key) => caches.delete(key)),
       );
       await self.clients.claim();

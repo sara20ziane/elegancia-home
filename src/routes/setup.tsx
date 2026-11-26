@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ShieldCheck, Store } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { BrandSignature } from "@/components/brand-signature";
+import { BRAND_NAME } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { LoadingState } from "@/components/ui/feedback";
+import { translate } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
 import { useAuth } from "@/lib/auth";
 import { getSupabase } from "@/lib/supabase/client";
@@ -11,7 +14,12 @@ import { isEmptyDatabaseError } from "@/lib/supabase/health";
 import { SetupCheck } from "@/components/setup-check";
 
 export const Route = createFileRoute("/setup")({
-  head: () => ({ meta: [{ title: "إعداد المتجر" }, { name: "robots", content: "noindex" }] }),
+  head: ({ match }) => ({
+    meta: [
+      { title: `${translate(match.context.locale, "setup.title")} | ${BRAND_NAME}` },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: SetupPage,
 });
 
@@ -58,8 +66,7 @@ function SetupPage() {
   return (
     <main className="container-page flex min-h-dvh flex-col items-center justify-center gap-6 py-16">
       <Link to="/" className="flex items-center gap-2 font-display text-lg font-semibold">
-        <Store size={20} className="text-primary" aria-hidden="true" />
-        OpenStore DZ
+        <BrandSignature />
       </Link>
       <SetupForm onAwaitingEmail={() => setPhase("awaitEmail")} />
     </main>

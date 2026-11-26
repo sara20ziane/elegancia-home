@@ -4,7 +4,6 @@ import { CartDrawer } from "./cart-drawer";
 import { BottomNav } from "./bottom-nav";
 import { AnnouncementBar } from "./announcement-bar";
 import { DemoBanner } from "./demo-banner";
-import { BrandStyle } from "./brand-style";
 import { InstallApp } from "./install-app";
 import { useOnline } from "@/lib/online";
 
@@ -22,7 +21,6 @@ export function StoreLayout({ children }: { children: React.ReactNode }) {
   const online = useOnline();
   return (
     <div className="flex min-h-dvh flex-col">
-      <BrandStyle />
       <DemoBanner />
       <AnnouncementBar />
       <SiteHeader />

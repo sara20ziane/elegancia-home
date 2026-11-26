@@ -16,7 +16,7 @@ export const arUpdates = {
   "version.current": "نسخة المصدر الحالية",
   "version.available": "نسخة OpenStore المتاحة",
   "version.review": "عرض التغييرات",
-  "version.manual": "Elegancia مخصصة. كل دمج يتطلب مراجعة يدوية.",
+  "version.manual": "Cotonia Home مخصصة. كل دمج يتطلب مراجعة يدوية.",
   "version.schema": "يلزم تحديث قاعدة البيانات",
   "version.unknown": "نسخة قاعدة البيانات غير متاحة",
   "version.expected": "نسخة قاعدة البيانات المطلوبة",

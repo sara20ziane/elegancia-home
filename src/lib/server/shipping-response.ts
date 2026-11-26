@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only";
 import { assertAdmin } from "./packers-auth";
 import { isTokenShaped } from "../order";
 import { ORDER_SELECT, type AdminOrder } from "../admin";
+import { BRAND_NAME } from "../brand";
 import { renderShippingPdf } from "../shipping-pdf";
 
 const PRIVATE = {
@@ -35,14 +36,12 @@ export async function shippingResponse(request: Request): Promise<Response> {
     if (!orders.length) return fail(404);
     if (orders.length > 200)
       return fail(422, "Plus de 200 commandes : imprimez individuellement ou réduisez le lot.");
-    const settings = await supabase.from("store_settings").select("name").eq("id", 1).single();
-    if (settings.error) return fail(503);
-    const bytes = await renderShippingPdf(orders, settings.data.name, format);
+    const bytes = await renderShippingPdf(orders, BRAND_NAME, format);
     return new Response(new Uint8Array(bytes).buffer, {
       headers: {
         ...PRIVATE,
         "Content-Type": "application/pdf",
-        "Content-Disposition": 'attachment; filename="etiquettes-internes-elegancia.pdf"',
+        "Content-Disposition": 'attachment; filename="etiquettes-internes-cotonia-home.pdf"',
       },
     });
   } catch {

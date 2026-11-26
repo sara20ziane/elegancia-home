@@ -47,7 +47,7 @@ export function CatalogPresets() {
   return (
     <details className="rounded-[12px] border border-outline p-4">
       <summary className="cursor-pointer font-medium">
-        Standards Elegancia — presets configurables
+        Standards Cotonia Home — presets configurables
       </summary>
       <p className="my-3 text-sm text-on-surface-muted">
         Une règle par taille, type de parure et nombre de pièces. Saisis uniquement les valeurs
