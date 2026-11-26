@@ -125,7 +125,7 @@ export async function financePdfResponse(
       headers: {
         ...PRIVATE,
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${kind}-elegancia.pdf"`,
+        "Content-Disposition": `attachment; filename="${kind}-cotonia-home.pdf"`,
       },
     });
   } catch {

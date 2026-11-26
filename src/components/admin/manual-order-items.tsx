@@ -20,7 +20,7 @@ export function ManualOrderItems({ state }: { state: ManualOrderState }) {
       <div>
         <h3 className="font-display text-lg font-semibold">Articles</h3>
         <p className="text-xs text-on-surface-muted">
-          Les prix et le stock viennent directement du catalogue Elegancia Home.
+          Les prix et le stock viennent directement du catalogue Cotonia Home.
         </p>
       </div>
 

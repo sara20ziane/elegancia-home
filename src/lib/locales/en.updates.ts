@@ -17,7 +17,7 @@ export const enUpdates = {
   "version.current": "Current upstream baseline",
   "version.available": "Available OpenStore version",
   "version.review": "Review changes",
-  "version.manual": "Elegancia is customized. Every integration needs manual review.",
+  "version.manual": "Cotonia Home is customized. Every integration needs manual review.",
   "version.schema": "Database update required",
   "version.unknown": "Schema version unavailable",
   "version.expected": "Expected schema",

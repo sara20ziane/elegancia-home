@@ -42,7 +42,7 @@ export const arAdmin = {
   "admin.settings.commerce": "قواعد البيع",
   "admin.settings.packersManaged": "التوصيل مُدار عبر Packers / EcoTrack",
   "admin.settings.packersManagedHint":
-    "الانطلاق دائماً من الجزائر. أسعار التوصيل للمنزل وStop Desk تأتي من Packers. عرض Elegancia: عند شراء طقمين يصبح Stop Desk مجانياً، وعند شراء 3 أطقم يصبح التوصيل للمنزل مجانياً.",
+    "الانطلاق دائماً من الجزائر. أسعار التوصيل للمنزل وStop Desk تأتي من Packers. عرض Cotonia Home: من زوج أطقم، التوصيل لـ Stop Desk مجاني. من 3 أطقم، التوصيل للدار ولا لـ Stop Desk مجاني.",
   "admin.settings.deliveryFee": "سعر التوصيل",
   "admin.settings.returnsDays": "مدة الإرجاع بالأيام",
   "admin.settings.saved": "تم حفظ الإعدادات",

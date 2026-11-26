@@ -29,7 +29,7 @@ export async function downloadFinanceDocument(id: string, kind = "invoice") {
   const url = URL.createObjectURL(await response.blob());
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `${kind}-elegancia.pdf`;
+  anchor.download = `${kind}-cotonia-home.pdf`;
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

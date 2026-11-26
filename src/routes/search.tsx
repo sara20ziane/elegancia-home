@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "@/lib/brand";
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Search as SearchIcon } from "lucide-react";
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/search")({
   },
   head: ({ match }) => ({
     meta: [
-      { title: translate(match.context.locale, "search.title") },
+      { title: `${translate(match.context.locale, "search.title")} | ${BRAND_NAME}` },
       { name: "robots", content: "noindex" },
     ],
   }),

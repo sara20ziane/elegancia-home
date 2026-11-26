@@ -10,4 +10,4 @@ Disallow: /checkout
 Disallow: /track
 Disallow: /*?*sort=
 
-Sitemap: https://elegancia-home.vercel.app/sitemap.xml
+Sitemap: https://cotonia-home.vercel.app/sitemap.xml

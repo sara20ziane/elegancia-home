@@ -29,10 +29,10 @@ it("préfère le texte alternatif renseigné", () => {
 });
 it("décrit la couleur de la photo, sans inventer de taille ni de matière visible", () => {
   expect(productImageAlt(product("  "), "/sage.webp", "fr")).toBe(
-    "Parure Serena – Vert sauge – Elegancia Home",
+    "Parure Serena – Vert sauge – Cotonia Home",
   );
-  expect(productImageAlt(product(null), "/blue.webp", "ar")).toBe("سيرينا – Bleu – Elegancia Home");
+  expect(productImageAlt(product(null), "/blue.webp", "ar")).toBe("سيرينا – Bleu – Cotonia Home");
   expect(productImageAlt(product(null), "/unknown.webp", "fr")).toBe(
-    "Parure Serena – Elegancia Home",
+    "Parure Serena – Cotonia Home",
   );
 });

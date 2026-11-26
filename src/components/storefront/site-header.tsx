@@ -1,78 +1,63 @@
 import { Link } from "@tanstack/react-router";
-import { BedDouble, Menu, ShoppingBag, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { useRef } from "react";
+import { BrandSignature } from "@/components/brand-signature";
+import { LocaleSwitcher } from "@/components/locale-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { brandCopy } from "@/lib/brand";
 import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n-context";
-import { useStoreSettings } from "@/lib/queries";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { LocaleSwitcher } from "@/components/locale-switcher";
-import { cn } from "@/lib/utils";
 
-/** Storefront header with a premium Elegancia Home wordmark fallback. */
 export function SiteHeader() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { count, openCart } = useCart();
-  const { data: settings } = useStoreSettings();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const storeName = settings?.name?.trim() || "Elegancia Home";
-
+  const mobileMenu = useRef<HTMLDetailsElement>(null);
+  const copy = brandCopy(locale);
   const links = [
-    { to: "/", label: t("nav.home") },
     { to: "/catalogue", label: t("nav.shop") },
+    { to: "/livraison", label: t("nav.delivery") },
     { to: "/track", label: t("nav.trackOrder") },
   ] as const;
 
+  function closeMenu() {
+    if (mobileMenu.current) mobileMenu.current.open = false;
+  }
+
   return (
-    <header className="sticky top-0 z-30 border-b border-[#E8DDD3] bg-[#FFFDF9]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FFFDF9]/88">
-      <div className="container-page flex h-[68px] items-center gap-3">
-        <Link to="/" className="flex min-h-11 min-w-0 items-center gap-2.5">
-          {settings?.logo_url ? (
-            <img
-              src={settings.logo_url}
-              alt={storeName}
-              className="h-10 max-w-[150px] shrink-0 object-contain sm:max-w-[180px]"
-            />
-          ) : (
-            <>
-              <span className="grid size-9 shrink-0 place-items-center rounded-full border border-[#DECABA] bg-[#F7F1EA] text-primary">
-                <BedDouble size={18} strokeWidth={1.8} aria-hidden="true" />
-              </span>
-              <span className="flex min-w-0 items-baseline gap-1.5 text-[#38281E]">
-                <span className="truncate font-display text-[1.34rem] font-semibold tracking-[-0.03em] sm:text-[1.5rem]">
-                  Elegancia
-                </span>
-                <span className="hidden text-[0.62rem] font-semibold tracking-[0.22em] text-primary uppercase xs:inline sm:inline">
-                  Home
-                </span>
-              </span>
-            </>
-          )}
+    <header className="sticky top-0 z-30 border-b border-outline bg-nav-bg/95 backdrop-blur">
+      <div className="container-page flex min-h-[68px] items-center justify-between gap-2 lg:gap-6">
+        <Link to="/" className="flex min-h-11 min-w-0 items-center">
+          <BrandSignature />
         </Link>
 
-        <nav className="ms-4 hidden items-center gap-1 md:flex" aria-label="Main">
+        <nav className="hidden items-center gap-2 lg:flex" aria-label={copy.menu}>
           {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-[#74665C] transition-colors hover:bg-[#F5ECE4] hover:text-[#38281E]"
-              activeOptions={{ exact: link.to === "/" }}
-              activeProps={{ className: "bg-[#F5ECE4] text-[#38281E]" }}
+              className="rounded-sm px-3 py-2 text-sm font-semibold text-on-surface-muted hover:bg-surface-high hover:text-primary"
+              activeProps={{ className: "bg-surface-high text-primary" }}
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="ms-auto flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <LocaleSwitcher className="hidden sm:block" />
           <ThemeToggle />
-
+          <Link
+            to="/search"
+            className="header-icon hidden lg:inline-flex"
+            aria-label={t("nav.search")}
+          >
+            <Search size={18} aria-hidden="true" />
+          </Link>
           <button
             type="button"
             onClick={openCart}
             data-testid="cart-open"
-            className="relative inline-flex size-10 items-center justify-center rounded-full border border-[#E1D4C9] bg-white/70 text-[#38281E] transition-colors hover:bg-[#F5ECE4]"
+            className="header-icon relative inline-flex"
             aria-label={t("cart.title")}
           >
             <ShoppingBag size={18} aria-hidden="true" />
@@ -82,44 +67,54 @@ export function SiteHeader() {
             {count > 0 && (
               <span
                 aria-hidden="true"
-                className="absolute -top-1 -end-1 grid size-5 place-items-center rounded-full bg-primary font-mono text-[0.65rem] font-semibold text-on-primary"
+                className="absolute -top-0.5 -end-0.5 grid min-h-5 min-w-5 place-items-center rounded-full bg-primary px-0.5 text-xs font-semibold text-on-primary"
               >
                 {count > 99 ? "99+" : count}
               </span>
             )}
           </button>
-
-          <button
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            className="inline-flex size-10 items-center justify-center rounded-full border border-[#E1D4C9] bg-white/70 text-[#38281E] transition-colors hover:bg-[#F5ECE4] md:hidden"
-            aria-expanded={menuOpen}
-            aria-label={menuOpen ? t("common.close") : t("nav.shop")}
+          <details
+            ref={mobileMenu}
+            id="mobile-shop-nav"
+            className="group lg:hidden"
+            suppressHydrationWarning
           >
-            {menuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
-          </button>
-        </div>
-      </div>
-
-      <div
-        className={cn(
-          "overflow-hidden border-t border-[#E8DDD3] bg-[#FFFDF9] transition-[max-height] duration-300 ease-out-soft md:hidden",
-          menuOpen ? "max-h-64" : "max-h-0",
-        )}
-      >
-        <nav className="container-page flex flex-col gap-1 py-3" aria-label="Mobile">
-          {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              onClick={() => setMenuOpen(false)}
-              className="rounded-[12px] px-3 py-3 text-sm font-medium text-[#58483D] hover:bg-[#F5ECE4]"
+            <summary
+              className="header-icon mobile-menu-summary inline-flex list-none"
+              aria-label={copy.mobileMenu}
             >
-              {link.label}
-            </Link>
-          ))}
-          <LocaleSwitcher className="mt-2 sm:hidden" />
-        </nav>
+              <Menu size={18} className="group-open:hidden" aria-hidden="true" />
+              <X size={18} className="hidden group-open:block" aria-hidden="true" />
+            </summary>
+            <nav
+              className="absolute inset-x-0 top-full border-y border-outline bg-nav-bg py-3 shadow-md"
+              aria-label={copy.menu}
+            >
+              <div className="container-page flex flex-col gap-1">
+                {links.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={closeMenu}
+                    className="rounded-sm px-3 py-3 text-sm font-semibold hover:bg-surface-high"
+                    activeProps={{ className: "bg-surface-high text-primary" }}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <Link
+                  to="/search"
+                  onClick={closeMenu}
+                  className="flex items-center gap-2 rounded-sm px-3 py-3 text-sm font-semibold hover:bg-surface-high"
+                >
+                  <Search size={17} aria-hidden="true" />
+                  {t("nav.search")}
+                </Link>
+                <LocaleSwitcher className="mt-2 sm:hidden" />
+              </div>
+            </nav>
+          </details>
+        </div>
       </div>
     </header>
   );

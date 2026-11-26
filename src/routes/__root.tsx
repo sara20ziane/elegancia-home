@@ -6,10 +6,10 @@ import { Toaster } from "sonner";
 
 import "@fontsource-variable/cairo";
 import cairoArabic from "@fontsource-variable/cairo/files/cairo-arabic-wght-normal.woff2?url";
-import frauncesLatin from "@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2?url";
-import "@fontsource-variable/fraunces/opsz.css";
-import "@fontsource-variable/outfit";
-import outfitLatin from "@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2?url";
+import "@fontsource-variable/playfair-display";
+import playfairLatin from "@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2?url";
+import "@fontsource-variable/montserrat";
+import montserratLatin from "@fontsource-variable/montserrat/files/montserrat-latin-wght-normal.woff2?url";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "../styles.css";
@@ -18,6 +18,7 @@ import { ServiceWorkerRegistrar } from "@/components/service-worker";
 import { WebAnalytics } from "@/components/storefront/web-analytics";
 import { Button } from "@/components/ui/button";
 import { AuthProvider } from "@/lib/auth";
+import { BRAND_NAME } from "@/lib/brand";
 import { CartProvider } from "@/lib/cart";
 import { localeBootstrapScript } from "@/lib/i18n";
 import { I18nProvider, useI18n } from "@/lib/i18n-context";
@@ -32,13 +33,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#A65E23" },
+      { name: "theme-color", content: "#6B2F3A" },
       // Default title, overridden by whichever route matches. Without this a
       // route that forgets one — or the 404 page — ships an empty <title>, which
       // axe flags and which browsers render as the raw URL.
-      { title: "Elegancia Home" },
-      { name: "application-name", content: "Elegancia Home" },
-      { name: "apple-mobile-web-app-title", content: "Elegancia Home" },
+      { title: BRAND_NAME },
+      { name: "application-name", content: BRAND_NAME },
+      { name: "apple-mobile-web-app-title", content: BRAND_NAME },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
     ],
@@ -67,7 +68,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function fontPreloads(locale: "ar" | "fr" | "en"): string[] {
-  return locale === "ar" ? [cairoArabic] : [outfitLatin, frauncesLatin];
+  return locale === "ar" ? [cairoArabic] : [montserratLatin, playfairLatin];
 }
 
 function RootShell({ children }: { children: React.ReactNode }) {

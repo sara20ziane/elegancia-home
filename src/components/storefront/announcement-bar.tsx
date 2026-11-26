@@ -1,3 +1,4 @@
+import { rebrandStoreCopy } from "@/lib/brand";
 import { useStoreSettings } from "@/lib/queries";
 
 /**
@@ -15,7 +16,7 @@ import { useStoreSettings } from "@/lib/queries";
  */
 export function AnnouncementBar() {
   const { data: settings } = useStoreSettings();
-  const text = settings?.announcement?.trim();
+  const text = rebrandStoreCopy(settings?.announcement)?.trim();
 
   if (!settings?.announcement_enabled || !text) return null;
 

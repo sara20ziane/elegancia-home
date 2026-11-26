@@ -1,3 +1,4 @@
+import { BRAND_NAME, rebrandStoreCopy } from "./brand";
 import { localized, type Locale } from "./i18n";
 import { sortVariants, type CatalogueProduct } from "./queries";
 
@@ -6,16 +7,13 @@ export function productImageAlt(product: CatalogueProduct, url: string, locale: 
   const variants = sortVariants(product.product_variants);
   for (const variant of variants) {
     const image = variant.variant_images.find((image) => image.url === url);
-    if (image?.alt?.trim()) return image.alt.trim();
+    const alt = rebrandStoreCopy(image?.alt)?.trim();
+    if (alt) return alt;
   }
   const owner = variants.find((variant) =>
     variant.variant_images.some((image) => image.url === url),
   );
-  return [
-    localized(locale, product.name, product.name_fr),
-    owner?.color_name?.trim(),
-    "Elegancia Home",
-  ]
+  return [localized(locale, product.name, product.name_fr), owner?.color_name?.trim(), BRAND_NAME]
     .filter(Boolean)
     .join(" – ");
 }

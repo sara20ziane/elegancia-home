@@ -174,7 +174,7 @@ export function CheckoutSummary({
                 {line.variantLabel} × {line.quantity}
               </span>
             </span>
-            <span className="shrink-0 font-mono text-xs" dir="ltr">
+            <span className="shrink-0 font-body tabular-nums text-xs" dir="ltr">
               {formatDzd(line.unitPrice * line.quantity, locale)}
             </span>
           </li>
@@ -184,13 +184,13 @@ export function CheckoutSummary({
       <dl className="flex flex-col gap-2 border-t border-outline pt-4 text-sm">
         <div className="flex justify-between">
           <dt className="text-on-surface-muted">{t("cart.subtotal")}</dt>
-          <dd className="font-mono" dir="ltr">
+          <dd className="font-body tabular-nums" dir="ltr">
             {formatDzd(subtotal, locale)}
           </dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-on-surface-muted">{t("cart.delivery")}</dt>
-          <dd className="font-mono" dir="ltr">
+          <dd className="font-body tabular-nums" dir="ltr">
             {!hasWilaya
               ? t("cart.deliveryCalculated")
               : deliveryAvailable
@@ -200,7 +200,7 @@ export function CheckoutSummary({
         </div>
         <div className="flex justify-between border-t border-outline pt-2 text-base font-semibold">
           <dt>{t("common.total")}</dt>
-          <dd className="font-mono text-primary" dir="ltr">
+          <dd className="font-body tabular-nums text-primary" dir="ltr">
             {formatDzd(total, locale)}
           </dd>
         </div>

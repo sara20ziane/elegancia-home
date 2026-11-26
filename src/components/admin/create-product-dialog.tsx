@@ -13,7 +13,7 @@ export function CreateProductDialog({ open, onClose }: { open: boolean; onClose:
     <Dialog
       open={open}
       onClose={onClose}
-      title="Nouveau modèle Elegancia"
+      title="Nouveau modèle Cotonia Home"
       className="!w-[min(95vw,60rem)]"
     >
       {open && <CreateModel onClose={onClose} />}

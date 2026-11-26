@@ -67,6 +67,8 @@ begin
  perform public.finance_issue_invoice(invoice);perform public.finance_issue_invoice(invoice);
  select i.number,i.payload into saved_number,saved_payload from public.invoices i where id=invoice;
  perform pg_temp.check_ok(saved_number ~ '^FAC-[0-9]{4}-[0-9]{6}$','invoice numbering');
+ perform pg_temp.check_ok(saved_payload->>'renderer_version'='cotonia-a4-v2','Cotonia renderer not recorded at issuance');
+ perform pg_temp.check_ok(saved_payload->'issuer'->>'name'='Elegancia Test','Cotonia renderer changed legal issuer');
  perform pg_temp.check_ok((select status='issued' and paid_at is null from public.invoices where id=invoice),'delivery marked invoice paid');
  perform pg_temp.check_ok((select tax=round(20600::numeric*9/109,2) and total=20600 from public.invoices where id=invoice),'included tax changed total');
  perform pg_temp.reject(format('update public.invoices set total=1 where id=%L',invoice),'issued amount mutable');
@@ -112,6 +114,7 @@ begin
  perform pg_temp.check_ok((select count(*)=1 from public.financial_movements where source_id=(purchase->>'id')::uuid),'double purchase payment');
  perform pg_temp.check_ok((select product_cost=12000 from public.order_finance where order_id=oid),'purchase changed historic cost');
  credit:=public.finance_create_credit(invoice,'Retour total validé');perform pg_temp.check_ok(public.finance_create_credit(invoice,'Retour total validé')=credit,'duplicate credit');
+ perform pg_temp.check_ok((select payload->>'renderer_version'='cotonia-a4-v2' from public.credit_notes where id=credit),'credit did not inherit original renderer');
  perform pg_temp.check_ok((select status='cancelled' from public.invoices where id=invoice),'credit did not cancel');
  perform public.finance_refund_credit(credit,cash,day::date);perform public.finance_refund_credit(credit,cash,day::date);
  perform pg_temp.check_ok((select count(*)=1 from public.finance_refunds where credit_id=credit),'duplicate refund');

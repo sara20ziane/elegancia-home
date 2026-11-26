@@ -1,7 +1,7 @@
 {
-  "name": "Elegancia Home",
-  "short_name": "Elegancia",
-  "description": "Literie et linge de maison élégants avec paiement à la livraison en Algérie.",
+  "name": "Cotonia Home",
+  "short_name": "Cotonia",
+  "description": "Linge de lit, plaids et linge de maison Cotonia Home.",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "/",
@@ -9,7 +9,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F7F3EA",
-  "theme_color": "#A65E23",
+  "theme_color": "#6B2F3A",
   "categories": ["shopping", "business"],
   "icons": [
     {

@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "@/lib/brand";
 import { createFileRoute } from "@tanstack/react-router";
 import { StoreLayout } from "@/components/storefront/store-layout";
 import { CatalogueView } from "@/components/storefront/catalogue-view";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/catalogue")({
       .catch(() => null);
   },
   head: ({ match }) => {
-    const title = `${translate(match.context.locale, "nav.products")} | Elegancia Home`;
+    const title = `${translate(match.context.locale, "nav.products")} | ${BRAND_NAME}`;
     const description = translate(match.context.locale, "catalogue.description");
     const url = canonicalUrl("/catalogue");
     return {
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/catalogue")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
-        { property: "og:site_name", content: "Elegancia Home" },
+        { property: "og:site_name", content: BRAND_NAME },
         { property: "og:url", content: url },
         { name: "twitter:card", content: "summary" },
       ],

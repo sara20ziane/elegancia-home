@@ -1,148 +1,109 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/*
- * OpenStore DZ — design system
- *
- * Ported from the Commerce Storefront reference system (system 02), which is a
- * component-CSS system rather than a utility system. The tokens below are copied
- * value-for-value. The component classes in the "Commerce components" section
- * are ported from it too, so the storefront renders the same shapes rather than
- * an approximation built out of utilities.
- *
- * Design thesis: product photography sells; every pixel of chrome must yield to
- * the image. That is why the product card is full-bleed media with a small text
- * block beneath it, and why nothing else on the page competes for attention.
- *
- * Two deliberate departures from the reference:
- *   1. Cairo is added to the font stacks. The reference is Latin-only and would
- *      silently fall back to whatever serif/sans the OS has for Arabic.
- *   2. Arabic gets a density override (17px / 1.75). Arabic has a smaller
- *      x-height at the same nominal size, so the Latin 15px / 1.5 reads cramped.
- *
- * Default theme is LIGHT, and it is enforced: see `lib/theme.ts`. The reference
- * marks light as canonical, and a storefront that opens dark on a dark-mode
- * phone misrepresents the seller's photography.
- */
+/* Cotonia Home brand colors and interface tokens. */
+:root {
+  --burgundy: #6b2f3a;
+  --ivory: #f7f3ea;
+  --taupe: #c2a997;
+  --sage: #7e8f75;
+  --slate-blue: #6e8192;
+}
 
-/* ── Tokens: light (canonical) ─────────────────────────────────────────────── */
 :root,
 [data-theme="light"] {
-  --bg: #faf7f4;
-  --bg-dim: #f3efeb;
-  --surface: #ffffff;
-  --surface-mid: #faf7f4;
-  --surface-high: #f0ebe6;
-  --surface-highest: #e6dfd7;
-  --on-surface: #1c1917;
-  /* Darkened from the reference #78716c, which measured 4.49:1 on the cream
-     background and 4.19:1 on the tinted section band — both under the 4.5:1 AA
-     floor for body text. This measures 5.13:1 and 4.78:1. Muted secondary text
-     is what a shop uses for delivery terms and return windows, so failing AA
-     there is failing on the copy a buyer most needs to read. */
-  --on-surface-muted: #6b6460;
-  --outline: #e7e0d8;
-  --outline-hi: #c9beb2;
+  --bg: var(--ivory);
+  --bg-dim: color-mix(in srgb, var(--ivory) 84%, var(--taupe));
+  --surface: color-mix(in srgb, var(--ivory) 50%, white);
+  --surface-mid: var(--ivory);
+  --surface-high: color-mix(in srgb, var(--ivory) 75%, var(--taupe));
+  --surface-highest: color-mix(in srgb, var(--ivory) 53%, var(--taupe));
+  --on-surface: color-mix(in srgb, var(--burgundy) 38%, #211b1d);
+  --on-surface-muted: color-mix(in srgb, var(--burgundy) 55%, #575354);
+  --outline: color-mix(in srgb, var(--ivory) 63%, var(--taupe));
+  --outline-hi: color-mix(in srgb, var(--taupe) 84%, var(--burgundy));
+  --primary: var(--burgundy);
+  --primary-solid: var(--burgundy);
+  --on-primary: var(--ivory);
+  --primary-glow: color-mix(in srgb, var(--burgundy) 18%, transparent);
+  --primary-glow-sm: color-mix(in srgb, var(--burgundy) 8%, transparent);
 
-  /* One deliberate deviation from the reference palette, measured rather than
-     guessed. The reference primary #d9480f scores 4.29:1 for white-on-orange and
-     4.02:1 for orange-on-cream, and WCAG AA requires 4.5:1 for text below 18.66px.
-     It therefore fails on every button label and every accented caption.
-     #c2410c is the same hue one step darker: 5.18:1 with white and 4.85:1 on the
-     cream background, passing both. The brand still reads as burnt orange; it
-     just stops failing axe. Verified by e2e/accessibility.spec.ts. */
-  --primary: #c2410c;
-  --primary-solid: #c2410c;
-  --on-primary: #ffffff;
-  --primary-glow: rgba(194, 65, 12, 0.18);
-  --primary-glow-sm: rgba(194, 65, 12, 0.08);
-
-  --brand-orange: #ea580c;
-  --secondary: #e11d48;
-  --secondary-dim: #be123c;
-  --on-secondary: #ffffff;
-  --tertiary: #b45309;
-  --on-tertiary: #ffffff;
-  --quaternary: #0d9488;
-  --on-quaternary: #ffffff;
-  /* Darkened from #15803d for the same reason as --primary: on the 12% tint the
-     in-stock badge uses, the reference green measured 4.27:1. This is 6.07:1
-     there and 7.14:1 on plain white. */
-  --positive: #166534;
+  --secondary: var(--burgundy);
+  --secondary-dim: color-mix(in srgb, var(--burgundy) 80%, black);
+  --on-secondary: var(--ivory);
+  --tertiary: color-mix(in srgb, var(--burgundy) 75%, var(--taupe));
+  --on-tertiary: var(--ivory);
+  --quaternary: color-mix(in srgb, var(--slate-blue) 68%, #22282d);
+  --on-quaternary: var(--ivory);
+  --positive: #34563a;
   --on-positive: #ffffff;
-  --error: #dc2626;
+  --error: #a42134;
 
-  --shadow-sm: 0 1px 3px rgba(60, 30, 10, 0.08);
-  --shadow-md: 0 6px 16px rgba(60, 30, 10, 0.1);
-  --shadow-lg: 0 16px 40px rgba(60, 30, 10, 0.14);
-
-  --nav-bg: #ffffff;
-  --scroll-track: #f3efeb;
-  --scroll-thumb: #ddd3c7;
-  --scroll-thumb-hi: #d9480f;
-  --toggle-bg: rgba(217, 72, 15, 0.06);
-  --toggle-border: rgba(217, 72, 15, 0.22);
-  --table-header-bg: #f0ebe6;
-  --table-header-fg: #9a3412;
-  --table-row-bg: #ffffff;
-  --table-row-hover: #faf7f4;
-  --table-border: #e7e0d8;
-  --section-alt: #f3efeb;
+  --shadow-sm: 0 1px 3px rgb(62 26 35 / 8%);
+  --shadow-md: 0 6px 16px rgb(62 26 35 / 10%);
+  --shadow-lg: 0 16px 40px rgb(62 26 35 / 14%);
+  --nav-bg: var(--surface);
+  --scroll-track: var(--bg-dim);
+  --scroll-thumb: var(--taupe);
+  --scroll-thumb-hi: var(--burgundy);
+  --toggle-bg: var(--primary-glow-sm);
+  --toggle-border: var(--primary-glow);
+  --table-header-bg: var(--surface-high);
+  --table-header-fg: var(--burgundy);
+  --table-row-bg: var(--surface);
+  --table-row-hover: var(--surface-mid);
+  --table-border: var(--outline);
+  --section-alt: var(--bg-dim);
 }
 
-/* ── Tokens: dark ──────────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg: #16110c;
-  --bg-dim: #100c08;
-  --surface: #1d1712;
-  --surface-mid: #241d16;
-  --surface-high: #2b231b;
-  --surface-highest: #352b21;
-  --on-surface: #f2ece5;
-  --on-surface-muted: #a8a29e;
-  --outline: #332a21;
-  --outline-hi: #4a3e31;
+  --bg: #1d1618;
+  --bg-dim: #251a1e;
+  --surface: #282024;
+  --surface-mid: #2e2327;
+  --surface-high: #35292d;
+  --surface-highest: #45363c;
+  --on-surface: var(--ivory);
+  --on-surface-muted: #c8b7b9;
+  --outline: #49383e;
+  --outline-hi: #8b6d74;
+  --primary: #e2b7bd;
+  --primary-solid: #e2b7bd;
+  --on-primary: #401b24;
+  --primary-glow: color-mix(in srgb, var(--primary) 20%, transparent);
+  --primary-glow-sm: color-mix(in srgb, var(--primary) 10%, transparent);
 
-  --primary: #fb923c;
-  --primary-solid: #fb923c;
-  --on-primary: #271204;
-  --primary-glow: rgba(251, 146, 60, 0.2);
-  --primary-glow-sm: rgba(251, 146, 60, 0.1);
+  --secondary: var(--primary);
+  --secondary-dim: #efd0d4;
+  --on-secondary: var(--on-primary);
+  --tertiary: var(--taupe);
+  --on-tertiary: #2c2022;
+  --quaternary: #abc0d2;
+  --on-quaternary: #202a31;
+  --positive: #a9cba5;
+  --on-positive: #172319;
+  --error: #ff9fa8;
 
-  --brand-orange: #fb923c;
-  --secondary: #fb7185;
-  --secondary-dim: #f43f5e;
-  --on-secondary: #2a050e;
-  --tertiary: #fbbf24;
-  --on-tertiary: #422006;
-  --quaternary: #2dd4bf;
-  --on-quaternary: #042f2e;
-  --positive: #4ade80;
-  --on-positive: #052e16;
-  --error: #f87171;
-
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.5);
-
-  --nav-bg: #100c08;
-  --scroll-track: #1d1712;
-  --scroll-thumb: #352b21;
-  --scroll-thumb-hi: #fb923c;
-  --toggle-bg: rgba(251, 146, 60, 0.08);
-  --toggle-border: rgba(251, 146, 60, 0.25);
-  --table-header-bg: #241d16;
-  --table-header-fg: #fb923c;
-  --table-row-bg: #16110c;
-  --table-row-hover: #1d1712;
-  --table-border: #332a21;
-  --section-alt: #100c08;
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 40%);
+  --shadow-md: 0 6px 20px rgb(0 0 0 / 45%);
+  --shadow-lg: 0 16px 44px rgb(0 0 0 / 50%);
+  --nav-bg: var(--bg);
+  --scroll-track: var(--surface);
+  --scroll-thumb: var(--surface-highest);
+  --scroll-thumb-hi: var(--taupe);
+  --toggle-bg: var(--primary-glow-sm);
+  --toggle-border: var(--primary-glow);
+  --table-header-bg: var(--surface-mid);
+  --table-header-fg: var(--primary);
+  --table-row-bg: var(--bg);
+  --table-row-hover: var(--surface);
+  --table-border: var(--outline);
+  --section-alt: var(--bg-dim);
 }
 
-/* ── Tokens: scale (keep verbatim) ─────────────────────────────────────────── */
 :root {
-  --font-display: "Fraunces Variable", "Cairo Variable", serif;
-  --font-body: "Outfit Variable", "Cairo Variable", sans-serif;
+  --font-display: "Playfair Display Variable", "Cairo Variable", serif;
+  --font-body: "Montserrat Variable", "Cairo Variable", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   --r-xs: 4px;
@@ -159,7 +120,7 @@
   --s-xl: 40px;
   --s-2xl: 64px;
 
-  --content-max: 1100px;
+  --content-max: 1240px;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-back: cubic-bezier(0.68, -0.4, 0.32, 1.4);
@@ -189,7 +150,11 @@
   --color-primary: var(--primary);
   --color-primary-solid: var(--primary-solid);
   --color-on-primary: var(--on-primary);
-  --color-brand: var(--brand-orange);
+  --color-brand: var(--burgundy);
+  --color-ivory: var(--ivory);
+  --color-taupe: var(--taupe);
+  --color-sage: var(--sage);
+  --color-slate-blue: var(--slate-blue);
 
   --color-secondary: var(--secondary);
   --color-secondary-dim: var(--secondary-dim);
@@ -245,7 +210,7 @@
     background: var(--bg);
     color: var(--on-surface);
     font-family: var(--font-body);
-    font-size: 15px;
+    font-size: 1rem;
     line-height: 1.5;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
@@ -253,7 +218,7 @@
     transition: var(--transition);
   }
 
-  /* Arabic density override — see the header note. */
+  /* Cairo supports Arabic, with density adjusted for legibility. */
   [lang="ar"] body,
   html[lang="ar"] {
     font-size: 17px;
@@ -591,14 +556,14 @@
   flex: 1;
 }
 .pc-brand {
-  font: 600 9.5px/1 var(--font-body);
+  font: 600 0.75rem/1.25 var(--font-body);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--on-surface-muted);
 }
 .pc-title {
   font-family: var(--font-display);
-  font-size: 15.5px;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--on-surface);
   line-height: 1.25;
@@ -614,26 +579,27 @@
 }
 .pc-price-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
   margin-top: auto;
   padding-top: 4px;
 }
 .pc-price {
-  font-family: var(--font-mono);
-  font-size: 17px;
+  font-family: var(--font-body);
+  font-size: 1rem;
   font-weight: 600;
   color: var(--on-surface);
   font-variant-numeric: tabular-nums;
 }
 .pc-price-old {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 12.5px;
   color: var(--on-surface-muted);
   text-decoration: line-through;
 }
 .pc-price-save {
-  font: 600 10px/1 var(--font-mono);
+  font: 600 0.75rem/1 var(--font-body);
   color: var(--positive);
 }
 .pc-cta {
@@ -1460,8 +1426,8 @@ html[dir="rtl"] {
   flex-shrink: 0;
 }
 .sl-sd {
-  background: #d7263d;
-  color: #fff;
+  background: var(--burgundy);
+  color: var(--ivory);
   font: 700 7mm/1 var(--font-body);
   padding: 0.8mm 2.5mm;
   margin-bottom: 1mm;
@@ -1572,4 +1538,39 @@ html[dir="rtl"] {
   .label-sheet-a4 .ship-label:nth-child(4n) {
     break-after: page;
   }
+}
+
+/* Shared identity and navigation controls. */
+.brand-signature {
+  color: var(--primary);
+}
+.header-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--outline);
+  border-radius: var(--r-full);
+  color: var(--on-surface);
+  transition: var(--transition);
+}
+.header-icon:hover {
+  background: var(--surface-high);
+  color: var(--primary);
+}
+@media (min-width: 1024px) {
+  html.nav-collapsed .admin-sidebar .brand-signature-full {
+    display: none;
+  }
+  html.nav-collapsed .admin-sidebar .brand-signature-small {
+    display: block;
+  }
+}
+
+.mobile-menu-summary {
+  cursor: pointer;
+}
+.mobile-menu-summary::-webkit-details-marker {
+  display: none;
 }

@@ -16,6 +16,20 @@ describe("PDF natif serveur pdfme", () => {
     expect(pdf.getPage(0).getSize().height).toBeCloseTo(841.89, 0);
     await writeFile("/tmp/elegancia-native-invoice.pdf", bytes);
   }, 30000);
+  it("rend le logo Cotonia sur les nouvelles factures et conserve le modèle historique", async () => {
+    const legacy = invoiceFixture();
+    const updated = { ...legacy, renderer_version: "cotonia-a4-v2" };
+    const oldFields = invoiceTemplate(legacy).schemas[0];
+    const newFields = invoiceTemplate(updated).schemas[0];
+    expect(oldFields[0]).toMatchObject({ name: "brand", type: "text" });
+    expect(newFields[0]).toMatchObject({ name: "brand", type: "image" });
+    expect(oldFields.find((field) => field.name === "footer")?.content).toContain("Elegancia Home");
+    expect(newFields.find((field) => field.name === "footer")?.content).toContain("Cotonia Home");
+    expect(newFields.find((field) => field.name === "issuer")?.content).toContain(
+      legacy.issuer.name,
+    );
+    expect((await PDFDocument.load(await renderInvoicePdf(updated))).getPageCount()).toBe(1);
+  }, 30000);
   it("pagine une facture longue et ne crée aucune mention légale absente", async () => {
     const payload = invoiceFixture(65);
     const pdf = await PDFDocument.load(await renderInvoicePdf(payload));

@@ -1,3 +1,4 @@
+import { BRAND_NAME, BRAND_MONOGRAM } from "@/lib/brand";
 import { formatDzd } from "@/lib/format";
 import { WILAYAS } from "@/lib/wilayas";
 import type { AdminOrder } from "@/lib/admin";
@@ -31,9 +32,9 @@ export function ShippingLabel({
     <article className="ship-label" dir="ltr">
       <header className="sl-top">
         <div className="sl-from">
-          {settings?.logo_url && <img src={settings.logo_url} alt="" className="sl-logo" />}
+          <img src={BRAND_MONOGRAM} alt="" className="sl-logo" />
           <p className="sl-k">Expéditeur</p>
-          <p className="sl-strong">{settings?.name}</p>
+          <p className="sl-strong">{BRAND_NAME}</p>
           {settings?.address_fr || settings?.address ? (
             <p>{settings?.address_fr ?? settings?.address}</p>
           ) : null}

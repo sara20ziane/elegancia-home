@@ -25,15 +25,15 @@ export function StockLine({
     <div className="flex flex-col gap-2">
       {selected && (
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1" dir="ltr">
-          <span className="font-mono text-2xl font-semibold text-primary">
+          <span className="font-body tabular-nums text-2xl font-semibold text-primary">
             {formatDzd(selected.price, locale)}
           </span>
           {sale && (
             <>
-              <span className="font-mono text-base text-on-surface-muted line-through">
+              <span className="font-body tabular-nums text-base text-on-surface-muted line-through">
                 {formatDzd(sale.was, locale)}
               </span>
-              <span className="rounded-full bg-positive/12 px-2 py-0.5 font-mono text-xs font-semibold text-positive">
+              <span className="rounded-full bg-positive/12 px-2 py-0.5 font-body tabular-nums text-xs font-semibold text-positive">
                 −{sale.percent}%
               </span>
             </>

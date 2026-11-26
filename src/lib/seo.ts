@@ -1,4 +1,4 @@
-export const SITE_URL = "https://elegancia-home.vercel.app";
+export const SITE_URL = "https://cotonia-home.vercel.app";
 
 export function absoluteUrl(pathOrUrl: string | null | undefined): string | null {
   if (!pathOrUrl) return null;

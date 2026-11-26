@@ -109,6 +109,13 @@ export const frStorefront = {
   "common.previous": "Précédent",
   "common.next": "Suivant",
   "common.pagination": "Pagination",
+  "checkout.offerTitle": "Offre livraison Cotonia Home",
+  "checkout.offerHome":
+    "Avec {count} parures, la livraison est offerte à domicile ou en Stop Desk.",
+  "checkout.offerStopDesk":
+    "Le Stop Desk est offert. Ajoutez une parure pour profiter aussi de la livraison à domicile offerte.",
+  "checkout.offerThresholds":
+    "Dès 2 parures, le Stop Desk est offert. Dès 3 parures, la livraison est offerte à domicile ou en Stop Desk.",
   "checkout.title": "Finaliser la commande",
   "checkout.yourInfo": "Informations de livraison",
   "checkout.fullName": "Nom complet",

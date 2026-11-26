@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "@/lib/brand";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Circle, MapPin, Package, Phone, Truck } from "lucide-react";
@@ -18,7 +19,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/order/$token")({
   head: ({ match }) => ({
     meta: [
-      { title: translate(match.context.locale, "order.title") },
+      { title: `${translate(match.context.locale, "order.title")} | ${BRAND_NAME}` },
       { name: "robots", content: "noindex" },
     ],
   }),

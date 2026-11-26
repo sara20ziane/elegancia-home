@@ -1,4 +1,4 @@
-import { COPY, ELEGANCIA_PRESETS } from "@/components/admin/category-copy";
+import { COPY, COTONIA_PRESETS } from "@/components/admin/category-copy";
 import { CategoryRow } from "@/components/admin/category-row";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
@@ -86,7 +86,7 @@ function CategoriesPage() {
     if (category.product_count === 0 || window.confirm(message)) remove.mutate(category.id);
   };
 
-  const exists = (preset: (typeof ELEGANCIA_PRESETS)[number]) =>
+  const exists = (preset: (typeof COTONIA_PRESETS)[number]) =>
     list.some(
       (category) =>
         normalise(category.name) === normalise(preset.ar) ||
@@ -161,7 +161,7 @@ function CategoryCreation({
   setName: (value: string) => void;
   setNameFr: (value: string) => void;
   busy: boolean;
-  exists: (preset: (typeof ELEGANCIA_PRESETS)[number]) => boolean;
+  exists: (preset: (typeof COTONIA_PRESETS)[number]) => boolean;
   onCreate: () => void;
 }) {
   return (
@@ -208,7 +208,7 @@ function CategoryCreation({
           </div>
           <p className="mt-1 text-xs text-on-surface-muted">{c.suggestionsBody}</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {ELEGANCIA_PRESETS.map((preset) => {
+            {COTONIA_PRESETS.map((preset) => {
               const added = exists(preset);
               return (
                 <button

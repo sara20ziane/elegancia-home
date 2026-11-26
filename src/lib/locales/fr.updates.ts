@@ -17,7 +17,8 @@ export const frUpdates = {
   "version.current": "Version dérivée actuelle",
   "version.available": "Version OpenStore disponible",
   "version.review": "Consulter les changements",
-  "version.manual": "Elegancia est personnalisée. Toute intégration nécessite une revue manuelle.",
+  "version.manual":
+    "Cotonia Home est personnalisée. Toute intégration nécessite une revue manuelle.",
   "version.schema": "Mise à jour de base de données requise",
   "version.unknown": "Version du schéma indisponible",
   "version.expected": "Schéma attendu",

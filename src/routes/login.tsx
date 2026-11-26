@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LockKeyhole, Store } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
+import { BrandSignature } from "@/components/brand-signature";
+import { BRAND_NAME } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { useAuth } from "@/lib/auth";
+import { translate } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
 import { getSupabase } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "دخول الإدارة" }, { name: "robots", content: "noindex" }] }),
+  head: ({ match }) => ({
+    meta: [
+      { title: `${translate(match.context.locale, "admin.login.title")} | ${BRAND_NAME}` },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: LoginPage,
 });
 
@@ -109,13 +117,12 @@ function LoginPage() {
   return (
     <main className="container-page flex min-h-dvh flex-col items-center justify-center gap-6 py-16">
       <Link to="/" className="flex items-center gap-2 font-display text-lg font-semibold">
-        <Store size={20} className="text-primary" aria-hidden="true" />
-        {t("app.name")}
+        <BrandSignature />
       </Link>
 
       <form
         onSubmit={submit}
-        className="flex w-full max-w-sm flex-col gap-5 rounded-[16px] border border-outline bg-surface p-6"
+        className="flex w-full max-w-sm flex-col gap-5 rounded-md border border-outline bg-surface p-6 shadow-sm"
       >
         <div className="flex flex-col gap-1">
           <h1 className="flex items-center gap-2 font-display text-xl font-semibold">

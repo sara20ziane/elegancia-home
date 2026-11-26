@@ -32,7 +32,7 @@ export function ServiceWorkerRegistrar() {
   if (!waiting) return null;
   return (
     <aside className="no-print fixed end-3 top-3 z-50 max-w-xs rounded-[12px] border border-outline bg-surface p-3 text-sm shadow-lg">
-      <p>Une mise à jour Elegancia Home est disponible.</p>
+      <p>Une mise à jour Cotonia Home est disponible.</p>
       <button
         type="button"
         className="btn btn-primary btn-sm mt-2"

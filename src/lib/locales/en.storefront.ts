@@ -108,6 +108,12 @@ export const enStorefront = {
   "common.previous": "Previous",
   "common.next": "Next",
   "common.pagination": "Pagination",
+  "checkout.offerTitle": "Cotonia Home delivery offer",
+  "checkout.offerHome": "With {count} bedding sets, home and Stop Desk delivery are free.",
+  "checkout.offerStopDesk":
+    "Stop Desk delivery is free. Add one bedding set to get free home delivery too.",
+  "checkout.offerThresholds":
+    "Free Stop Desk delivery on 2 or more bedding sets. Free home or Stop Desk delivery on 3 or more.",
   "checkout.title": "Checkout",
   "checkout.yourInfo": "Delivery details",
   "checkout.fullName": "Full name",

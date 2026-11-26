@@ -15,6 +15,34 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
+test("identité Cotonia, navigation et métadonnées sur mobile et ordinateur", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle(/Cotonia Home/);
+  const signature = page.locator("header").getByRole("img", { name: "Cotonia Home" });
+  await expect(signature).toHaveAttribute("src", "/brand/cotonia-horizontal.svg");
+  await expect
+    .poll(() => signature.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#6B2F3A");
+  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute(
+    "content",
+    "Cotonia Home",
+  );
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute(
+    "href",
+    "/favicon.svg",
+  );
+  const mobileMenu = page.locator("#mobile-shop-nav");
+  if (await mobileMenu.isVisible()) {
+    await expect(mobileMenu.locator("nav")).toBeHidden();
+    await mobileMenu.locator("summary").click();
+    await expect(mobileMenu).toHaveAttribute("open", "");
+  }
+  await page.locator('header nav:visible a[href="/livraison"]').click();
+  await expect(page).toHaveURL(/\/livraison$/);
+  await noOverflow(page);
+});
+
 test("homepage, catalogue, variante, panier, validation, livraison et commande COD", async ({
   page,
 }, info) => {
@@ -35,7 +63,7 @@ test("homepage, catalogue, variante, panier, validation, livraison et commande C
   );
   await expect(page.locator(".gallery-main img").first()).toHaveAttribute(
     "alt",
-    /Vert sauge.*Elegancia Home/,
+    /Vert sauge.*Cotonia Home/,
   );
   await noOverflow(page);
   await page.getByRole("button", { name: /أضف إلى السلة/ }).click();
@@ -83,14 +111,19 @@ test("admin et Finance restent fermés et les routes privées non indexables", a
   expect(privateRead.status()).toBe(403);
 });
 
-test("canonical, Product JSON-LD et cartes sociales préservés", async ({ page }) => {
+test("référencement de la nouvelle adresse sur les fiches et dans le sitemap", async ({
+  page,
+  request,
+}) => {
   await page.goto("/product/synthetic-serena");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
-    "https://elegancia-home.vercel.app/product/synthetic-serena",
+    "https://cotonia-home.vercel.app/product/synthetic-serena",
   );
   const json = await page.locator('script[type="application/ld+json"]').textContent();
   const product = JSON.parse(json!);
+  expect(product.brand.name).toBe("Cotonia Home");
+  expect(product.url).toBe("https://cotonia-home.vercel.app/product/synthetic-serena");
   expect(product.offers.priceCurrency).toBe("DZD");
   expect(product.offers.offers).toHaveLength(2);
   expect(product.offers.availability).toBe("https://schema.org/InStock");
@@ -99,5 +132,11 @@ test("canonical, Product JSON-LD et cartes sociales préservés", async ({ page 
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
     "content",
     "summary_large_image",
+  );
+  const robots = await request.get("/robots.txt");
+  expect(await robots.text()).toContain("Sitemap: https://cotonia-home.vercel.app/sitemap.xml");
+  const sitemap = await request.get("/sitemap.xml");
+  expect(await sitemap.text()).toContain(
+    "https://cotonia-home.vercel.app/product/synthetic-serena",
   );
 });

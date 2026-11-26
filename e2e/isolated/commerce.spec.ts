@@ -43,7 +43,7 @@ test("dashboard, checklist et étiquettes privées restent lisibles sur mobile",
   expect(response.status()).toBe(401);
   expect(response.headers()["cache-control"]).toContain("no-store");
   await page.goto("/admin/slips");
-  await expect(page.getByText(/Étiquettes internes Elegancia Home/)).toBeVisible();
+  await expect(page.getByText(/Étiquettes internes Cotonia Home/)).toBeVisible();
   for (const width of [320, 360, 390, 414, 768, 1024, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await expect

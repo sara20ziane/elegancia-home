@@ -52,7 +52,7 @@ function ProductsPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold">Modèles</h1>
           <p className="mt-1 text-sm text-on-surface-muted">
-            Gère les modèles Elegancia et leurs configurations de vente.
+            Gère les modèles Cotonia Home et leurs configurations de vente.
           </p>
         </div>
         <span className="flex items-center gap-3">
