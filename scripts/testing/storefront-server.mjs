@@ -50,7 +50,8 @@ await db.query("update orders set status='confirmed' where public_token=$1", [
 let queue = Promise.resolve();
 
 async function handle(req, res) {
-  const path = new URL(req.url, "http://127.0.0.1:54329").pathname;
+  const url = new URL(req.url, "http://127.0.0.1:54329");
+  const path = url.pathname;
   const send = (data, status = 200, extraHeaders = {}) => {
     res.writeHead(status, {
       "Content-Type": "application/json",
@@ -84,7 +85,12 @@ async function handle(req, res) {
       },
     });
   if (path.endsWith("/store_settings")) return send(settings);
-  if (path.endsWith("/products")) return send(product);
+  if (path.endsWith("/products")) {
+    if (url.searchParams.get("select") === "slug,published_at,updated_at") {
+      return send([{ slug: product.slug }]);
+    }
+    return send(product);
+  }
   if (path.endsWith("/delivery_zones"))
     return send([
       {

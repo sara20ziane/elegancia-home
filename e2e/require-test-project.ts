@@ -11,6 +11,9 @@ export default function requireTestProject() {
     throw new Error("Supabase URL does not match the explicitly selected Test project.");
   if (project === "zlceykczkkuzqnwtxmeh")
     throw new Error("The Elegancia Production Supabase project is forbidden in connected E2E.");
-  if (target && new URL(target).hostname === "elegancia-home.vercel.app")
+  if (
+    target &&
+    ["elegancia-home.vercel.app", "cotonia-home.vercel.app"].includes(new URL(target).hostname)
+  )
     throw new Error("Connected E2E must never target the Production storefront.");
 }

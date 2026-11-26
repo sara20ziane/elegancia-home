@@ -111,15 +111,19 @@ test("admin et Finance restent fermés et les routes privées non indexables", a
   expect(privateRead.status()).toBe(403);
 });
 
-test("canonical, Product JSON-LD et cartes sociales préservés", async ({ page }) => {
+test("référencement de la nouvelle adresse sur les fiches et dans le sitemap", async ({
+  page,
+  request,
+}) => {
   await page.goto("/product/synthetic-serena");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
-    "https://elegancia-home.vercel.app/product/synthetic-serena",
+    "https://cotonia-home.vercel.app/product/synthetic-serena",
   );
   const json = await page.locator('script[type="application/ld+json"]').textContent();
   const product = JSON.parse(json!);
   expect(product.brand.name).toBe("Cotonia Home");
+  expect(product.url).toBe("https://cotonia-home.vercel.app/product/synthetic-serena");
   expect(product.offers.priceCurrency).toBe("DZD");
   expect(product.offers.offers).toHaveLength(2);
   expect(product.offers.availability).toBe("https://schema.org/InStock");
@@ -128,5 +132,11 @@ test("canonical, Product JSON-LD et cartes sociales préservés", async ({ page 
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
     "content",
     "summary_large_image",
+  );
+  const robots = await request.get("/robots.txt");
+  expect(await robots.text()).toContain("Sitemap: https://cotonia-home.vercel.app/sitemap.xml");
+  const sitemap = await request.get("/sitemap.xml");
+  expect(await sitemap.text()).toContain(
+    "https://cotonia-home.vercel.app/product/synthetic-serena",
   );
 });
